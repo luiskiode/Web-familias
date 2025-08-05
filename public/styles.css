@@ -1,0 +1,96 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #b71c1c, #f44336);
+    color: white;
+}
+header {
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+nav {
+    display: flex;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+}
+nav button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 1em;
+}
+nav button:hover {
+    background: rgba(255,255,255,0.2);
+}
+section {
+    display: none;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+}
+section.active {
+    display: block;
+}
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+}
+input[type="date"], input[type="email"], input[type="password"] {
+    color: black;
+}
+button.submit-btn {
+    background: white;
+    color: #b71c1c;
+    padding: 10px 20px;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 5px;
+}
+button.submit-btn:hover {
+    background: #ffcdd2;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    color: black;
+}
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+.success {
+    background: #4caf50;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+.error {
+    background: #f44336;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background: rgba(255,255,255,0.9);
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+.login-container input {
+    color: black;
+}
