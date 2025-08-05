@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de Familias</title>
+</head>
+<body>
+  <h1>Listado de Familias</h1>
+  <div id="familias"></div>
+  <button onclick="logout()">Cerrar Sesión</button>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Inicializar Supabase (usa tus credenciales públicas)
+    const supabaseUrl = "https://TU_PROJECT.supabase.co";
+    const supabaseKey = "TU_PUBLIC_ANON_KEY";
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Verificar sesión
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location = "login.html"; // redirige si no hay sesión
+      } else {
+        // Obtener token de Firebase
+        const token = await user.getIdToken();
+
+        // Configurar Supabase con token JWT de Firebase
+        supabaseClient.auth.setSession({ access_token: token, refresh_token: token });
+
+        // Consultar la tabla
+        const { data, error } = await supabaseClient
+          .from("familias")
+          .select("*");
+
+        if (error) {
+          console.error(error);
+          document.getElementById("familias").innerHTML = "Error al cargar";
+        } else {
+          // Mostrar datos
+          document.getElementById("familias").innerHTML =
+            "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        }
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => window.location = "login.html");
+    }
+  </script>
+</body>
+</html>
