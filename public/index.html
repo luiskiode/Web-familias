@@ -1,0 +1,30 @@
+<script>
+document.getElementById("formFamilia").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    const mensaje = document.getElementById("mensaje");
+    mensaje.textContent = "⏳ Enviando...";
+    mensaje.style.color = "blue";
+
+    try {
+        const response = await fetch("https://api-familias.onrender.com/familias", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            mensaje.textContent = "✅ Registro guardado con éxito";
+            mensaje.style.color = "green";
+            this.reset();
+        } else {
+            mensaje.textContent = "❌ Error al guardar";
+            mensaje.style.color = "red";
+        }
+    } catch (error) {
+        mensaje.textContent = "❌ Error de conexión";
+        mensaje.style.color = "red";
+    }
+});
+</script>
