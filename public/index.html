@@ -75,15 +75,17 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 
+<script>
+  // 🔹 Inicializar Firebase ANTES de usar auth
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+</script>
+
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
 <script>
-  // Inicializar Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
   // Inicializar Supabase
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
@@ -96,14 +98,13 @@
     const user = auth.currentUser;
     if (user) {
       loadFamilias();
-      document.querySelector("#listado").style.display = "block";
       showSection("listado");
     } else {
       window.location.href = "login.html";
     }
   }
 
-  // Enviar formulario
+  // Enviar formulario (público)
   document.getElementById("familiaForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const msgDiv = document.getElementById("msg");
@@ -135,13 +136,13 @@
       data.forEach((f) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${f.nombres_apellidos || ""}</td>
-          <td>${f.dni_solicitante || ""}</td>
-          <td>${f.apellido_familia || ""}</td>
-          <td>${f.fecha_registro || ""}</td>
-          <td>${f.telefono_contacto || ""}</td>
-          <td>${f.observaciones || ""}</td>
-        `;
+                <td>${f.nombres_apellidos || ""}</td>
+                <td>${f.dni_solicitante || ""}</td>
+                <td>${f.apellido_familia || ""}</td>
+                <td>${f.fecha_registro || ""}</td>
+                <td>${f.telefono_contacto || ""}</td>
+                <td>${f.observaciones || ""}</td>
+            `;
         tbody.appendChild(tr);
       });
     }
@@ -150,7 +151,6 @@
   // Logout
   function logout() {
     auth.signOut().then(() => {
-      document.querySelector("#listado").style.display = "none";
       showSection("inicio");
     });
   }
