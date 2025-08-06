@@ -75,17 +75,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 
-<script>
-  // 🔹 Inicializar Firebase ANTES de usar auth
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-</script>
-
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
 <script>
+  // Inicializar Firebase compat
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
   // Inicializar Supabase
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
@@ -103,6 +101,21 @@
       window.location.href = "login.html";
     }
   }
+
+  // Detectar si viene de login con ?view=listado
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "listado") {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          loadFamilias();
+          showSection("listado");
+        } else {
+          window.location.href = "login.html";
+        }
+      });
+    }
+  });
 
   // Enviar formulario (público)
   document.getElementById("familiaForm").addEventListener("submit", async function (e) {
