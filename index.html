@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cáritas - Registro de Familias</title>
+<title>Cáritas CNC - Registro de Familias</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header>Cáritas - Registro y Listado de Familias</header>
+<header>Cáritas CNC - Registro y Listado de Familias</header>
 
 <nav>
     <button onclick="showSection('inicio')">Inicio</button>
@@ -18,7 +18,7 @@
 
 <section id="inicio" class="active">
     <h2>Bienvenido</h2>
-    <p>Esta plataforma permite registrar familias y visualizar el listado de beneficiarios de Cáritas.</p>
+    <p>Esta plataforma permite registrar familias y visualizar el listado de beneficiarios de Cáritas CNC.</p>
     <br />
     <button class="submit-btn" onclick="goToListado()">📋 Ver Listado de Familias</button>
 </section>
@@ -41,12 +41,22 @@
         <textarea name="observaciones"></textarea>
         <label for="archivo">Adjuntar documento:</label>
         <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
+
+        <!-- Términos y condiciones -->
+        <label>
+          <input type="checkbox" id="aceptaTerminos" required>
+          Acepto los <a href="#" target="_blank">términos y condiciones</a>.
+        </label>
+
         <button type="submit" class="submit-btn">Registrar</button>
     </form>
 </section>
 
 <section id="listado" style="display:none;">
     <h2>Listado de Familias</h2>
+    <!-- Buscador -->
+    <input type="text" id="buscador" placeholder="Buscar familias..." onkeyup="filtrarTabla()" />
+    <br><br>
     <table id="familiasTable">
         <thead>
             <tr>
@@ -70,6 +80,10 @@
     <p>Teléfono: +51 999 888 777</p>
 </section>
 
+<footer>
+    <p>© 2025 Cáritas CNC - Todos los derechos reservados.</p>
+</footer>
+
 <!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -80,12 +94,20 @@
 <script src="supabase-config.js"></script>
 
 <script>
-  // Inicializar Firebase compat
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
-
-  // Inicializar Supabase
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+  // Si viene del login
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("login") === "success") {
+    const email = localStorage.getItem("userEmail") || "";
+    if (email) {
+      alert(`✅ Bienvenido ${email}`);
+    }
+    loadFamilias();
+    showSection("listado");
+  }
 
   function showSection(id) {
     document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
@@ -102,24 +124,13 @@
     }
   }
 
-  // Detectar si viene de login con ?view=listado
-  window.addEventListener("DOMContentLoaded", () => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("view") === "listado") {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          loadFamilias();
-          showSection("listado");
-        } else {
-          window.location.href = "login.html";
-        }
-      });
-    }
-  });
-
-  // Enviar formulario (público)
+  // Enviar formulario
   document.getElementById("familiaForm").addEventListener("submit", async function (e) {
     e.preventDefault();
+    if (!document.getElementById("aceptaTerminos").checked) {
+      alert("Debes aceptar los términos y condiciones.");
+      return;
+    }
     const msgDiv = document.getElementById("msg");
     msgDiv.innerHTML = "";
     const formData = new FormData(this);
@@ -137,7 +148,6 @@
     }
   });
 
-  // Cargar listado
   async function loadFamilias() {
     const { data, error } = await supabaseClient.from("familias").select("*");
     const tbody = document.querySelector("#familiasTable tbody");
@@ -149,19 +159,27 @@
       data.forEach((f) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-                <td>${f.nombres_apellidos || ""}</td>
-                <td>${f.dni_solicitante || ""}</td>
-                <td>${f.apellido_familia || ""}</td>
-                <td>${f.fecha_registro || ""}</td>
-                <td>${f.telefono_contacto || ""}</td>
-                <td>${f.observaciones || ""}</td>
-            `;
+          <td>${f.nombres_apellidos || ""}</td>
+          <td>${f.dni_solicitante || ""}</td>
+          <td>${f.apellido_familia || ""}</td>
+          <td>${f.fecha_registro || ""}</td>
+          <td>${f.telefono_contacto || ""}</td>
+          <td>${f.observaciones || ""}</td>
+        `;
         tbody.appendChild(tr);
       });
     }
   }
 
-  // Logout
+  // Filtrar tabla
+  function filtrarTabla() {
+    const filtro = document.getElementById("buscador").value.toLowerCase();
+    document.querySelectorAll("#familiasTable tbody tr").forEach((fila) => {
+      const textoFila = fila.textContent.toLowerCase();
+      fila.style.display = textoFila.includes(filtro) ? "" : "none";
+    });
+  }
+
   function logout() {
     auth.signOut().then(() => {
       showSection("inicio");
