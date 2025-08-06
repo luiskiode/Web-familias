@@ -1,7 +1,8 @@
 {
   "name": "Cáritas CNC",
   "short_name": "Cáritas",
-  "start_url": "index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#b71c1c",
   "theme_color": "#b71c1c",
