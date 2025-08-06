@@ -17,7 +17,7 @@
     <label>Contraseña</label>
     <input type="password" id="password" placeholder="********" required />
     <button class="submit-btn" onclick="login()">Ingresar</button>
-    <p id="errorMsg" style="color:yellow;margin-top:10px;"></p>
+    <p id="errorMsg" style="color:yellow;"></p>
 </section>
 
 <!-- Firebase compat -->
@@ -44,7 +44,7 @@
     auth
       .signInWithEmailAndPassword(email, pass)
       .then(() => {
-        // Redirigir al index para mostrar listado
+        // Redirigir al listado directamente
         window.location.href = "index.html?view=listado";
       })
       .catch((err) => {
