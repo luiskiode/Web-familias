@@ -3,17 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cáritas CNC - Registro de Familias</title>
+<title>Caritas CNC - Registro de Familias</title>
 <link rel="stylesheet" href="styles.css" />
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+
 </head>
 <body>
 
-<header>Cáritas CNC - Registro y Listado de Familias</header>
+<header>Caritas CNC - Registro y Listado de Familias</header>
 
 <nav>
     <button onclick="showSection('inicio')">Inicio</button>
     <button onclick="showSection('registro')">Registro de Familias</button>
     <button onclick="showSection('contacto')">Contacto</button>
+    <button onclick="showSection('administracion')">Administración</button>
 </nav>
 
 <section id="inicio" class="active">
@@ -44,8 +49,7 @@
 
         <!-- Términos y condiciones -->
         <label>
-          <input type="checkbox" id="aceptaTerminos" required>
-          Acepto los <a href="#" target="_blank">términos y condiciones</a>.
+            <input type="checkbox" id="aceptoTerminos" required> Acepto los <a href="#" target="_blank">Términos y Condiciones</a>
         </label>
 
         <button type="submit" class="submit-btn">Registrar</button>
@@ -54,9 +58,7 @@
 
 <section id="listado" style="display:none;">
     <h2>Listado de Familias</h2>
-    <!-- Buscador -->
-    <input type="text" id="buscador" placeholder="Buscar familias..." onkeyup="filtrarTabla()" />
-    <br><br>
+    <input type="text" id="buscador" placeholder="🔍 Buscar por nombre, DNI o apellido" />
     <table id="familiasTable">
         <thead>
             <tr>
@@ -78,10 +80,30 @@
     <h2>Contacto</h2>
     <p>Email: contacto@caritas.org</p>
     <p>Teléfono: +51 999 888 777</p>
+    <br>
+    <button onclick="alert('Enlace a formulario de empleo')">📌 Trabaja con nosotros</button>
+    <button onclick="window.open('https://paypal.me', '_blank')">💖 Dona aquí</button>
+    <div style="margin-top:10px;">
+        <a href="https://facebook.com" target="_blank">📘 Facebook</a> |
+        <a href="https://instagram.com" target="_blank">📷 Instagram</a> |
+        <a href="https://wa.me/51999988877" target="_blank">💬 WhatsApp</a> |
+        <a href="https://youtube.com" target="_blank">▶ YouTube</a>
+    </div>
+</section>
+
+<section id="administracion">
+    <h2>Administración</h2>
+    <div>
+        <button onclick="showSubSection('agendamiento')">📅 Agendamiento</button>
+    </div>
+    <div id="agendamiento" class="subsection" style="display:none; margin-top:20px;">
+        <h3>Agenda</h3>
+        <div id="calendar"></div>
+    </div>
 </section>
 
 <footer>
-    <p>© 2025 Cáritas CNC - Todos los derechos reservados.</p>
+    <p>© 2025 Caritas CNC. Todos los derechos reservados.</p>
 </footer>
 
 <!-- Firebase compat -->
@@ -93,98 +115,110 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
+<!-- FullCalendar -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
 <script>
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+// Inicializar Firebase antes de cualquier uso
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-  // Si viene del login
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("login") === "success") {
-    const email = localStorage.getItem("userEmail") || "";
-    if (email) {
-      alert(`✅ Bienvenido ${email}`);
-    }
-    loadFamilias();
-    showSection("listado");
-  }
+// Inicializar Supabase
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-  function showSection(id) {
-    document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
+function showSection(id) {
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
-  }
+}
 
-  function goToListado() {
-    const user = auth.currentUser;
-    if (user) {
-      loadFamilias();
-      showSection("listado");
+function showSubSection(id) {
+    document.querySelectorAll(".subsection").forEach(sec => sec.style.display = "none");
+    document.getElementById(id).style.display = "block";
+}
+
+// Redirigir a listado si logueado
+function goToListado() {
+    if (auth.currentUser) {
+        loadFamilias();
+        showSection("listado");
     } else {
-      window.location.href = "login.html";
+        window.location.href = "login.html";
     }
-  }
+}
 
-  // Enviar formulario
-  document.getElementById("familiaForm").addEventListener("submit", async function (e) {
+// Enviar formulario
+document.getElementById("familiaForm").addEventListener("submit", async function(e) {
     e.preventDefault();
-    if (!document.getElementById("aceptaTerminos").checked) {
-      alert("Debes aceptar los términos y condiciones.");
-      return;
+    if (!document.getElementById("aceptoTerminos").checked) {
+        alert("Debes aceptar los términos y condiciones.");
+        return;
     }
     const msgDiv = document.getElementById("msg");
     msgDiv.innerHTML = "";
     const formData = new FormData(this);
     try {
-      const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
-        this.reset();
-      } else {
-        msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
-      }
+        const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
+            this.reset();
+        } else {
+            msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
+        }
     } catch {
-      msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar con el servidor</div>";
+        msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar con el servidor</div>";
     }
-  });
+});
 
-  async function loadFamilias() {
+// Buscar en tabla
+document.getElementById("buscador").addEventListener("input", function() {
+    const filtro = this.value.toLowerCase();
+    document.querySelectorAll("#familiasTable tbody tr").forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(filtro) ? "" : "none";
+    });
+});
+
+// Cargar listado
+async function loadFamilias() {
     const { data, error } = await supabaseClient.from("familias").select("*");
     const tbody = document.querySelector("#familiasTable tbody");
     tbody.innerHTML = "";
     if (error) {
-      console.error(error);
-      tbody.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
+        console.error(error);
+        tbody.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
     } else {
-      data.forEach((f) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${f.nombres_apellidos || ""}</td>
-          <td>${f.dni_solicitante || ""}</td>
-          <td>${f.apellido_familia || ""}</td>
-          <td>${f.fecha_registro || ""}</td>
-          <td>${f.telefono_contacto || ""}</td>
-          <td>${f.observaciones || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+        data.forEach(f => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${f.nombres_apellidos || ""}</td>
+                <td>${f.dni_solicitante || ""}</td>
+                <td>${f.apellido_familia || ""}</td>
+                <td>${f.fecha_registro || ""}</td>
+                <td>${f.telefono_contacto || ""}</td>
+                <td>${f.observaciones || ""}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
-  }
+}
 
-  // Filtrar tabla
-  function filtrarTabla() {
-    const filtro = document.getElementById("buscador").value.toLowerCase();
-    document.querySelectorAll("#familiasTable tbody tr").forEach((fila) => {
-      const textoFila = fila.textContent.toLowerCase();
-      fila.style.display = textoFila.includes(filtro) ? "" : "none";
-    });
-  }
-
-  function logout() {
+// Logout
+function logout() {
     auth.signOut().then(() => {
-      showSection("inicio");
+        showSection("inicio");
     });
-  }
+}
+
+// Iniciar calendario
+document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+    if (calendarEl) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth'
+        });
+        calendar.render();
+    }
+});
 </script>
 
 </body>

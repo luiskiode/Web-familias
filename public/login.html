@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Iniciar Sesión - Cáritas CNC</title>
+<title>Iniciar Sesión - Caritas CNC</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header>Acceso Administrador - Cáritas CNC</header>
+<header>Acceso Administrador - Caritas CNC</header>
 
-<section class="active login-container">
+<section class="login-container">
     <h2>Iniciar Sesión</h2>
     <label>Correo electrónico</label>
     <input type="email" id="email" placeholder="admin@ejemplo.com" required />
@@ -21,7 +21,7 @@
 </section>
 
 <footer>
-    <p>© 2025 Cáritas CNC - Todos los derechos reservados.</p>
+    <p>© 2025 Caritas CNC. Todos los derechos reservados.</p>
 </footer>
 
 <!-- Firebase compat -->
@@ -30,6 +30,7 @@
 <script src="firebase-config.js"></script>
 
 <script>
+  // Inicializar Firebase antes de cualquier uso
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
@@ -44,11 +45,11 @@
       return;
     }
 
-    auth.signInWithEmailAndPassword(email, pass)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        localStorage.setItem("userEmail", user.email);
-        window.location.href = "index.html?login=success";
+    auth
+      .signInWithEmailAndPassword(email, pass)
+      .then(() => {
+        // Redirigir al listado directamente
+        window.location.href = "index.html?view=listado";
       })
       .catch((err) => {
         console.error(err);
