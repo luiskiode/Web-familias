@@ -104,63 +104,65 @@
 <!-- FullCalendar -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
+<!-- Funciones personalizadas -->
 <script>
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-function showSection(id) {
-  document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
-function showSubSection(id) {
-  document.querySelectorAll(".subsection").forEach((sec) => sec.style.display = "none");
-  document.getElementById(id).style.display = "block";
-}
-
-function goToListado() {
-  if (auth.currentUser) {
-    window.open("listado.html", "_blank");
-  } else {
-    window.location.href = "login.html";
+  function showSection(id) {
+    document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
   }
-}
 
-document.getElementById("familiaForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const msgDiv = document.getElementById("msg");
-  msgDiv.innerHTML = "";
-  const formData = new FormData(this);
-  try {
-    const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
-    const data = await res.json();
-    if (res.ok) {
-      msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
-      this.reset();
+  function showSubSection(id) {
+    document.querySelectorAll(".subsection").forEach((sec) => sec.style.display = "none");
+    document.getElementById(id).style.display = "block";
+  }
+
+  function goToListado() {
+    if (auth.currentUser) {
+      window.open("listado.html", "_blank");
     } else {
-      msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
+      window.location.href = "login.html";
     }
-  } catch {
-    msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
   }
-});
 
-function logout() {
-  auth.signOut().then(() => showSection("inicio"));
-}
+  document.getElementById("familiaForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const msgDiv = document.getElementById("msg");
+    msgDiv.innerHTML = "";
+    const formData = new FormData(this);
+    try {
+      const res = await fetch("https://api-familias.onrender.com/familias", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
+        this.reset();
+      } else {
+        msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
+      }
+    } catch {
+      msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
+    }
+  });
 
-document.addEventListener("DOMContentLoaded", function () {
-  const calendarEl = document.getElementById("calendar");
-  if (calendarEl) {
-    const calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth' });
-    calendar.render();
+  function logout() {
+    auth.signOut().then(() => showSection("inicio"));
   }
-});
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+    if (calendarEl) {
+      const calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth' });
+      calendar.render();
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+  }
 </script>
 
 </body>
