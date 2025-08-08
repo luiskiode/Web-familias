@@ -6,9 +6,9 @@ body {
     background-image:
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-size: 20px 20px; /* Patrón de cruces pequeñas */
     color: white;
-    padding-bottom: 60px; /* espacio para footer fijo */
+    padding-bottom: 60px; /* espacio para footer */
 }
 
 /* Encabezado */
@@ -25,7 +25,6 @@ nav {
     display: flex;
     justify-content: center;
     background: rgba(0,0,0,0.3);
-    flex-wrap: wrap;
 }
 nav button {
     background: none;
@@ -46,7 +45,7 @@ nav button:hover {
 section {
     display: none;
     padding: 20px;
-    max-width: 900px;
+    max-width: 800px;
     margin: auto;
 }
 section.active {
@@ -80,34 +79,17 @@ button.submit-btn:hover {
     transform: scale(1.05);
 }
 
-/* Tabla del listado */
-#listado table {
+/* Tabla */
+table {
     width: 100%;
     border-collapse: collapse;
-    background: black;
-    color: white;
-}
-#listado th, #listado td {
-    padding: 10px;
-    border: 1px solid #444;
-    text-align: left;
-}
-#listado a {
-    color: #ff6666;
-    text-decoration: underline;
-}
-#listado a:hover {
-    color: #ff9999;
-}
-
-/* Buscador */
-#search {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: none;
-    border-radius: 5px;
+    background: white;
     color: black;
+}
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
 }
 
 /* Mensajes */
@@ -128,7 +110,7 @@ button.submit-btn:hover {
 .login-container {
     max-width: 400px;
     margin: 50px auto;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255,255,255,0.9);
     color: black;
     padding: 20px;
     border-radius: 10px;
@@ -136,30 +118,6 @@ button.submit-btn:hover {
 }
 .login-container input {
     color: black;
-}
-
-/* Subpestañas */
-.subsection {
-    padding: 15px;
-    background: rgba(255,255,255,0.9);
-    color: black;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-
-/* Calendario */
-#calendar {
-    background: white;
-    color: black;
-    border-radius: 8px;
-    padding: 10px;
-}
-
-/* Mapa */
-#mapContainer {
-    margin-top: 15px;
-    border-radius: 8px;
-    overflow: hidden;
 }
 
 /* Footer fijo */

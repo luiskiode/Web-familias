@@ -7,9 +7,6 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#b71c1c">
 <link rel="stylesheet" href="styles.css" />
-
-<!-- FullCalendar CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -19,12 +16,11 @@
     <button onclick="showSection('inicio')">Inicio</button>
     <button onclick="showSection('registro')">Registro</button>
     <button onclick="showSection('contacto')">Contacto</button>
-    <button onclick="showSection('administracion')">Administración</button>
 </nav>
 
 <section id="inicio" class="active">
-    <h2>Bienvenido ❤️</h2>
-    <p>Gracias por usar <b>Cáritas CNC</b> para ayudar a las familias necesitadas.</p>
+    <h2>Bienvenido</h2>
+    <p>Registra y gestiona familias beneficiarias de Cáritas CNC.</p>
     <br />
     <button class="submit-btn" onclick="goToListado()">📋 Ver Listado de Familias</button>
 </section>
@@ -39,8 +35,6 @@
         <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
         <label>Apellido Familia*</label>
         <input type="text" name="apellido_familia" required />
-        <label>Dirección*</label>
-        <input type="text" name="direccion" required />
         <label>Fecha de Registro*</label>
         <input type="date" name="fecha_registro" required />
         <label>Teléfono*</label>
@@ -63,16 +57,13 @@
                 <th>Nombres</th>
                 <th>DNI</th>
                 <th>Apellido</th>
-                <th>Dirección</th>
                 <th>Fecha</th>
                 <th>Teléfono</th>
                 <th>Observaciones</th>
-                <th>Mapa</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
-    <div id="mapContainer" style="margin-top:20px;"></div>
     <br />
     <button class="submit-btn" onclick="logout()">Cerrar Sesión</button>
 </section>
@@ -81,15 +72,6 @@
     <h2>Contacto</h2>
     <p>Email: contacto@caritas.org</p>
     <p>Teléfono: +51 999 888 777</p>
-</section>
-
-<section id="administracion">
-    <h2>Administración</h2>
-    <button onclick="showSubSection('agendamiento')">📅 Agendamiento</button>
-    <div id="agendamiento" class="subsection" style="display:none;">
-        <h3>Agenda</h3>
-        <div id="calendar"></div>
-    </div>
 </section>
 
 <footer>
@@ -105,110 +87,82 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
-<!-- FullCalendar -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
 <script>
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-function showSection(id) {
+  function showSection(id) {
     document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
-}
+  }
 
-function showSubSection(id) {
-    document.querySelectorAll(".subsection").forEach((sec) => sec.style.display = "none");
-    document.getElementById(id).style.display = "block";
-}
-
-function goToListado() {
+  function goToListado() {
     if (auth.currentUser) {
-        loadFamilias();
-        showSection("listado");
+      loadFamilias();
+      showSection("listado");
     } else {
-        window.location.href = "login.html";
+      window.location.href = "login.html";
     }
-}
+  }
 
-document.getElementById("familiaForm").addEventListener("submit", async function (e) {
+  document.getElementById("familiaForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const msgDiv = document.getElementById("msg");
     msgDiv.innerHTML = "";
     const formData = new FormData(this);
     try {
-        const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
-        const data = await res.json();
-        if (res.ok) {
-            msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
-            this.reset();
-        } else {
-            msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
-        }
+      const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
+        this.reset();
+      } else {
+        msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
+      }
     } catch {
-        msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
+      msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
     }
-});
+  });
 
-async function loadFamilias() {
+  async function loadFamilias() {
     const { data, error } = await supabaseClient.from("familias").select("*");
     const tbody = document.querySelector("#familiasTable tbody");
     tbody.innerHTML = "";
     if (error) {
-        tbody.innerHTML = `<tr><td colspan="8">Error al cargar</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
     } else {
-        data.forEach((f) => {
-            const tr = document.createElement("tr");
-            const direccion = encodeURIComponent(f.direccion || "");
-            tr.innerHTML = `
-                <td>${f.nombres_apellidos || ""}</td>
-                <td>${f.dni_solicitante || ""}</td>
-                <td>${f.apellido_familia || ""}</td>
-                <td>${f.direccion || ""}</td>
-                <td>${f.fecha_registro || ""}</td>
-                <td>${f.telefono_contacto || ""}</td>
-                <td>${f.observaciones || ""}</td>
-                <td><a href="https://www.google.com/maps/search/?api=1&query=${direccion}" target="_blank" onclick="showMap('${direccion}')">Ver en Mapa</a></td>`;
-            tbody.appendChild(tr);
-        });
+      data.forEach((f) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${f.nombres_apellidos || ""}</td>
+          <td>${f.dni_solicitante || ""}</td>
+          <td>${f.apellido_familia || ""}</td>
+          <td>${f.fecha_registro || ""}</td>
+          <td>${f.telefono_contacto || ""}</td>
+          <td>${f.observaciones || ""}</td>`;
+        tbody.appendChild(tr);
+      });
     }
-}
+  }
 
-function showMap(direccion) {
-    const mapContainer = document.getElementById("mapContainer");
-    mapContainer.innerHTML = `
-        <iframe width="100%" height="300" style="border:0"
-        src="https://www.google.com/maps/embed/v1/place?key=TU_API_KEY&q=${direccion}"
-        allowfullscreen></iframe>
-    `;
-}
-
-document.getElementById("search").addEventListener("input", function () {
+  document.getElementById("search").addEventListener("input", function () {
     const filter = this.value.toLowerCase();
     document.querySelectorAll("#familiasTable tbody tr").forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+      row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
     });
-});
+  });
 
-function logout() {
+  function logout() {
     auth.signOut().then(() => {
-        showSection("inicio");
+      showSection("inicio");
     });
-}
+  }
 
-document.addEventListener("DOMContentLoaded", function () {
-    const calendarEl = document.getElementById("calendar");
-    if (calendarEl) {
-        const calendar = new FullCalendar.Calendar(calendarEl, { initialView: 'dayGridMonth' });
-        calendar.render();
-    }
-});
-
-if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js");
-}
+  }
 </script>
+
 </body>
 </html>
-

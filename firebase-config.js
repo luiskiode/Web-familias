@@ -1,4 +1,5 @@
-const firebaseConfig = {
+// firebase-config.js
+export const firebaseConfig = {
   apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
   authDomain: "web-familias.firebaseapp.com",
   projectId: "web-familias",
