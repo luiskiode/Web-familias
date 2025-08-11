@@ -17,60 +17,70 @@
     crossorigin=""
   />
 
-  <!-- Estilos rápidos -->
+  <!-- Estilos -->
   <style>
     :root {
       --bg: #0a0f1a; --card: #111827; --muted: #94a3b8; --b: #0a4bff; --b2: #0a62ff;
       --ok: #22c55e; --err: #ef4444; --text: #e5e7eb;
     }
     *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      background:linear-gradient(180deg,#0b1020, #0a0f1a 60%); color:var(--text)}
-    header{position:sticky;top:0;z-index:10;background:rgba(17,24,39,.8);
-      backdrop-filter: blur(8px);border-bottom:1px solid #1f2937}
+    body{
+      margin:0;font-family:system-ui,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      background:linear-gradient(180deg,#0b1020,#0a0f1a 60%); color:var(--text)
+    }
+    header{
+      position:sticky;top:0;z-index:10;background:rgba(17,24,39,.8);
+      backdrop-filter: blur(8px);border-bottom:1px solid #1f2937
+    }
     .wrap{max-width:1100px;margin:0 auto;padding:16px}
     h1{margin:0;font-size:1.4rem}
+    h2{margin:0 0 8px 0;font-size:1.1rem}
     .grid{display:grid;grid-template-columns: 1fr 1fr;gap:16px}
-    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25)}
+    .card{
+      background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25)
+    }
     label{display:block;font-size:.9rem;margin:8px 0 6px;color:var(--muted)}
-    input,textarea,button{width:100%;padding:12px;border-radius:12px;border:1px solid #263244;
-      background:#0b1220;color:var(--text)}
+    input,textarea,button{
+      width:100%;padding:12px;border-radius:12px;border:1px solid #263244;
+      background:#0b1220;color:var(--text)
+    }
     textarea{min-height:90px;resize:vertical}
-    button{cursor:pointer;border:none;background:linear-gradient(180deg,var(--b),var(--b2));
-      font-weight:600;letter-spacing:.2px;transition:transform .05s ease, opacity .2s ease}
+    button{
+      cursor:pointer;border:none;background:linear-gradient(180deg,var(--b),var(--b2));
+      font-weight:600;letter-spacing:.2px;transition:transform .05s ease, opacity .2s ease
+    }
+    button.ghost{background:#0b1220;border:1px solid #22304d}
     button:active{transform:translateY(1px)}
     .row{display:flex;gap:8px;align-items:center}
     .row > *{flex:1}
     .muted{color:var(--muted);font-size:.9rem}
     .ok{color:var(--ok)} .err{color:var(--err)}
-    .list-header{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .list-header{display:flex;gap:8px;align-items:center;margin:8px 0}
     .badge{font-size:.75rem;border:1px solid #263244;border-radius:999px;padding:6px 10px}
     ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:360px;overflow:auto}
-    li{background:#0b1220;border:1px solid #22304d;border-radius:12px;padding:12px;display:grid;gap:4px}
+    li{background:#0b1220;border:1px solid #22304d;border-radius:12px;padding:12px;display:grid;gap:6px}
     .addr{color:#cbd5e1}
     #map{height:320px;border-radius:16px;border:1px solid #22304d}
     .top-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:10px}
-    .ghost{background:#0b1220;border:1px solid #22304d}
     .pill{max-width:280px}
     .footer{padding:24px 0;color:var(--muted);text-align:center}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    /* Sugerencias (datalist) no requiere estilos extra */
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
       <h1>📘 Cáritas CNC — Registro</h1>
-      <div class="muted">Registro de familias con búsqueda y mapa (Leaflet + Nominatim).</div>
+      <div class="muted">Registro de familias con búsqueda y mapa (Leaflet + Nominatim) + Pendientes.</div>
     </div>
   </header>
 
   <main class="wrap" style="padding-top:16px;">
     <div class="grid">
-      <!-- FORMULARIO -->
+      <!-- =================== FORMULARIO FAMILIAS =================== -->
       <section class="card">
-        <h2 style="margin-top:0">Nueva familia</h2>
+        <h2>Nueva familia</h2>
         <form id="familia-form">
           <label for="nombre">Nombre de familia</label>
           <input id="nombre" name="nombre" placeholder="Ej. Familia García" required>
@@ -100,8 +110,9 @@
         </div>
       </section>
 
-      <!-- LISTA -->
+      <!-- =================== LISTA FAMILIAS =================== -->
       <section class="card">
+        <h2>Familias registradas</h2>
         <div class="list-header">
           <input id="buscador" class="pill" placeholder="🔎 Buscar por nombre o dirección..." />
           <button id="btn-refrescar" class="ghost" style="max-width:140px">↻ Actualizar</button>
@@ -112,13 +123,31 @@
       </section>
     </div>
 
-    <div class="footer">PWA lista • Mapas por OpenStreetMap/Leaflet • Geocodificación por Nominatim</div>
+    <!-- =================== PENDIENTES =================== -->
+    <section class="card" id="pendientes-card" style="margin-top:16px">
+      <h2>📝 Pendientes</h2>
+
+      <form id="pend-form" class="row" style="margin-bottom:10px">
+        <input id="pend-descripcion" placeholder="Nueva tarea… (Enter para guardar)" required />
+        <button type="submit" style="max-width:180px">Agregar</button>
+      </form>
+
+      <div class="list-header">
+        <span id="pend-contador" class="badge">0 tareas</span>
+        <span class="muted">Haz clic en el texto para editar; marca el ☐ para completar.</span>
+      </div>
+
+      <ul id="pend-lista"></ul>
+    </section>
+
+    <div class="footer">PWA lista • OpenStreetMap/Leaflet • Geocodificación Nominatim • Supabase</div>
   </main>
 
-  <!-- Supabase -->
+  <!-- =================== APP SCRIPT =================== -->
   <script type="module">
     import { supabase } from './supabase-config.js';
 
+    // --------- Referencias DOM (familias) ---------
     const form = document.getElementById('familia-form');
     const msg = document.getElementById('form-msg');
     const lista = document.getElementById('lista');
@@ -129,10 +158,18 @@
     const direccionInput = document.getElementById('direccion');
     const dlDirecciones = document.getElementById('dl-direcciones');
 
-    let familias = [];   // cache local
-    let map, marker;     // Leaflet
+    // --------- Referencias DOM (pendientes) ---------
+    const pendForm = document.getElementById('pend-form');
+    const pendDesc = document.getElementById('pend-descripcion');
+    const pendLista = document.getElementById('pend-lista');
+    const pendContador = document.getElementById('pend-contador');
 
-    // --------- MAPA (Leaflet) ---------
+    // --------- Estado ---------
+    let familias = [];
+    let pendientes = [];
+    let map, marker; // Leaflet
+
+    // ======================= MAPA (Leaflet) =======================
     function initMap() {
       map = L.map('map', {
         center: [-12.0464, -77.0428], // Lima
@@ -157,20 +194,19 @@
       if (label) marker.bindPopup(label).openPopup();
     }
 
-    // --------- Nominatim (búsqueda/geocodificación) ---------
+    // ======================= NOMINATIM =======================
     async function geocodeAddress(q, limit = 1) {
       const url = new URL('https://nominatim.openstreetmap.org/search');
       url.searchParams.set('format', 'json');
       url.searchParams.set('q', q);
       url.searchParams.set('addressdetails', '1');
       url.searchParams.set('limit', String(limit));
-      // Nominatim pide un "User-Agent" o "Referer" identificable: el navegador enviará el referer de tu sitio.
       const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
       if (!resp.ok) throw new Error('Nominatim error');
       return resp.json();
     }
 
-    // sugerencias en <datalist>
+    // Sugerencias con <datalist>
     let sugTimer;
     direccionInput.addEventListener('input', () => {
       clearTimeout(sugTimer);
@@ -200,7 +236,7 @@
       }
     });
 
-    // --------- SUPABASE: CRUD BÁSICO ---------
+    // ======================= SUPABASE: FAMILIAS =======================
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.textContent = 'Guardando...';
@@ -234,7 +270,7 @@
           .order('id', { ascending: true });
         if (error) throw error;
         familias = data || [];
-        renderLista();
+        renderFamilias();
       } catch (err) {
         console.error('Error load familias:', err);
         alert('Error al cargar familias. Revisa Supabase-config o RLS.');
@@ -243,7 +279,7 @@
       }
     }
 
-    function renderLista() {
+    function renderFamilias() {
       const q = buscador.value.trim().toLowerCase();
       const filtradas = q.length >= 2
         ? familias.filter(f =>
@@ -271,7 +307,7 @@
         lista.appendChild(li);
       });
 
-      // Botones de cada item
+      // Acciones por item
       lista.querySelectorAll('button[data-geo]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const addr = decodeURIComponent(btn.dataset.geo || '');
@@ -289,12 +325,12 @@
       lista.querySelectorAll('button[data-del]').forEach(btn => {
         btn.addEventListener('click', async () => {
           if (!confirm('¿Eliminar este registro?')) return;
-          const id = Number(btn.dataset.del);
+          const id = Number(btn.getAttribute('data-del'));
           try {
             const { error } = await supabase.from('familias').delete().eq('id', id);
             if (error) throw error;
             familias = familias.filter(x => x.id !== id);
-            renderLista();
+            renderFamilias();
           } catch (err) {
             console.error('Error delete:', err);
             alert('No se pudo eliminar (verifica RLS).');
@@ -305,17 +341,143 @@
       contador.textContent = `${filtradas.length} resultado${filtradas.length===1?'':'s'}`;
     }
 
+    buscador.addEventListener('input', renderFamilias);
+    btnRefrescar.addEventListener('click', () => cargarFamilias(true));
+
+    // ======================= SUPABASE: PENDIENTES =======================
+    async function cargarPendientes() {
+      try {
+        const { data, error } = await supabase
+          .from('pendientes')
+          .select('id, descripcion, estado, created_at')
+          .order('id', { ascending: true });
+        if (error) throw error;
+        pendientes = data || [];
+        renderPendientes();
+      } catch (err) {
+        console.error('Error load pendientes:', err);
+        alert('Error al cargar pendientes. Revisa la tabla/políticas RLS.');
+      }
+    }
+
+    function renderPendientes() {
+      pendLista.innerHTML = '';
+      pendientes.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div class="row" style="align-items:center; gap:10px">
+            <input type="checkbox" data-check="${p.id}" ${p.estado ? 'checked' : ''} style="flex:0 0 auto; width:20px; height:20px" />
+            <input type="text" class="pend-input" data-edit="${p.id}"
+                   value="${escapeHtml(p.descripcion)}"
+                   style="flex:1; ${p.estado ? 'text-decoration: line-through; opacity:.7;' : ''}">
+            <button class="ghost" data-del="${p.id}" style="flex:0 0 auto;max-width:120px">🗑️ Borrar</button>
+          </div>
+        `;
+        pendLista.appendChild(li);
+      });
+      pendContador.textContent = `${pendientes.length} tarea${pendientes.length===1?'':'s'}`;
+    }
+
+    pendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const desc = pendDesc.value.trim();
+      if (!desc) return;
+      try {
+        const { data, error } = await supabase
+          .from('pendientes')
+          .insert([{ descripcion: desc, estado: false }])
+          .select();
+        if (error) throw error;
+        if (data && data[0]) pendientes.push(data[0]);
+        pendDesc.value = '';
+        renderPendientes();
+      } catch (err) {
+        console.error('Error insert pendiente:', err);
+        alert('No se pudo agregar la tarea.');
+      }
+    });
+
+    // Toggle estado
+    pendLista.addEventListener('change', async (e) => {
+      const id = e.target.getAttribute('data-check');
+      if (!id) return;
+      const checked = !!e.target.checked;
+      try {
+        const { error } = await supabase
+          .from('pendientes')
+          .update({ estado: checked })
+          .eq('id', Number(id));
+        if (error) throw error;
+        const idx = pendientes.findIndex(x => x.id === Number(id));
+        if (idx >= 0) pendientes[idx].estado = checked;
+        renderPendientes();
+      } catch (err) {
+        console.error('Error toggle pendiente:', err);
+        alert('No se pudo actualizar el estado.');
+        e.target.checked = !checked;
+      }
+    });
+
+    // Guardar edición (Enter o al perder foco)
+    pendLista.addEventListener('keydown', async (e) => {
+      if (e.key !== 'Enter') return;
+      const input = e.target;
+      const id = input.getAttribute('data-edit');
+      if (!id) return;
+      e.preventDefault();
+      input.blur();
+    });
+
+    pendLista.addEventListener('blur', async (e) => {
+      const input = e.target;
+      const id = input.getAttribute('data-edit');
+      if (!id) return;
+
+      const nuevo = input.value.trim();
+      const p = pendientes.find(x => x.id === Number(id));
+      if (!p || nuevo === p.descripcion) return;
+
+      try {
+        const { error } = await supabase
+          .from('pendientes')
+          .update({ descripcion: nuevo })
+          .eq('id', Number(id));
+        if (error) throw error;
+        p.descripcion = nuevo;
+      } catch (err) {
+        console.error('Error update pendiente:', err);
+        alert('No se pudo guardar el texto.');
+        input.value = p.descripcion;
+      }
+    }, true);
+
+    // Borrar
+    pendLista.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-del]');
+      if (!btn) return;
+      const id = Number(btn.getAttribute('data-del'));
+      if (!confirm('¿Borrar esta tarea?')) return;
+      try {
+        const { error } = await supabase.from('pendientes').delete().eq('id', id);
+        if (error) throw error;
+        pendientes = pendientes.filter(x => x.id !== id);
+        renderPendientes();
+      } catch (err) {
+        console.error('Error delete pendiente:', err);
+        alert('No se pudo borrar.');
+      }
+    });
+
+    // ======================= UTILS =======================
     function escapeHtml(s=''){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
     function formatDate(iso){ try{ const d=new Date(iso); return d.toLocaleString('es-PE'); }catch{ return '—';} }
 
-    buscador.addEventListener('input', renderLista);
-    btnRefrescar.addEventListener('click', () => cargarFamilias(true));
-
-    // Inicializar
+    // ======================= INIT =======================
     initMap();
     cargarFamilias();
+    cargarPendientes();
 
-    // --------- SERVICE WORKER ---------
+    // ======================= SERVICE WORKER =======================
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
