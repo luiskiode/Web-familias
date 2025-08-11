@@ -1,496 +1,643 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cáritas CNC — Registro de Familias</title>
+  <title>Cáritas CNC – Gestión</title>
 
-  <!-- Manifest PWA -->
-  <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="theme-color" content="#0a4bff" />
+  <!-- Estilos globales -->
+  <link rel="stylesheet" href="styles.css?v=1" />
 
-  <!-- Leaflet CSS (mapas) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+  <!-- PWA opcional -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#b71c1c" />
 
-  <!-- Estilos -->
-  <style>
-    :root {
-      --bg: #0a0f1a; --card: #111827; --muted: #94a3b8; --b: #0a4bff; --b2: #0a62ff;
-      --ok: #22c55e; --err: #ef4444; --text: #e5e7eb;
-    }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{
-      margin:0;font-family:system-ui,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      background:linear-gradient(180deg,#0b1020,#0a0f1a 60%); color:var(--text)
-    }
-    header{
-      position:sticky;top:0;z-index:10;background:rgba(17,24,39,.8);
-      backdrop-filter: blur(8px);border-bottom:1px solid #1f2937
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    h1{margin:0;font-size:1.4rem}
-    h2{margin:0 0 8px 0;font-size:1.1rem}
-    .grid{display:grid;grid-template-columns: 1fr 1fr;gap:16px}
-    .card{
-      background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25)
-    }
-    label{display:block;font-size:.9rem;margin:8px 0 6px;color:var(--muted)}
-    input,textarea,button{
-      width:100%;padding:12px;border-radius:12px;border:1px solid #263244;
-      background:#0b1220;color:var(--text)
-    }
-    textarea{min-height:90px;resize:vertical}
-    button{
-      cursor:pointer;border:none;background:linear-gradient(180deg,var(--b),var(--b2));
-      font-weight:600;letter-spacing:.2px;transition:transform .05s ease, opacity .2s ease
-    }
-    button.ghost{background:#0b1220;border:1px solid #22304d}
-    button:active{transform:translateY(1px)}
-    .row{display:flex;gap:8px;align-items:center}
-    .row > *{flex:1}
-    .muted{color:var(--muted);font-size:.9rem}
-    .ok{color:var(--ok)} .err{color:var(--err)}
-    .list-header{display:flex;gap:8px;align-items:center;margin:8px 0}
-    .badge{font-size:.75rem;border:1px solid #263244;border-radius:999px;padding:6px 10px}
-    ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:360px;overflow:auto}
-    li{background:#0b1220;border:1px solid #22304d;border-radius:12px;padding:12px;display:grid;gap:6px}
-    .addr{color:#cbd5e1}
-    #map{height:320px;border-radius:16px;border:1px solid #22304d}
-    .top-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:10px}
-    .pill{max-width:280px}
-    .footer{padding:24px 0;color:var(--muted);text-align:center}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-  </style>
+  <!-- Firebase (compat) y config -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <!-- FullCalendar (LOCAL) -->
+  <link href="./vendor/fullcalendar/main.min.css" rel="stylesheet" />
+  <script src="./vendor/fullcalendar/index.global.min.js"></script>
+
+  <!-- Leaflet (solo CSS; el JS va al final) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
 </head>
+
 <body>
-  <header>
-    <div class="wrap">
-      <h1>📘 Cáritas CNC — Registro</h1>
-      <div class="muted">Registro de familias con búsqueda y mapa (Leaflet + Nominatim) + Pendientes.</div>
-    </div>
+  <header class="app-header">
+    <h1>Cáritas CNC</h1>
+    <nav>
+      <button type="button" onclick="showSection('inicio')">Inicio</button>
+      <button type="button" onclick="showSection('registro')">Registro</button>
+      <button type="button" onclick="showSection('contacto')">Contacto</button>
+      <button type="button" onclick="showSection('administracion')">Administración</button>
+      <button type="button" id="btn-login" onclick="goLogin()">Iniciar sesión</button>
+      <button type="button" id="btn-logout" style="display:none;" onclick="logout()">Cerrar sesión</button>
+    </nav>
   </header>
 
-  <main class="wrap" style="padding-top:16px;">
-    <div class="grid">
-      <!-- =================== FORMULARIO FAMILIAS =================== -->
-      <section class="card">
-        <h2>Nueva familia</h2>
-        <form id="familia-form">
-          <label for="nombre">Nombre de familia</label>
-          <input id="nombre" name="nombre" placeholder="Ej. Familia García" required>
+  <!-- INICIO -->
+  <section id="inicio" class="seccion active">
+    <h2>Bienvenido ❤️</h2>
+    <p>Gracias por usar <b>Cáritas CNC</b>. Desde aquí puedes registrar nuevas familias y gestionar tareas internas del grupo.</p>
+  </section>
 
-          <label for="direccion">Dirección (con sugerencias)</label>
-          <div class="row">
-            <input id="direccion" name="direccion" placeholder="Calle, número, distrito..."
-                   autocomplete="off" list="dl-direcciones" required>
-            <button type="button" id="btn-ver-mapa" title="Buscar y centrar">📍 Ver en mapa</button>
-          </div>
-          <datalist id="dl-direcciones"></datalist>
+  <!-- REGISTRO -->
+  <section id="registro" class="seccion">
+    <h2>Registro de Familias</h2>
+    <div id="msg"></div>
 
-          <label for="telefono">Teléfono</label>
-          <input id="telefono" name="telefono" placeholder="Ej. 999 888 777">
+    <form id="familiaForm" enctype="multipart/form-data">
+      <label>Nombres y Apellidos*</label>
+      <input type="text" name="nombres_apellidos" required />
 
-          <label for="observaciones">Observaciones</label>
-          <textarea id="observaciones" name="observaciones" placeholder="Notas adicionales..."></textarea>
+      <label>DNI*</label>
+      <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
 
-          <div class="top-actions">
-            <button type="submit">Guardar</button>
-            <span id="form-msg" class="muted"></span>
-          </div>
-        </form>
+      <label>Apellido Familia*</label>
+      <input type="text" name="apellido_familia" required />
 
-        <div style="margin-top:14px">
-          <div id="map"></div>
-        </div>
-      </section>
+      <label>Dirección* (con sugerencias)</label>
+      <div class="row">
+        <input type="text" id="reg-direccion" name="direccion" list="dl-direcciones" autocomplete="off" required />
+        <button type="button" class="submit-btn" id="btn-ver-mapa">📍 Ver en mapa</button>
+      </div>
+      <datalist id="dl-direcciones"></datalist>
 
-      <!-- =================== LISTA FAMILIAS =================== -->
-      <section class="card">
-        <h2>Familias registradas</h2>
-        <div class="list-header">
-          <input id="buscador" class="pill" placeholder="🔎 Buscar por nombre o dirección..." />
-          <button id="btn-refrescar" class="ghost" style="max-width:140px">↻ Actualizar</button>
-          <span id="contador" class="badge">0 resultados</span>
-        </div>
-        <ul id="lista"></ul>
-        <div class="muted" style="margin-top:8px;">Consejo: escribe al menos 2 letras para filtrar resultados.</div>
-      </section>
+      <label>Fecha de Registro*</label>
+      <input type="date" name="fecha_registro" required />
+
+      <label>Teléfono*</label>
+      <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+
+      <label>Observaciones</label>
+      <textarea name="observaciones"></textarea>
+
+      <label>Adjuntar documento</label>
+      <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
+
+      <label><input type="checkbox" required> Acepto los términos y condiciones</label>
+      <button type="submit" class="submit-btn">Registrar</button>
+    </form>
+
+    <div style="margin-top:12px">
+      <div id="map" style="height:320px;border-radius:14px;border:1px solid #e6e6e6;background:#f6f7f9"></div>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section id="contacto" class="seccion">
+    <h2>Contacto</h2>
+    <p>Email: contacto@caritas.org</p>
+    <p>Teléfono: +51 999 888 777</p>
+  </section>
+
+  <!-- ADMINISTRACIÓN -->
+  <section id="administracion" class="seccion">
+    <h2>Administración</h2>
+
+    <div style="display:flex; gap:.5rem; margin:.5rem 0; flex-wrap:wrap;">
+      <button type="button" class="submit-btn" onclick="showSubSection('pendientes')">✅ Pendientes de grupo</button>
+      <button type="button" class="submit-btn" onclick="showSubSection('agendamiento')">🗓️ Agenda</button>
+      <button type="button" id="btn-admin-familias" class="submit-btn hidden" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
     </div>
 
-    <!-- =================== PENDIENTES =================== -->
-    <section class="card" id="pendientes-card" style="margin-top:16px">
-      <h2>📝 Pendientes</h2>
+    <!-- PENDIENTES -->
+    <div id="pendientes" class="subsection" style="display:none; margin-top:1rem;">
+      <h3>Pendientes de grupo</h3>
+      <p>Las tareas pendientes se almacenan en Supabase; puedes editarlas aquí y guardarlas.</p>
 
-      <form id="pend-form" class="row" style="margin-bottom:10px">
-        <input id="pend-descripcion" placeholder="Nueva tarea… (Enter para guardar)" required />
-        <button type="submit" style="max-width:180px">Agregar</button>
-      </form>
-
-      <div class="list-header">
-        <span id="pend-contador" class="badge">0 tareas</span>
-        <span class="muted">Haz clic en el texto para editar; marca el ☐ para completar.</span>
+      <div style="display:flex; gap:.5rem; margin:.5rem 0;">
+        <button class="submit-btn" type="button" onclick="addPendRow()">➕ Añadir fila</button>
+        <button class="submit-btn" type="button" onclick="savePendientes()">💾 Guardar cambios</button>
+        <span id="pendientesStatus" style="margin-left:.5rem;"></span>
       </div>
 
-      <ul id="pend-lista"></ul>
-    </section>
+      <table id="pendientesTable">
+        <thead>
+          <tr>
+            <th style="width:70%;">Descripción (editable)</th>
+            <th style="width:15%;">Hecho</th>
+            <th style="width:15%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-    <div class="footer">PWA lista • OpenStreetMap/Leaflet • Geocodificación Nominatim • Supabase</div>
-  </main>
+      <div id="pendientesError" style="color:#b00020; margin-top:.5rem;"></div>
+    </div>
 
-  <!-- =================== APP SCRIPT =================== -->
-  <script type="module">
-    import { supabase } from './supabase-config.js';
+    <!-- CALENDARIO -->
+    <div id="agendamiento" class="subsection" style="display:none; margin-top:1rem;">
+      <h3>Agenda</h3>
+      <div id="calendar"></div>
 
-    // --------- Referencias DOM (familias) ---------
-    const form = document.getElementById('familia-form');
-    const msg = document.getElementById('form-msg');
-    const lista = document.getElementById('lista');
-    const buscador = document.getElementById('buscador');
-    const contador = document.getElementById('contador');
-    const btnRefrescar = document.getElementById('btn-refrescar');
-    const btnVerMapa = document.getElementById('btn-ver-mapa');
-    const direccionInput = document.getElementById('direccion');
-    const dlDirecciones = document.getElementById('dl-direcciones');
+      <!-- Modal Evento (CRUD) -->
+      <div id="event-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; align-items:center; justify-content:center;">
+        <div style="background:#fff; color:#1b1b1b; width:min(520px,92vw); border-radius:14px; border:1px solid #e7e7e7; box-shadow:0 18px 40px rgba(0,0,0,.25);">
+          <div style="padding:14px 16px; border-bottom:1px solid #eee; font-weight:700">Evento</div>
+          <form id="event-form" style="padding:14px 16px; display:grid; gap:10px">
+            <input type="hidden" id="ev-id" />
+            <label>Título
+              <input id="ev-title" required />
+            </label>
+            <label>Inicio
+              <input id="ev-start" type="datetime-local" required />
+            </label>
+            <label>Fin (opcional)
+              <input id="ev-end" type="datetime-local" />
+            </label>
+            <label style="display:flex; gap:.5rem; align-items:center;">
+              <input id="ev-allday" type="checkbox" />
+              Todo el día
+            </label>
 
-    // --------- Referencias DOM (pendientes) ---------
-    const pendForm = document.getElementById('pend-form');
-    const pendDesc = document.getElementById('pend-descripcion');
-    const pendLista = document.getElementById('pend-lista');
-    const pendContador = document.getElementById('pend-contador');
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px">
+              <button type="button" id="ev-delete" class="submit-btn" style="background:#fff; color:#1b1b1b; border:1px solid #e0e0e0">🗑️ Borrar</button>
+              <button type="button" id="ev-cancel" class="submit-btn" style="background:#fff; color:#1b1b1b; border:1px solid #e0e0e0">Cancelar</button>
+              <button type="submit" class="submit-btn">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- /Modal -->
+    </div>
 
-    // --------- Estado ---------
-    let familias = [];
-    let pendientes = [];
-    let map, marker; // Leaflet
+    <!-- FAMILIAS (SOLO LOGUEADO) -->
+    <div id="familiasAdmin" class="subsection" style="display:none; margin-top:1rem;">
+      <h3>Familias registradas</h3>
+      <p class="muted" id="familiasNotice" style="display:none;">Debes iniciar sesión para ver esta información.</p>
 
-    // ======================= MAPA (Leaflet) =======================
-    function initMap() {
-      map = L.map('map', {
-        center: [-12.0464, -77.0428], // Lima
-        zoom: 12,
-        zoomControl: true
-      });
+      <div class="row" style="margin:.5rem 0;">
+        <input id="fam-search" placeholder="🔎 Buscar por nombres, apellido, dirección o DNI…" />
+        <button type="button" class="submit-btn" id="fam-refresh">↻ Actualizar</button>
+        <span class="muted" id="fam-count"></span>
+      </div>
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contrib.'
-      }).addTo(map);
-    }
+      <table id="familiasAdminTable">
+        <thead>
+          <tr>
+            <th>Nombres</th><th>DNI</th><th>Apellido</th><th>Dirección</th>
+            <th>Fecha</th><th>Teléfono</th><th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-    function centerMap(lat, lng, label = '') {
-      const pos = [lat, lng];
-      map.setView(pos, 16);
-      if (!marker) {
-        marker = L.marker(pos, { title: label }).addTo(map);
+      <div id="familiasAdminError" class="error" style="display:none;margin-top:.5rem;">No se pudo cargar el listado.</div>
+    </div>
+  </section>
+
+  <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
+
+  <!-- ================== JS ================== -->
+  <script>
+  // --- Supabase client
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+  // --- Navegación
+  function showSection(id) {
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    if (id === 'administracion') showSubSection('pendientes');
+  }
+
+  function showSubSection(id) {
+    document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // Gate de autenticación para Familias
+    if (id === 'familiasAdmin') {
+      const user = (window.firebase && firebase.auth) ? firebase.auth().currentUser : null;
+      const notice = document.getElementById('familiasNotice');
+      if (!user) {
+        notice.style.display = 'block';
+        el.style.display = 'block';
+        const tbody = document.querySelector('#familiasAdminTable tbody');
+        if (tbody) tbody.innerHTML = '';
+        document.getElementById('fam-count').textContent = '';
+        return;
       } else {
-        marker.setLatLng(pos);
+        notice.style.display = 'none';
+        el.style.display = 'block';
+        loadFamiliasAdmin();
+        return;
       }
-      if (label) marker.bindPopup(label).openPopup();
     }
 
-    // ======================= NOMINATIM =======================
-    async function geocodeAddress(q, limit = 1) {
-      const url = new URL('https://nominatim.openstreetmap.org/search');
-      url.searchParams.set('format', 'json');
-      url.searchParams.set('q', q);
-      url.searchParams.set('addressdetails', '1');
-      url.searchParams.set('limit', String(limit));
-      const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-      if (!resp.ok) throw new Error('Nominatim error');
-      return resp.json();
+    // Mostrar primero, luego inicializar dependientes de visibilidad
+    el.style.display = 'block';
+    if (id === 'pendientes') loadPendientes();
+    if (id === 'agendamiento') initCalendar();
+  }
+
+  function goLogin(){ window.location.href = 'login.html'; }
+  function logout(){
+    const fbAuth = (typeof auth !== 'undefined' && auth) ? auth : (firebase.auth ? firebase.auth() : null);
+    if (fbAuth) {
+      fbAuth.signOut().then(() => { updateAuthUI(null); showSection('inicio'); });
+    }
+  }
+
+  function updateAuthUI(user) {
+    document.getElementById('btn-login').style.display = user ? 'none' : 'inline-block';
+    document.getElementById('btn-logout').style.display = user ? 'inline-block' : 'none';
+    const btnFam = document.getElementById('btn-admin-familias');
+    if (btnFam) btnFam.classList.toggle('hidden', !user);
+    if (!user && document.getElementById('familiasAdmin').style.display === 'block') {
+      const tbody = document.querySelector('#familiasAdminTable tbody');
+      if (tbody) tbody.innerHTML = '';
+      document.getElementById('fam-count').textContent = '';
+      document.getElementById('familiasNotice').style.display = 'block';
+    }
+  }
+
+  // --- Registro (a tu API Render)
+  document.getElementById('familiaForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const msgDiv = document.getElementById('msg');
+    msgDiv.innerHTML = '';
+    const formData = new FormData(this);
+    try {
+      const res = await fetch('https://api-familias.onrender.com/familias', { method:'POST', body: formData });
+      const data = await res.json();
+      if (res.ok) { msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>"; this.reset(); }
+      else { msgDiv.innerHTML = "<div class='error'>❌ Error al registrar</div>"; console.error(data); }
+    } catch(err){
+      msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
+    }
+  });
+
+  // --- Leaflet + Nominatim
+  let map, marker;
+  function initMap() {
+    map = L.map('map', { center: [-12.0464, -77.0428], zoom: 12 });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  }
+  function centerMap(lat, lng, label='') {
+    const pos = [lat, lng];
+    map.setView(pos, 16);
+    if (!marker) marker = L.marker(pos).addTo(map);
+    else marker.setLatLng(pos);
+    if (label) marker.bindPopup(label).openPopup();
+  }
+  async function geocodeAddress(q, limit=1){
+    const u = new URL('https://nominatim.openstreetmap.org/search');
+    u.searchParams.set('format','json'); u.searchParams.set('q', q);
+    u.searchParams.set('addressdetails','1'); u.searchParams.set('limit', String(limit));
+    const r = await fetch(u, { headers: { 'Accept-Language':'es' } });
+    if (!r.ok) throw new Error('Nominatim error');
+    return r.json();
+  }
+  const dirInput = document.getElementById('reg-direccion');
+  const dl = document.getElementById('dl-direcciones');
+  let sugTimer;
+  dirInput.addEventListener('input', () => {
+    clearTimeout(sugTimer);
+    const q = dirInput.value.trim();
+    if (q.length < 3) { dl.innerHTML = ''; return; }
+    sugTimer = setTimeout(async () => {
+      try {
+        const results = await geocodeAddress(q, 5);
+        dl.innerHTML = results.map(r => `<option value="${escapeHtml(r.display_name)}"></option>`).join('');
+      } catch {}
+    }, 350);
+  });
+  document.getElementById('btn-ver-mapa').addEventListener('click', async () => {
+    const q = dirInput.value.trim(); if (!q) return;
+    try {
+      const [r] = await geocodeAddress(q, 1) || [];
+      if (r) centerMap(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
+      else alert('No se encontró esa dirección.');
+    } catch { alert('Error al buscar la dirección.'); }
+  });
+
+  // --- Utils
+  function escapeHtml(s=''){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // --- Pendientes (Supabase)
+  function trPendiente({ id, descripcion = "", estado = false } = {}) {
+    const tr = document.createElement('tr');
+    if (id != null) tr.dataset.id = id;
+    tr.innerHTML = `
+      <td contenteditable="true">${escapeHtml(descripcion ?? "")}</td>
+      <td style="text-align:center;"><input type="checkbox" ${estado ? 'checked' : ''}></td>
+      <td style="text-align:center;"><button type="button" onclick="deletePendRow(this)">🗑️</button></td>
+    `;
+    return tr;
+  }
+  function addPendRow(){ document.querySelector('#pendientesTable tbody').appendChild(trPendiente({ descripcion:"", estado:false })); }
+  function deletePendRow(btn){ btn.closest('tr').remove(); }
+
+  async function loadPendientes(){
+    const tbody = document.querySelector('#pendientesTable tbody');
+    const status = document.getElementById('pendientesStatus');
+    const err = document.getElementById('pendientesError');
+    status.textContent = '⏳ Cargando...'; err.textContent = '';
+    try {
+      const { data, error } = await supabaseClient.from('pendientes').select('id, descripcion, estado').order('id', { ascending: true });
+      if (error) throw error;
+      tbody.innerHTML = '';
+      data.forEach(item => tbody.appendChild(trPendiente(item)));
+      status.textContent = `✔ ${data.length} tareas`;
+    } catch(e){
+      err.textContent = 'No se pudieron cargar los pendientes.'; status.textContent = '';
+    }
+  }
+  async function savePendientes(){
+    const tbody = document.querySelector('#pendientesTable tbody');
+    const status = document.getElementById('pendientesStatus');
+    const err = document.getElementById('pendientesError');
+    const rows = [...tbody.querySelectorAll('tr')];
+    const payload = rows.map(tr => {
+      const [tdDesc, tdCheck] = tr.children;
+      const id = tr.dataset.id ? Number(tr.dataset.id) : undefined;
+      const descripcion = (tdDesc.textContent || '').trim();
+      const estado = tdCheck.querySelector('input[type="checkbox"]').checked;
+      const obj = { descripcion, estado };
+      if (id) obj.id = id;
+      return obj;
+    });
+    status.textContent = '💾 Guardando...'; err.textContent = '';
+    try {
+      const { data, error } = await supabaseClient.from('pendientes').upsert(payload, { onConflict: 'id' }).select('id, descripcion, estado');
+      if (error) throw error;
+      tbody.innerHTML = ''; data.sort((a,b)=>a.id-b.id).forEach(item => tbody.appendChild(trPendiente(item)));
+      status.textContent = '✅ Cambios guardados';
+    } catch(e){ err.textContent = 'No se pudieron guardar los cambios.'; status.textContent = ''; }
+  }
+
+  // --- Familias (Admin)
+  let familiasAdminData = [];
+  const famSearch = () => (document.getElementById('fam-search').value || '').trim().toLowerCase();
+
+  function renderFamiliasAdmin(){
+    const q = famSearch();
+    const tbody = document.querySelector('#familiasAdminTable tbody');
+    const rows = (q.length >= 2)
+      ? familiasAdminData.filter(f =>
+          (f.nombres_apellidos||'').toLowerCase().includes(q) ||
+          (f.apellido_familia||'').toLowerCase().includes(q) ||
+          (f.direccion||'').toLowerCase().includes(q) ||
+          (String(f.dni_solicitante||'')).includes(q))
+      : familiasAdminData;
+
+    tbody.innerHTML = '';
+    rows.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Nombres">${escapeHtml(f.nombres_apellidos||'')}</td>
+        <td data-label="DNI">${escapeHtml(f.dni_solicitante||'')}</td>
+        <td data-label="Apellido">${escapeHtml(f.apellido_familia||'')}</td>
+        <td data-label="Dirección">${escapeHtml(f.direccion||'')}</td>
+        <td data-label="Fecha">${escapeHtml(f.fecha_registro||'')}</td>
+        <td data-label="Teléfono">${escapeHtml(f.telefono_contacto||'')}</td>
+        <td data-label="Obs.">${escapeHtml(f.observaciones||'')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('fam-count').textContent = `${rows.length} registro${rows.length===1?'':'s'}`;
+  }
+
+  async function loadFamiliasAdmin(){
+    const errBox = document.getElementById('familiasAdminError');
+    errBox.style.display = 'none';
+    familiasAdminData = [];
+    try {
+      const { data, error } = await supabaseClient
+        .from('familias')
+        .select('id, nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones')
+        .order('id', { ascending: true });
+      if (error) throw error;
+      familiasAdminData = (data || []);
+      renderFamiliasAdmin();
+      return;
+    } catch (e) {}
+    try {
+      const res = await fetch('https://api-familias.onrender.com/familias');
+      if (!res.ok) throw new Error('API Render error');
+      const data = await res.json();
+      familiasAdminData = (Array.isArray(data) ? data : (data.items || []))
+        .map(x => ({
+          nombres_apellidos: x.nombres_apellidos || x.nombres || '',
+          dni_solicitante: x.dni_solicitante || x.dni || '',
+          apellido_familia: x.apellido_familia || x.apellido || '',
+          direccion: x.direccion || '',
+          fecha_registro: x.fecha_registro || x.fecha || '',
+          telefono_contacto: x.telefono_contacto || x.telefono || '',
+          observaciones: x.observaciones || x.obs || ''
+        }));
+      renderFamiliasAdmin();
+    } catch (e) {
+      errBox.style.display = 'block';
+    }
+  }
+
+  document.getElementById('fam-refresh').addEventListener('click', loadFamiliasAdmin);
+  document.getElementById('fam-search').addEventListener('input', renderFamiliasAdmin);
+
+  // --- Calendario (LOCAL + CRUD Supabase)
+  // Mapea filas de la tabla 'eventos' a objetos FullCalendar
+  function mapEventoToFC(row){
+    return {
+      id: row.id,
+      title: row.titulo ?? row.title ?? row.nombre ?? 'Evento',
+      start: row.fecha_inicio ?? row.start ?? row.inicio ?? row.fecha ?? row.date,
+      end:   row.fecha_fin    ?? row.end   ?? row.fin   ?? null,
+      allDay: !!(row.all_day ?? row.allday ?? row.todo_dia ?? false),
+    };
+  }
+
+  async function fcEventSource(info, success, failure){
+    try {
+      // Si prefieres filtrar por rango: añade .gte('fecha_inicio', info.startStr).lte('fecha_inicio', info.endStr)
+      const cols = 'id, titulo, fecha_inicio, fecha_fin, all_day';
+      const { data, error } = await supabaseClient
+        .from('eventos')
+        .select(cols)
+        .order('fecha_inicio', { ascending: true });
+      if (error) throw error;
+      success((data || []).map(mapEventoToFC));
+    } catch (e) {
+      console.error('Cargar eventos:', e);
+      failure(e);
+    }
+  }
+
+  // Modal CRUD
+  const $modal = document.getElementById('event-modal');
+  const $form  = document.getElementById('event-form');
+  const $id    = document.getElementById('ev-id');
+  const $title = document.getElementById('ev-title');
+  const $start = document.getElementById('ev-start');
+  const $end   = document.getElementById('ev-end');
+  const $all   = document.getElementById('ev-allday');
+  const $del   = document.getElementById('ev-delete');
+  const $cancel= document.getElementById('ev-cancel');
+
+  function openEventModal({ id=null, title='', start=null, end=null, allDay=false } = {}){
+    $id.value = id ?? '';
+    $title.value = title ?? '';
+    $all.checked = !!allDay;
+
+    const toLocal = (d) => {
+      if (!d) return '';
+      const dt = (typeof d === 'string') ? new Date(d) : d;
+      const off = dt.getTimezoneOffset();
+      const dt2 = new Date(dt.getTime() - off*60*1000);
+      return dt2.toISOString().slice(0,16);
+    };
+
+    $start.value = start ? toLocal(start) : '';
+    $end.value   = end   ? toLocal(end)   : '';
+    if (allDay && start && typeof start === 'string' && start.length === 10) {
+      $start.value = start + 'T00:00';
     }
 
-    // Sugerencias con <datalist>
-    let sugTimer;
-    direccionInput.addEventListener('input', () => {
-      clearTimeout(sugTimer);
-      const q = direccionInput.value.trim();
-      if (q.length < 3) { dlDirecciones.innerHTML = ''; return; }
-      sugTimer = setTimeout(async () => {
-        try {
-          const results = await geocodeAddress(q, 5);
-          dlDirecciones.innerHTML = results.map(r => `<option value="${escapeHtml(r.display_name)}"></option>`).join('');
-        } catch {}
-      }, 350);
-    });
+    $del.style.display = id ? 'inline-block' : 'none';
+    $modal.style.display = 'flex';
+  }
+  function closeEventModal(){ $modal.style.display='none'; $form.reset(); }
 
-    btnVerMapa.addEventListener('click', async () => {
-      const addr = direccionInput.value.trim();
-      if (!addr) return;
-      try {
-        const results = await geocodeAddress(addr, 1);
-        if (results && results[0]) {
-          const { lat, lon, display_name } = results[0];
-          centerMap(parseFloat(lat), parseFloat(lon), display_name);
-        } else {
-          alert('No se encontró esa dirección.');
-        }
-      } catch {
-        alert('Error al buscar la dirección.');
-      }
-    });
+  // Guardar (insert/update)
+  $form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      titulo: $title.value.trim(),
+      all_day: $all.checked,
+      fecha_inicio: $start.value ? new Date($start.value).toISOString() : null,
+      fecha_fin:    $end.value   ? new Date($end.value).toISOString()   : null
+    };
 
-    // ======================= SUPABASE: FAMILIAS =======================
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.textContent = 'Guardando...';
-      try {
-        const payload = {
-          nombre: document.getElementById('nombre').value.trim(),
-          direccion: direccionInput.value.trim(),
-          telefono: document.getElementById('telefono').value.trim(),
-          observaciones: document.getElementById('observaciones').value.trim(),
-          creado_en: new Date().toISOString()
-        };
-        const { error } = await supabase.from('familias').insert([payload]);
+    try {
+      if ($id.value) {
+        const { error } = await supabaseClient.from('eventos').update(payload).eq('id', Number($id.value));
         if (error) throw error;
-        msg.textContent = '✅ Guardado'; msg.className = 'ok';
-        form.reset();
-        await cargarFamilias(true);
-      } catch (err) {
-        console.error('Error insert:', err);
-        msg.textContent = '❌ Error al guardar'; msg.className = 'err';
-      } finally {
-        setTimeout(()=>{ msg.textContent=''; msg.className='muted';}, 1800);
-      }
-    });
-
-    async function cargarFamilias() {
-      try {
-        btnRefrescar.disabled = true; btnRefrescar.textContent = 'Actualizando...';
-        const { data, error } = await supabase
-          .from('familias')
-          .select('id,nombre,direccion,telefono,observaciones,creado_en')
-          .order('id', { ascending: true });
+      } else {
+        const { error } = await supabaseClient.from('eventos').insert([payload]);
         if (error) throw error;
-        familias = data || [];
-        renderFamilias();
-      } catch (err) {
-        console.error('Error load familias:', err);
-        alert('Error al cargar familias. Revisa Supabase-config o RLS.');
-      } finally {
-        btnRefrescar.disabled = false; btnRefrescar.textContent = '↻ Actualizar';
       }
+      closeEventModal();
+      if (calendarInstance) calendarInstance.refetchEvents();
+    } catch (err) {
+      alert('No se pudo guardar el evento.');
+      console.error('Guardar evento:', err);
+    }
+  });
+
+  // Borrar
+  $del.addEventListener('click', async () => {
+    if (!$id.value) return;
+    if (!confirm('¿Eliminar este evento?')) return;
+    try {
+      const { error } = await supabaseClient.from('eventos').delete().eq('id', Number($id.value));
+      if (error) throw error;
+      closeEventModal();
+      if (calendarInstance) calendarInstance.refetchEvents();
+    } catch (err) {
+      alert('No se pudo borrar el evento.');
+    }
+  });
+
+  // Cancelar / cerrar clic fuera
+  $cancel.addEventListener('click', closeEventModal);
+  $modal.addEventListener('click', (e) => { if (e.target === $modal) closeEventModal(); });
+
+  // Instancia del calendario
+  let calendarInstance = null;
+  function initCalendar(){
+    const el = document.getElementById('calendar');
+    if (!el) return;
+
+    if (calendarInstance) {
+      requestAnimationFrame(()=> calendarInstance.render());
+      return;
     }
 
-    function renderFamilias() {
-      const q = buscador.value.trim().toLowerCase();
-      const filtradas = q.length >= 2
-        ? familias.filter(f =>
-            (f.nombre || '').toLowerCase().includes(q) ||
-            (f.direccion || '').toLowerCase().includes(q)
-          )
-        : familias;
+    if (!el.style.minHeight) el.style.minHeight = '520px';
 
-      lista.innerHTML = '';
-      filtradas.forEach(f => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
-            <strong>${escapeHtml(f.nombre || '(sin nombre)')}</strong>
-            <span class="muted" style="font-size:.8rem">${formatDate(f.creado_en)}</span>
-          </div>
-          <div class="addr">📍 ${escapeHtml(f.direccion || '—')}</div>
-          ${f.telefono ? `<div>📞 ${escapeHtml(f.telefono)}</div>` : ''}
-          ${f.observaciones ? `<div class="muted">📝 ${escapeHtml(f.observaciones)}</div>` : ''}
-          <div class="row" style="margin-top:8px">
-            <button class="ghost" data-geo="${encodeURIComponent(f.direccion || '')}">📍 Ver en mapa</button>
-            <button class="ghost" data-del="${f.id}">🗑️ Eliminar</button>
-          </div>
-        `;
-        lista.appendChild(li);
-      });
+    requestAnimationFrame(() => {
+      calendarInstance = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        selectable: true,
+        editable: true,
+        height: 'auto',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: fcEventSource,
 
-      // Acciones por item
-      lista.querySelectorAll('button[data-geo]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const addr = decodeURIComponent(btn.dataset.geo || '');
-          if (!addr) return;
+        // Crear por selección
+        select: (info) => {
+          openEventModal({
+            title: '',
+            start: info.start,
+            end: info.end,
+            allDay: info.allDay
+          });
+          calendarInstance.unselect();
+        },
+
+        // Editar al hacer clic
+        eventClick: (arg) => {
+          const e = arg.event;
+          openEventModal({
+            id: e.id,
+            title: e.title,
+            start: e.start,
+            end: e.end,
+            allDay: e.allDay
+          });
+        },
+
+        // Arrastrar / redimensionar
+        eventChange: async (arg) => {
+          const e = arg.event;
           try {
-            const results = await geocodeAddress(addr, 1);
-            if (results && results[0]) {
-              const { lat, lon, display_name } = results[0];
-              centerMap(parseFloat(lat), parseFloat(lon), display_name);
-            }
-          } catch {}
-        });
-      });
-
-      lista.querySelectorAll('button[data-del]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          if (!confirm('¿Eliminar este registro?')) return;
-          const id = Number(btn.getAttribute('data-del'));
-          try {
-            const { error } = await supabase.from('familias').delete().eq('id', id);
+            const { error } = await supabaseClient
+              .from('eventos')
+              .update({
+                fecha_inicio: e.start ? e.start.toISOString() : null,
+                fecha_fin:    e.end   ? e.end.toISOString()   : null,
+                all_day:      !!e.allDay
+              })
+              .eq('id', Number(e.id));
             if (error) throw error;
-            familias = familias.filter(x => x.id !== id);
-            renderFamilias();
           } catch (err) {
-            console.error('Error delete:', err);
-            alert('No se pudo eliminar (verifica RLS).');
+            alert('No se pudo actualizar la fecha del evento.');
+            arg.revert();
           }
-        });
+        }
       });
+      calendarInstance.render();
+    });
+  }
 
-      contador.textContent = `${filtradas.length} resultado${filtradas.length===1?'':'s'}`;
+  // --- Inicio
+  document.addEventListener('DOMContentLoaded', () => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js", { updateViaCache: "none" })
+        .then(reg => reg.update().catch(()=>{})).catch(()=>{});
     }
-
-    buscador.addEventListener('input', renderFamilias);
-    btnRefrescar.addEventListener('click', () => cargarFamilias(true));
-
-    // ======================= SUPABASE: PENDIENTES =======================
-    async function cargarPendientes() {
-      try {
-        const { data, error } = await supabase
-          .from('pendientes')
-          .select('id, descripcion, estado, created_at')
-          .order('id', { ascending: true });
-        if (error) throw error;
-        pendientes = data || [];
-        renderPendientes();
-      } catch (err) {
-        console.error('Error load pendientes:', err);
-        alert('Error al cargar pendientes. Revisa la tabla/políticas RLS.');
-      }
-    }
-
-    function renderPendientes() {
-      pendLista.innerHTML = '';
-      pendientes.forEach(p => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div class="row" style="align-items:center; gap:10px">
-            <input type="checkbox" data-check="${p.id}" ${p.estado ? 'checked' : ''} style="flex:0 0 auto; width:20px; height:20px" />
-            <input type="text" class="pend-input" data-edit="${p.id}"
-                   value="${escapeHtml(p.descripcion)}"
-                   style="flex:1; ${p.estado ? 'text-decoration: line-through; opacity:.7;' : ''}">
-            <button class="ghost" data-del="${p.id}" style="flex:0 0 auto;max-width:120px">🗑️ Borrar</button>
-          </div>
-        `;
-        pendLista.appendChild(li);
-      });
-      pendContador.textContent = `${pendientes.length} tarea${pendientes.length===1?'':'s'}`;
-    }
-
-    pendForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const desc = pendDesc.value.trim();
-      if (!desc) return;
-      try {
-        const { data, error } = await supabase
-          .from('pendientes')
-          .insert([{ descripcion: desc, estado: false }])
-          .select();
-        if (error) throw error;
-        if (data && data[0]) pendientes.push(data[0]);
-        pendDesc.value = '';
-        renderPendientes();
-      } catch (err) {
-        console.error('Error insert pendiente:', err);
-        alert('No se pudo agregar la tarea.');
-      }
-    });
-
-    // Toggle estado
-    pendLista.addEventListener('change', async (e) => {
-      const id = e.target.getAttribute('data-check');
-      if (!id) return;
-      const checked = !!e.target.checked;
-      try {
-        const { error } = await supabase
-          .from('pendientes')
-          .update({ estado: checked })
-          .eq('id', Number(id));
-        if (error) throw error;
-        const idx = pendientes.findIndex(x => x.id === Number(id));
-        if (idx >= 0) pendientes[idx].estado = checked;
-        renderPendientes();
-      } catch (err) {
-        console.error('Error toggle pendiente:', err);
-        alert('No se pudo actualizar el estado.');
-        e.target.checked = !checked;
-      }
-    });
-
-    // Guardar edición (Enter o al perder foco)
-    pendLista.addEventListener('keydown', async (e) => {
-      if (e.key !== 'Enter') return;
-      const input = e.target;
-      const id = input.getAttribute('data-edit');
-      if (!id) return;
-      e.preventDefault();
-      input.blur();
-    });
-
-    pendLista.addEventListener('blur', async (e) => {
-      const input = e.target;
-      const id = input.getAttribute('data-edit');
-      if (!id) return;
-
-      const nuevo = input.value.trim();
-      const p = pendientes.find(x => x.id === Number(id));
-      if (!p || nuevo === p.descripcion) return;
-
-      try {
-        const { error } = await supabase
-          .from('pendientes')
-          .update({ descripcion: nuevo })
-          .eq('id', Number(id));
-        if (error) throw error;
-        p.descripcion = nuevo;
-      } catch (err) {
-        console.error('Error update pendiente:', err);
-        alert('No se pudo guardar el texto.');
-        input.value = p.descripcion;
-      }
-    }, true);
-
-    // Borrar
-    pendLista.addEventListener('click', async (e) => {
-      const btn = e.target.closest('button[data-del]');
-      if (!btn) return;
-      const id = Number(btn.getAttribute('data-del'));
-      if (!confirm('¿Borrar esta tarea?')) return;
-      try {
-        const { error } = await supabase.from('pendientes').delete().eq('id', id);
-        if (error) throw error;
-        pendientes = pendientes.filter(x => x.id !== id);
-        renderPendientes();
-      } catch (err) {
-        console.error('Error delete pendiente:', err);
-        alert('No se pudo borrar.');
-      }
-    });
-
-    // ======================= UTILS =======================
-    function escapeHtml(s=''){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-    function formatDate(iso){ try{ const d=new Date(iso); return d.toLocaleString('es-PE'); }catch{ return '—';} }
-
-    // ======================= INIT =======================
     initMap();
-    cargarFamilias();
-    cargarPendientes();
 
-    // ======================= SERVICE WORKER =======================
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .catch(err => console.log('SW no registrado:', err));
-      });
+    if (window.firebase && window.firebase.auth) {
+      firebase.auth().onAuthStateChanged(user => { updateAuthUI(user); });
     }
+  });
   </script>
 
-  <!-- Leaflet JS (mapas) -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 </body>
 </html>
