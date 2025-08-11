@@ -18,7 +18,7 @@
   <script defer src="firebase-config.js"></script>
 
   <!-- Supabase SDK -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script defer src="supabase-config.js"></script>
 
   <!-- FullCalendar CSS (CDN fiable) -->
@@ -37,6 +37,15 @@
 
 <!-- FullCalendar JS (CDN confiable) -->
 <script defer src="https://unpkg.com/fullcalendar@6.1.8/index.global.min.js"></script>
+
+
+<!-- FullCalendar CSS (CDN confiable) -->
+<link href="https://unpkg.com/@fullcalendar/core@6.1.8/index.global.min.css" rel="stylesheet" />
+<link href="https://unpkg.com/@fullcalendar/daygrid@6.1.8/index.global.min.css" rel="stylesheet" />
+
+<!-- FullCalendar JS (CDN confiable) -->
+<script src="https://unpkg.com/@fullcalendar/core@6.1.8/index.global.min.js"></script>
+<script src="https://unpkg.com/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
 
 </head>
 
@@ -209,7 +218,8 @@
 
   <!-- ================== JS ================== -->
   <script>
-  // --- Supabase client
+  let calendarInstance = null;
+// --- Supabase client
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
   // --- Navegación
