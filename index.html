@@ -29,6 +29,36 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
+  .card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      width: 300px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .card h2, .card h3 {
+      margin-top: 0;
+    }
+    input, button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 8px;
+    }
+    button {
+      background: #007BFF; color: white;
+      border: none; cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .credenciales-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .qr-container {
+      text-align: center;
+      margin-top: 10px;
+    }
   /* Video de fondo pegado a toda la pantalla */
   #bg-video {
     position: fixed;
@@ -95,9 +125,10 @@
 <body>
 
   <!-- ====== Video de fondo global (VISIBLE EN TODAS LAS SECCIONES) ====== -->
-  <video id="bg-video" autoplay muted loop playsinline>
-    <source src="VIDEO_WEBM_URL" type="video/webm" />
-    <source src="VIDEO_MP4_URL" type="video/mp4" />
+  <video autoplay muted loop id="bg-video">
+    <source src="videos/fondo.webm" type="video/webm">
+    <source src="videos/fondo.mp4" type="video/mp4">
+    Tu navegador no soporta el video de fondo.
   </video>
   <div id="bg-overlay"></div>
 
@@ -106,7 +137,7 @@
     <h1><i class="fas fa-church"></i> Cáritas CNC</h1>
     <nav>
       <button type="button" onclick="showSection('inicio')" class="tabbtn">Inicio</button>
-      <button type="button" onclick="showSection('validar')" class="tabbtn">Validar</button>
+      <button type="button" onclick="showSection('credenciales')" class="tabbtn">Credenciales</button>
       <button type="button" onclick="showSection('registro')" class="tabbtn">Registro</button>
       <button type="button" onclick="showSection('contacto')" class="tabbtn">Contacto</button>
       <button type="button" onclick="showSection('administracion')" class="tabbtn">Administración</button>
@@ -147,16 +178,41 @@
     </div>
   </section>
 
-  <!-- ====== VALIDAR (acceso a validar.html externo si lo tienes) ====== -->
-  <section id="validar" class="seccion">
-    <div class="card">
-      <h2>Validar Credencial</h2>
-      <p>Escanea el código QR de la credencial del usuario para verificar su validez.</p>
-      <button class="submit-btn" onclick="window.location.href='validar.html'">
-        <i class="fa-solid fa-qrcode"></i> Ir a validar
-      </button>
+ <!-- ====== SECCIÓN DE CREDENCIALES ====== -->
+<section id="credenciales" class="seccion">
+  <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
+<main>
+   <!-- Generar credenciales -->
+  <div class="card">
+    <h3>Generar credenciales</h3>
+    <input type="email" id="email" placeholder="Correo">
+    <input type="password" id="password" placeholder="Contraseña">
+    <label for="foto-perfil">Subir foto de perfil:</label>
+    <input type="file" id="foto-perfil" accept="image/*">
+    <button id="crear-credenciales">Crear Usuario</button>
+    <div class="qr-container">
+      <canvas id="qr-canvas"></canvas>
     </div>
+    <button id="ver-credencial" style="display:none;">Ver Credencial</button>
+  </div>
+      </div>
+
+     <!-- Validar credencial -->
+  <div class="card">
+    <h2>Validar Credencial</h2>
+    <p>Escanea el código QR para verificar la validez.</p>
+    <button onclick="window.location.href='validar.html'">Ir a validar</button>
+  </div>
+
+    <br><br>
+    <button id="ver-credencial" class="submit-btn">
+      <i class="fa-solid fa-id-card"></i> Ver Credencial
+    </button>
   </section>
+  </main>
+
+
+
 
   <!-- ====== REGISTRO ====== -->
   <section id="registro" class="seccion">
@@ -279,6 +335,96 @@
   <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
 
 <!-- ================== JS ================== -->
+
+
+ <script type="module">
+  import { supabase } from './supabase-config.js';
+
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  const fotoInput = document.getElementById('foto-perfil');
+  const crearBtn = document.getElementById('crear-credenciales');
+  const qrCanvas = document.getElementById('qr-canvas');
+  const verCredencialBtn = document.getElementById('ver-credencial');
+
+  crearBtn.addEventListener('click', async () => {
+    try {
+      console.log("📌 Creando usuario en Supabase...");
+
+      if (!emailInput.value || !passInput.value) {
+        alert("Por favor complete correo y contraseña");
+        return;
+      }
+      if (!fotoInput.files.length) {
+        alert("Por favor seleccione una foto de perfil");
+        return;
+      }
+
+      // 1. Crear usuario en Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: emailInput.value,
+        password: passInput.value
+      });
+      if (authError) throw authError;
+
+      // 2. Subir foto a Supabase Storage
+      const userId = crypto.randomUUID();
+      const file = fotoInput.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${userId}.${fileExt}`;
+
+      const { error: uploadError } = await supabase
+        .storage
+        .from('fotos-perfil')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 3. Generar URL pública de la foto
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('fotos-perfil')
+        .getPublicUrl(filePath);
+
+      const fotoUrl = publicUrlData.publicUrl;
+
+      // 4. Guardar registro en tabla "credenciales"
+      const { error: insertError } = await supabase
+        .from('credenciales')
+        .insert([
+          { id: userId, email: emailInput.value, foto_url: fotoUrl }
+        ]);
+
+      if (insertError) throw insertError;
+
+      // 5. Generar QR con enlace a credencial
+      const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
+      await QRCode.toCanvas(qrCanvas, credencialUrl);
+
+      verCredencialBtn.style.display = "block";
+      verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
+
+      alert("✅ Usuario creado con éxito. QR generado.");
+    } catch (err) {
+      console.error("❌ Error inesperado:", err);
+      alert("Error: " + err.message);
+    }
+  });
+</script>
+
+    // === Botón para ver credencial ===
+    document.getElementById("ver-credencial").addEventListener("click", () => {
+      const qrImg = document.querySelector("#qrContainer img");
+      if (qrImg) {
+        const win = window.open("");
+        win.document.write(`<h1>Credencial</h1>`);
+        win.document.write(qrImg.outerHTML);
+      } else {
+        alert("No hay credencial generada todavía.");
+      }
+    });
+</script>
+
 <script>
   /* =============================
      Navegación entre secciones
@@ -289,6 +435,7 @@
     if (el) el.classList.add('active');
     if (id === 'administracion') showSubSection('pendientes');
   }
+  
 
   function showSubSection(id) {
     document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
