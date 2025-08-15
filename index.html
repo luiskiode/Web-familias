@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cáritas CNC – Gestión</title>
+  
 
   <!-- Estilos -->
   <link rel="stylesheet" href="styles.css" />
@@ -61,7 +62,9 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js" defer></script>
 </head>
 <body>
-
+<video autoplay muted loop id="video-fondo">
+  <source src="videos/fondo-rojo.mp4" type="video/mp4">
+</video>
 
 <header class="app-header">
     
@@ -273,7 +276,11 @@
   <!-- ================== JS ================== -->
   <script>
   // --- Supabase client
-  const Supabaseclient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+   const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+    const supabaseclient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+    console.log("✅ Supabase inicializado", supabaseClient);
 
   // --- Navegación
   function showSection(id) {
