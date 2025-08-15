@@ -1,133 +1,169 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cáritas CNC – Gestión</title>
-  
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cáritas CNC</title>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#b71c1c" />
+<!-- ====== Estilos propios ====== -->
+<link rel="stylesheet" href="styles.css" />
 
-  <!-- PWA opcional -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#b71c1c" />
+<!-- ====== Iconos ====== -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
 
-   <!-- Firebase (compat) y config -->
-  <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script defer src="firebase-config.js"></script>
+<!-- ====== Leaflet (Mapa) ====== -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  crossorigin=""
+/>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  crossorigin=""
+></script>
 
-  <!-- Supabase SDK -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="supabase-config.js"></script>
+<!-- ====== FullCalendar (CDN oficial) ====== -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-  <!-- FullCalendar CSS (CDN fiable) -->
-  <link href="https://unpkg.com/@fullcalendar/core@6.1.8/index.global.css" rel="stylesheet" />
-  <link href="https://unpkg.com/@fullcalendar/daygrid@6.1.8/index.global.css" rel="stylesheet" />
+<!-- ====== Supabase UMD (sin imports) ====== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
-  <!-- FullCalendar JS (LOCAL) -->
-  <script defer src="./vendor/fullcalendar/index.global.min.js"></script>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
-
-  <!-- Barra de estado conexión -->
-  <style>
-    #estado-conexion {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      color: white;
-      text-align: center;
-      padding: 5px;
-      font-size: 14px;
-      z-index: 9999;
-      font-weight: bold;
-    }
-    body {
-      padding-top: 30px;
-    }
-  </style>
-
-  <!-- Librerías externas -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js" defer></script>
+<style>
+  /* Video de fondo pegado a toda la pantalla */
+  #bg-video {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+    filter: brightness(0.45) saturate(1.2);
+    pointer-events: none;
+  }
+  /* Capa sutil encima del video para contraste */
+  #bg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.06), transparent 45%),
+                linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
+    pointer-events: none;
+  }
+  /* Ajustes mínimos si no tienes styles.css aún */
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  .app-header {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(183, 28, 28, 0.95); color:#fff;
+    border-bottom: 1px solid rgba(255,255,255,.2);
+    display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; flex-wrap:wrap;
+  }
+  .app-header h1 { margin:0; font-weight:800; font-size:1.25rem; letter-spacing:.2px; }
+  .app-header nav { display:flex; gap:.5rem; flex-wrap:wrap; }
+  .app-header nav button {
+    border:1px solid rgba(255,255,255,.35); background:transparent; color:#fff;
+    padding:.45rem .75rem; border-radius:999px; font-weight:600; cursor:pointer;
+  }
+  .seccion { display:none; padding:1rem; max-width:1000px; margin:1rem auto; }
+  .seccion.active { display:block; }
+  .card {
+    background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,.06);
+  }
+  .row{display:flex; gap:.5rem; align-items:center;}
+  input, textarea, select, button.submit-btn{
+    font:inherit; border-radius:12px;
+  }
+  input, textarea, select { width:100%; padding:.7rem .85rem; border:1px solid #dedede; background:#fff; }
+  .submit-btn{ border:0; background:linear-gradient(180deg,#b71c1c,#d32f2f); color:#fff; padding:.7rem 1rem; cursor:pointer; font-weight:700; }
+  table{ width:100%; border-collapse:separate; border-spacing:0 8px; }
+  thead th{ text-align:left; font-size:.9rem; color:#616b74; padding:.4rem .6rem; }
+  tbody tr{ background:#fff; border:1px solid #dedede; box-shadow:0 2px 8px rgba(0,0,0,.03);}
+  tbody td{ padding:.6rem; vertical-align:middle; }
+  footer {
+    margin-top:1rem; padding:1rem; text-align:center; color:#fff;
+    background: rgba(183, 28, 28, 0.95); border-top:1px solid rgba(255,255,255,.15);
+  }
+  /* Inicio: layout de imágenes laterales + texto */
+  .contenido-inicio{ display:flex; gap:1rem; flex-wrap:wrap; }
+  .imagenes-laterales{ display:flex; flex-direction:column; gap:10px; min-width:100px; }
+  .imagenes-laterales img{ width:90px; border-radius:8px; box-shadow:0 2px 5px rgba(183,28,28,.35); }
+  .inicio-card{ background:#fff; color:#1b1b1b; border-radius:14px; padding:20px; box-shadow:0 4px 10px rgba(183,28,28,.25); }
+  #map{ min-height:320px; border-radius:14px; border:1px solid #e7e7e7; background:#f6f7f9; }
+  #calendar{ background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:.5rem; min-height:520px; }
+</style>
 </head>
 <body>
-<video autoplay muted loop id="video-fondo">
-  <source src="videos/fondo-rojo.mp4" type="video/mp4">
-</video>
 
-<header class="app-header">
-    
+  <!-- ====== Video de fondo global (VISIBLE EN TODAS LAS SECCIONES) ====== -->
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="VIDEO_WEBM_URL" type="video/webm" />
+    <source src="VIDEO_MP4_URL" type="video/mp4" />
+  </video>
+  <div id="bg-overlay"></div>
+
+  <!-- ====== Header / Navegación ====== -->
+  <header class="app-header">
+    <h1><i class="fas fa-church"></i> Cáritas CNC</h1>
     <nav>
-      <button type="button" onclick="showSection('inicio')">Inicio</button>
-      <button type="button" onclick="showSection('registro')">Registro</button>
-      <button type="button" onclick="showSection('contacto')">Contacto</button>
-      <button type="button" onclick="showSection('administracion')">Administración</button>
+      <button type="button" onclick="showSection('inicio')" class="tabbtn">Inicio</button>
+      <button type="button" onclick="showSection('validar')" class="tabbtn">Validar</button>
+      <button type="button" onclick="showSection('registro')" class="tabbtn">Registro</button>
+      <button type="button" onclick="showSection('contacto')" class="tabbtn">Contacto</button>
+      <button type="button" onclick="showSection('administracion')" class="tabbtn">Administración</button>
       <button type="button" id="btn-login" onclick="goLogin()">Iniciar sesión</button>
-      <button type="button" id="btn-logout" style="display:none;" onclick="logout()">Cerrar sesión</button>
+      <button type="button" id="btn-logout" style="display:none" onclick="logout()">Cerrar sesión</button>
     </nav>
   </header>
 
+  <!-- ====== INICIO ====== -->
+  <section id="inicio" class="seccion active">
+    <div class="inicio-card">
+      <h2>Bienvenido a Cáritas CNC ❤️</h2>
+      <div class="contenido-inicio">
+        <div class="imagenes-laterales">
+          <img src="img/imagen de grupo 1.jpeg" alt="Foto 1" />
+          <img src="img/imagen de grupo 2.jpeg" alt="Foto 2" />
+          <img src="img/imagen de grupo 3.jpeg" alt="Foto 3" />
+          <img src="img/imagen de grupo 4.jpeg" alt="Foto 4" />
+          <img src="img/imagen de grupo 5.jpeg" alt="Foto 5" />
+        </div>
+        <div style="flex:1;">
+          <p>Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.</p>
+          <p>Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.</p>
 
-<!-- Barra estado conexión -->
-<div id="estado-conexion">📡 Verificando conexión...</div>
+          <h3>Nuestra Misión</h3>
+          <p>Como voluntarios de Cáritas CNC, nuestra misión es servir con amor, respeto y empatía a las familias más necesitadas.</p>
+          <p>Nos guiamos por la fe, el compromiso y la compasión para acompañar, escuchar y brindar apoyo a quienes más lo requieren, promoviendo siempre la dignidad, la justicia y la solidaridad.</p>
 
-<header class="app-header">
-  <h1>Cáritas CNC</h1>
-</header>
+          <h3>Nuestra Visión</h3>
+          <p>Ser un referente de servicio y apoyo a las familias en situación de vulnerabilidad, construyendo una comunidad más justa y solidaria, donde cada persona sea valorada y tenga la oportunidad de vivir con dignidad.</p>
+          <p>Soñamos con una comunidad más justa, fraterna y solidaria, donde cada persona en situación de vulnerabilidad sea acogida, acompañada y valorada con dignidad. Aspiramos a ser un voluntariado comprometido y cercano, inspirado por el Evangelio, que transforme realidades a través del amor, la fe y el servicio.</p>
 
-<!-- 🔹 Tu contenido original va aquí -->
-
- <!-- INICIO -->
-<div id="inicio" class="seccion">
-  <section id="section-inicio">
-    <h2>Bienvenido a Cáritas CNC ❤️</h2>
-    <div class="contenido-inicio" style="display:flex; gap:1rem; flex-wrap:wrap;">
-      <div class="imagenes-laterales" style="display:flex; flex-direction:column; gap:10px;">
-        <img src="img/imagen de grupo 1.jpeg" alt="Foto 1" style="width:100px; border-radius:8px;" />
-        <img src="img/imagen de grupo 2.jpeg" alt="Foto 2" style="width:100px; border-radius:8px;" />
-        <img src="img/imagen de grupo 3.jpeg" alt="Foto 3" style="width:100px; border-radius:8px;" />
-        <img src="img/imagen de grupo 4.jpeg" alt="Foto 4" style="width:100px; border-radius:8px;" />
-        <img src="img/imagen de grupo 5.jpeg" alt="Foto 5" style="width:100px; border-radius:8px;" />
-      </div>
-      <div style="flex:1;">
-        <p>Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.</p>
-        <p>Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.</p>
-
-        <h3>Nuestra Misión</h3>
-        <p>Como voluntarios de Cáritas CNC, nuestra misión es servir con amor, respeto y empatía a las familias más necesitadas.</p>
-        <p>Nos guiamos por la fe, el compromiso y la compasión para acompañar, escuchar y brindar apoyo a quienes más lo requieren, promoviendo siempre la dignidad, la justicia y la solidaridad.</p>
-
-        <h3>Nuestra Visión</h3>
-        <p>Ser un referente de servicio y apoyo a las familias en situación de vulnerabilidad, construyendo una comunidad más justa y solidaria, donde cada persona sea valorada y tenga la oportunidad de vivir con dignidad.</p>
-        <p>Soñamos con una comunidad más justa, fraterna y solidaria, donde cada persona en situación de vulnerabilidad sea acogida, acompañada y valorada con dignidad. Aspiramos a ser un voluntariado comprometido y cercano, inspirado por el Evangelio, que transforme realidades a través del amor, la fe y el servicio.</p>
-
-        <p>¡Gracias por ser parte de esta misión!</p>
-        <p><b>Gracias por usar Cáritas CNC</b></p>
-        <p class="muted" style="color:#888;">Versión 1.1.0</p>
+          <p>¡Gracias por ser parte de esta misión!</p>
+          <p><b>Gracias por usar Cáritas CNC</b></p>
+          <p class="muted" style="color:#eee;">Versión 1.1.0</p>
+        </div>
       </div>
     </div>
   </section>
-</div>
 
+  <!-- ====== VALIDAR (acceso a validar.html externo si lo tienes) ====== -->
+  <section id="validar" class="seccion">
+    <div class="card">
+      <h2>Validar Credencial</h2>
+      <p>Escanea el código QR de la credencial del usuario para verificar su validez.</p>
+      <button class="submit-btn" onclick="window.location.href='validar.html'">
+        <i class="fa-solid fa-qrcode"></i> Ir a validar
+      </button>
+    </div>
+  </section>
 
-  <!-- REGISTRO -->
-  
+  <!-- ====== REGISTRO ====== -->
   <section id="registro" class="seccion">
     <h2>Registro de Familias</h2>
     <div id="msg"></div>
 
-    <form id="familiaForm" enctype="multipart/form-data">
+    <form id="familiaForm" enctype="multipart/form-data" class="card">
       <label>Nombres y Apellidos*</label>
       <input type="text" name="nombres_apellidos" required />
 
@@ -161,28 +197,30 @@
     </form>
 
     <div style="margin-top:12px">
-      <div id="map" style="height:320px;border-radius:14px;border:1px solid #e6e6e6;background:#f6f7f9"></div>
+      <div id="map"></div>
     </div>
   </section>
 
-  <!-- CONTACTO -->
+  <!-- ====== CONTACTO ====== -->
   <section id="contacto" class="seccion">
-    <h2>Contacto</h2>
-    <p>Email: contacto@caritas.org</p>
-    <p>Teléfono: +51 999 888 777</p>
+    <div class="card">
+      <h2>Contacto</h2>
+      <p><i class="fa-solid fa-envelope"></i> Email: contacto@caritas.org</p>
+      <p><i class="fa-solid fa-phone"></i> Teléfono: +51 999 888 777</p>
+    </div>
   </section>
 
-  <!-- ADMINISTRACIÓN -->
+  <!-- ====== ADMINISTRACIÓN ====== -->
   <section id="administracion" class="seccion">
     <h2>Administración</h2>
 
     <div style="display:flex; gap:.5rem; margin:.5rem 0; flex-wrap:wrap;">
       <button type="button" class="submit-btn" onclick="showSubSection('pendientes')">✅ Pendientes de grupo</button>
       <button type="button" class="submit-btn" onclick="showSubSection('agendamiento')">🗓️ Agenda</button>
-      <button type="button" id="btn-admin-familias" class="submit-btn hidden" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
+      <button type="button" id="btn-admin-familias" class="submit-btn" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
     </div>
 
-    <!-- PENDIENTES -->
+    <!-- PENDIENTES (Supabase) -->
     <div id="pendientes" class="subsection" style="display:none; margin-top:1rem;">
       <h3>Pendientes de grupo</h3>
       <p>Las tareas pendientes se almacenan en Supabase; puedes editarlas aquí y guardarlas.</p>
@@ -211,39 +249,9 @@
     <div id="agendamiento" class="subsection" style="display:none; margin-top:1rem;">
       <h3>Agenda</h3>
       <div id="calendar"></div>
-
-      <!-- Modal Evento (CRUD) -->
-      <div id="event-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; align-items:center; justify-content:center;">
-        <div style="background:#fff; color:#1b1b1b; width:min(520px,92vw); border-radius:14px; border:1px solid #e7e7e7; box-shadow:0 18px 40px rgba(0,0,0,.25);">
-          <div style="padding:14px 16px; border-bottom:1px solid #eee; font-weight:700">Evento</div>
-          <form id="event-form" style="padding:14px 16px; display:grid; gap:10px">
-            <input type="hidden" id="ev-id" />
-            <label>Título
-              <input id="ev-title" required />
-            </label>
-            <label>Inicio
-              <input id="ev-start" type="datetime-local" required />
-            </label>
-            <label>Fin (opcional)
-              <input id="ev-end" type="datetime-local" />
-            </label>
-            <label style="display:flex; gap:.5rem; align-items:center;">
-              <input id="ev-allday" type="checkbox" />
-              Todo el día
-            </label>
-
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px">
-              <button type="button" id="ev-delete" class="submit-btn" style="background:#fff; color:#1b1b1b; border:1px solid #e0e0e0">🗑️ Borrar</button>
-              <button type="button" id="ev-cancel" class="submit-btn" style="background:#fff; color:#1b1b1b; border:1px solid #e0e0e0">Cancelar</button>
-              <button type="submit" class="submit-btn">Guardar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <!-- /Modal -->
     </div>
 
-    <!-- FAMILIAS (SOLO LOGUEADO) -->
+    <!-- FAMILIAS (SOLO LOGUEADO, pero mostramos aviso si no hay sesión) -->
     <div id="familiasAdmin" class="subsection" style="display:none; margin-top:1rem;">
       <h3>Familias registradas</h3>
       <p class="muted" id="familiasNotice" style="display:none;">Debes iniciar sesión para ver esta información.</p>
@@ -270,19 +278,11 @@
 
   <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
 
-
-<!-- Mantén todas tus secciones, formularios, mapas, etc. -->
-<!-- ... -->
-  <!-- ================== JS ================== -->
-  <script>
-  // --- Supabase client
-   const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-    const supabaseclient = supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-    console.log("✅ Supabase inicializado", supabaseClient);
-
-  // --- Navegación
+<!-- ================== JS ================== -->
+<script>
+  /* =============================
+     Navegación entre secciones
+  ==============================*/
   function showSection(id) {
     document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
@@ -294,67 +294,26 @@
     document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
     const el = document.getElementById(id);
     if (!el) return;
-
-    // Gate de autenticación para Familias
-    if (id === 'familiasAdmin') {
-      const user = (window.firebase && firebase.auth) ? firebase.auth().currentUser : null;
-      const notice = document.getElementById('familiasNotice');
-      if (!user) {
-        notice.style.display = 'block';
-        el.style.display = 'block';
-        const tbody = document.querySelector('#familiasAdminTable tbody');
-        if (tbody) tbody.innerHTML = '';
-        document.getElementById('fam-count').textContent = '';
-        return;
-      } else {
-        notice.style.display = 'none';
-        el.style.display = 'block';
-        loadFamiliasAdmin();
-        return;
-      }
-    }
-    function mostrarSeccion(seccionId) {
-    // Oculta TODAS las secciones, incluido el inicio
-    document.querySelectorAll('.seccion').forEach(sec => {
-        sec.style.display = 'none';
-    });
-
-    // Muestra solo la que corresponde
-    const seccion = document.getElementById(seccionId);
-    if (seccion) {
-        seccion.style.display = 'block';
-    }
-}
-
-
-    // Mostrar primero, luego inicializar dependientes de visibilidad
+    // Mostrar primero
     el.style.display = 'block';
+    // Inicializaciones perezosas
     if (id === 'pendientes') loadPendientes();
     if (id === 'agendamiento') initCalendar();
+    if (id === 'familiasAdmin') {
+      // Si no usas Firebase Auth aquí, quita la puerta y carga directamente:
+      // loadFamiliasAdmin();
+      // Si más adelante activas Auth, muestra/oculta en consecuencia:
+      document.getElementById('familiasNotice').style.display = 'none';
+      loadFamiliasAdmin();
+    }
   }
 
   function goLogin(){ window.location.href = 'login.html'; }
-  function logout(){
-    const fbAuth = (typeof auth !== 'undefined' && auth) ? auth : (firebase.auth ? firebase.auth() : null);
-    if (fbAuth) {
-      fbAuth.signOut().then(() => { updateAuthUI(null); showSection('inicio'); });
-    }
-  }
+  function logout(){ /* si luego activas Firebase Auth aquí */ showSection('inicio'); }
 
-  function updateAuthUI(user) {
-    document.getElementById('btn-login').style.display = user ? 'none' : 'inline-block';
-    document.getElementById('btn-logout').style.display = user ? 'inline-block' : 'none';
-    const btnFam = document.getElementById('btn-admin-familias');
-    if (btnFam) btnFam.classList.toggle('hidden', !user);
-    if (!user && document.getElementById('familiasAdmin').style.display === 'block') {
-      const tbody = document.querySelector('#familiasAdminTable tbody');
-      if (tbody) tbody.innerHTML = '';
-      document.getElementById('fam-count').textContent = '';
-      document.getElementById('familiasNotice').style.display = 'block';
-    }
-  }
-
-  // --- Registro (API Render absoluta)
+  /* =============================
+     Registro (API Render absoluta)
+  ==============================*/
   document.getElementById('familiaForm').addEventListener('submit', async function(e){
     e.preventDefault();
     const msgDiv = document.getElementById('msg');
@@ -363,14 +322,21 @@
     try {
       const res = await fetch('https://api-familias.onrender.com/familias', { method:'POST', body: formData });
       const data = await res.json();
-      if (res.ok) { msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>"; this.reset(); }
-      else { msgDiv.innerHTML = "<div class='error'>❌ Error al registrar</div>"; console.error(data); }
+      if (res.ok) {
+        msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
+        this.reset();
+      } else {
+        msgDiv.innerHTML = "<div class='error'>❌ Error al registrar</div>";
+        console.error(data);
+      }
     } catch(err){
       msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
     }
   });
 
-  // --- Leaflet + Nominatim
+  /* =============================
+     Leaflet + Nominatim
+  ==============================*/
   let map, marker;
   function initMap() {
     map = L.map('map', { center: [-12.0464, -77.0428], zoom: 12 });
@@ -413,11 +379,17 @@
       else alert('No se encontró esa dirección.');
     } catch { alert('Error al buscar la dirección.'); }
   });
-
-  // --- Utils
   function escapeHtml(s=''){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  document.addEventListener('DOMContentLoaded', initMap);
 
-  // --- Pendientes (Supabase)
+  /* =============================
+     Supabase (pendientes & familias)
+  ==============================*/
+  const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+  // UI helpers para "Pendientes"
   function trPendiente({ id, descripcion = "", estado = false } = {}) {
     const tr = document.createElement('tr');
     if (id != null) tr.dataset.id = id;
@@ -437,7 +409,10 @@
     const err = document.getElementById('pendientesError');
     status.textContent = '⏳ Cargando...'; err.textContent = '';
     try {
-      const { data, error } = await supabaseClient.from('pendientes').select('id, descripcion, estado').order('id', { ascending: true });
+      const { data, error } = await supabaseClient
+        .from('pendientes')
+        .select('id, descripcion, estado')
+        .order('id', { ascending: true });
       if (error) throw error;
       tbody.innerHTML = '';
       data.forEach(item => tbody.appendChild(trPendiente(item)));
@@ -462,14 +437,18 @@
     });
     status.textContent = '💾 Guardando...'; err.textContent = '';
     try {
-      const { data, error } = await supabaseClient.from('pendientes').upsert(payload, { onConflict: 'id' }).select('id, descripcion, estado');
+      const { data, error } = await supabaseClient
+        .from('pendientes')
+        .upsert(payload, { onConflict: 'id' })
+        .select('id, descripcion, estado');
       if (error) throw error;
-      tbody.innerHTML = ''; data.sort((a,b)=>a.id-b.id).forEach(item => tbody.appendChild(trPendiente(item)));
+      tbody.innerHTML = '';
+      data.sort((a,b)=>a.id-b.id).forEach(item => tbody.appendChild(trPendiente(item)));
       status.textContent = '✅ Cambios guardados';
     } catch(e){ err.textContent = 'No se pudieron guardar los cambios.'; status.textContent = ''; }
   }
 
-  // --- Familias (Admin) — primero intenta Supabase; si falla, Render (URL absoluta)
+  // Familias (Admin) — ejemplo simple leyendo una vista/tabla "familias"
   let familiasAdminData = [];
   const famSearch = () => (document.getElementById('fam-search').value || '').trim().toLowerCase();
 
@@ -484,341 +463,64 @@
           (String(f.dni_solicitante||'')).includes(q))
       : familiasAdminData;
 
-    tbody.innerHTML = '';
-    rows.forEach(f => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td data-label="Nombres">${escapeHtml(f.nombres_apellidos||'')}</td>
-        <td data-label="DNI">${escapeHtml(f.dni_solicitante||'')}</td>
-        <td data-label="Apellido">${escapeHtml(f.apellido_familia||'')}</td>
-        <td data-label="Dirección">${escapeHtml(f.direccion||'')}</td>
-        <td data-label="Fecha">${escapeHtml(f.fecha_registro||'')}</td>
-        <td data-label="Teléfono">${escapeHtml(f.telefono_contacto||'')}</td>
-        <td data-label="Obs.">${escapeHtml(f.observaciones||'')}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    document.getElementById('fam-count').textContent = `${rows.length} registro${rows.length===1?'':'s'}`;
+    tbody.innerHTML = rows.map(f => `
+      <tr>
+        <td>${escapeHtml(f.nombres_apellidos||'')}</td>
+        <td>${escapeHtml(String(f.dni_solicitante||''))}</td>
+        <td>${escapeHtml(f.apellido_familia||'')}</td>
+        <td>${escapeHtml(f.direccion||'')}</td>
+        <td>${escapeHtml(f.fecha_registro||'')}</td>
+        <td>${escapeHtml(f.telefono_contacto||'')}</td>
+        <td>${escapeHtml(f.observaciones||'')}</td>
+      </tr>
+    `).join('');
+    document.getElementById('fam-count').textContent = `${rows.length} resultados`;
   }
 
   async function loadFamiliasAdmin(){
-    const errBox = document.getElementById('familiasAdminError');
-    errBox.style.display = 'none';
-    familiasAdminData = [];
+    const err = document.getElementById('familiasAdminError');
+    err.style.display = 'none';
     try {
       const { data, error } = await supabaseClient
         .from('familias')
-        .select('id, nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones')
-        .order('id', { ascending: true });
+        .select('nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones')
+        .order('fecha_registro', { ascending: false });
       if (error) throw error;
-      familiasAdminData = (data || []);
+      familiasAdminData = data || [];
       renderFamiliasAdmin();
-      return;
-    } catch (e) {
-      // Fallback a API en Render (URL absoluta)
-    }
-    try {
-      const res = await fetch('https://api-familias.onrender.com/familias');
-      if (!res.ok) throw new Error('API Render error');
-      const data = await res.json();
-      familiasAdminData = (Array.isArray(data) ? data : (data.items || []))
-        .map(x => ({
-          nombres_apellidos: x.nombres_apellidos || x.nombres || '',
-          dni_solicitante: x.dni_solicitante || x.dni || '',
-          apellido_familia: x.apellido_familia || x.apellido || '',
-          direccion: x.direccion || '',
-          fecha_registro: x.fecha_registro || x.fecha || '',
-          telefono_contacto: x.telefono_contacto || x.telefono || '',
-          observaciones: x.observaciones || x.obs || ''
-        }));
-      renderFamiliasAdmin();
-    } catch (e) {
-      errBox.style.display = 'block';
+    } catch(e){
+      err.style.display = 'block';
     }
   }
 
-  document.getElementById('fam-refresh').addEventListener('click', loadFamiliasAdmin);
   document.getElementById('fam-search').addEventListener('input', renderFamiliasAdmin);
+  document.getElementById('fam-refresh').addEventListener('click', loadFamiliasAdmin);
 
-  // --- Calendario (JS local + CSS por CDN) con CRUD Supabase
-  function mapEventoToFC(row){
-    return {
-      id: row.id,
-      title: row.titulo ?? row.title ?? row.nombre ?? 'Evento',
-      start: row.fecha_inicio ?? row.start ?? row.inicio ?? row.fecha ?? row.date,
-      end:   row.fecha_fin    ?? row.end   ?? row.fin   ?? null,
-      allDay: !!(row.all_day ?? row.allday ?? row.todo_dia ?? false),
-    };
-  }
-
-  async function fcEventSource(info, success, failure){
-    try {
-      const cols = 'id, titulo, fecha_inicio, fecha_fin, all_day';
-      const { data, error } = await supabaseClient
-        .from('eventos')
-        .select(cols)
-        .order('fecha_inicio', { ascending: true });
-      if (error) throw error;
-      success((data || []).map(mapEventoToFC));
-    } catch (e) {
-      console.error('Cargar eventos:', e);
-      failure(e);
-    }
-  }
-
-  // Modal CRUD
-  const $modal = document.getElementById('event-modal');
-  const $form  = document.getElementById('event-form');
-  const $id    = document.getElementById('ev-id');
-  const $title = document.getElementById('ev-title');
-  const $start = document.getElementById('ev-start');
-  const $end   = document.getElementById('ev-end');
-  const $all   = document.getElementById('ev-allday');
-  const $del   = document.getElementById('ev-delete');
-  const $cancel= document.getElementById('ev-cancel');
-
-  function openEventModal({ id=null, title='', start=null, end=null, allDay=false } = {}){
-    $id.value = id ?? '';
-    $title.value = title ?? '';
-    $all.checked = !!allDay;
-
-    const toLocal = (d) => {
-      if (!d) return '';
-      const dt = (typeof d === 'string') ? new Date(d) : d;
-      const off = dt.getTimezoneOffset();
-      const dt2 = new Date(dt.getTime() - off*60*1000);
-      return dt2.toISOString().slice(0,16);
-    };
-
-    $start.value = start ? toLocal(start) : '';
-    $end.value   = end   ? toLocal(end)   : '';
-    if (allDay && start && typeof start === 'string' && start.length === 10) {
-      $start.value = start + 'T00:00';
-    }
-
-    $del.style.display = id ? 'inline-block' : 'none';
-    $modal.style.display = 'flex';
-  }
-  function closeEventModal(){ $modal.style.display='none'; $form.reset(); }
-
-  // Guardar (insert/update)
-  $form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      titulo: $title.value.trim(),
-      all_day: $all.checked,
-      fecha_inicio: $start.value ? new Date($start.value).toISOString() : null,
-      fecha_fin:    $end.value   ? new Date($end.value).toISOString()   : null
-    };
-
-    try {
-      if ($id.value) {
-        const { error } = await supabaseClient.from('eventos').update(payload).eq('id', Number($id.value));
-        if (error) throw error;
-      } else {
-        const { error } = await supabaseClient.from('eventos').insert([payload]);
-        if (error) throw error;
-      }
-      closeEventModal();
-      if (calendarInstance) calendarInstance.refetchEvents();
-    } catch (err) {
-      alert('No se pudo guardar el evento.');
-    }
-  });
-
-  // Borrar
-  $del.addEventListener('click', async () => {
-    if (!$id.value) return;
-    if (!confirm('¿Eliminar este evento?')) return;
-    try {
-      const { error } = await supabaseClient.from('eventos').delete().eq('id', Number($id.value));
-      if (error) throw error;
-      closeEventModal();
-      if (calendarInstance) calendarInstance.refetchEvents();
-    } catch (err) {
-      alert('No se pudo borrar el evento.');
-    }
-  });
-
-  // Cancelar / cerrar clic fuera
-  $cancel.addEventListener('click', closeEventModal);
-  $modal.addEventListener('click', (e) => { if (e.target === $modal) closeEventModal(); });
-
-  // Instancia del calendario
+  /* =============================
+     FullCalendar (básico)
+  ==============================*/
   let calendarInstance = null;
   function initCalendar(){
+    if (calendarInstance) return; // evitar doble init
     const el = document.getElementById('calendar');
     if (!el) return;
-
-    if (calendarInstance) {
-      requestAnimationFrame(()=> calendarInstance.render());
-      return;
-    }
-
-    if (!el.style.minHeight) el.style.minHeight = '520px';
-
-    requestAnimationFrame(() => {
-      calendarInstance = new FullCalendar.Calendar(el, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        editable: true,
-        height: 'auto',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: fcEventSource,
-
-        // Crear por selección
-        select: (info) => {
-          openEventModal({
-            title: '',
-            start: info.start,
-            end: info.end,
-            allDay: info.allDay
-          });
-          calendarInstance.unselect();
-        },
-
-        // Editar al hacer clic
-        eventClick: (arg) => {
-          const e = arg.event;
-          openEventModal({
-            id: e.id,
-            title: e.title,
-            start: e.start,
-            end: e.end,
-            allDay: e.allDay
-          });
-        },
-
-        // Arrastrar / redimensionar
-        eventChange: async (arg) => {
-          const e = arg.event;
-          try {
-            const { error } = await supabaseClient
-              .from('eventos')
-              .update({
-                fecha_inicio: e.start ? e.start.toISOString() : null,
-                fecha_fin:    e.end   ? e.end.toISOString()   : null,
-                all_day:      !!e.allDay
-              })
-              .eq('id', Number(e.id));
-            if (error) throw error;
-          } catch (err) {
-            alert('No se pudo actualizar la fecha del evento.');
-            arg.revert();
-          }
+    calendarInstance = new FullCalendar.Calendar(el, {
+      initialView: 'dayGridMonth',
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,listWeek'
+      },
+      dateClick: (info) => {
+        const title = prompt('Título del evento:');
+        if (title) {
+          calendarInstance.addEvent({ title, start: info.dateStr, allDay: true });
         }
-      });
-      calendarInstance.render();
-    });
-  }
-
-  // --- Inicio
-  document.addEventListener('DOMContentLoaded', () => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js", { updateViaCache: "none" })
-        .then(reg => reg.update().catch(()=>{})).catch(()=>{});
-    }
-    initMap();
-
-    if (window.firebase && window.firebase.auth) {
-      firebase.auth().onAuthStateChanged(user => { updateAuthUI(user); });
-    }
-  });
-  </script>
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
-
-<script>
-// === Supabase ===
-const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co"; // Cambia
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw"; // Cambia
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// === IndexedDB ===
-let db;
-const request = indexedDB.open("caritasCNCdb", 1);
-request.onupgradeneeded = e => {
-  db = e.target.result;
-  db.createObjectStore("familias", { keyPath: "id", autoIncrement: true });
-  db.createObjectStore("pendientes", { keyPath: "id", autoIncrement: true });
-  db.createObjectStore("eventos", { keyPath: "id", autoIncrement: true });
-};
-request.onsuccess = e => {
-  db = e.target.result;
-  console.log("IndexedDB lista");
-};
-request.onerror = e => console.error("IndexedDB error", e);
-
-// === Barra conexión ===
-function actualizarEstadoConexion() {
-  const barra = document.getElementById("estado-conexion");
-  if (navigator.onLine) {
-    barra.style.background = "green";
-    barra.textContent = "✅ Conectado";
-  } else {
-    barra.style.background = "red";
-    barra.textContent = "📡 Modo offline";
-  }
-}
-window.addEventListener("online", () => {
-  actualizarEstadoConexion();
-  sincronizarPendientes();
-});
-window.addEventListener("offline", actualizarEstadoConexion);
-actualizarEstadoConexion();
-
-// === Guardar offline ===
-function guardarOffline(store, data) {
-  const tx = db.transaction(store, "readwrite");
-  tx.objectStore(store).add(data);
-  console.log(`Guardado en ${store} offline:`, data);
-  contarPendientes();
-}
-
-// === Contador de pendientes ===
-function contarPendientes() {
-  ["familias", "pendientes", "eventos"].forEach(storeName => {
-    const tx = db.transaction(storeName, "readonly");
-    const store = tx.objectStore(storeName);
-    const countReq = store.count();
-    countReq.onsuccess = () => {
-      console.log(`Pendientes en ${storeName}: ${countReq.result}`);
-    };
-  });
-}
-
-// === Sincronizar pendientes ===
-async function sincronizarPendientes() {
-  console.log("Sincronizando datos pendientes...");
-  const syncStore = async (storeName, table) => {
-    const tx = db.transaction(storeName, "readwrite");
-    const store = tx.objectStore(storeName);
-    store.getAll().onsuccess = async e => {
-      const data = e.target.result;
-      for (const item of data) {
-        await supabaseClient.from(table).insert([item]);
       }
-      store.clear();
-      console.log(`${storeName} sincronizados`);
-    };
-  };
-  await syncStore("familias", "familias");
-  await syncStore("pendientes", "pendientes");
-  await syncStore("eventos", "eventos");
-}
-
-// === Service Worker ===
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").then(() => {
-    console.log("Service Worker registrado");
-  });
-}
+    });
+    calendarInstance.render();
+  }
 </script>
-
 </body>
 </html>
