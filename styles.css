@@ -323,3 +323,17 @@ footer {
 .contenido-texto {
   flex: 1;
 }
+/* =========
+   Video de fondo
+   ========= */
+#video-fondo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ajusta sin distorsionar */
+  z-index: -1;       /* Queda detrás de todo */
+  opacity: 0.35;     /* Ajusta transparencia para que no opaque el contenido */
+  pointer-events: none; /* Evita que bloquee clics */
+}
