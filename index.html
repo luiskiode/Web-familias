@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="styles.css" />
 
 <!-- ====== Iconos ====== -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <!-- ====== Leaflet (Mapa) ====== -->
 <link
@@ -28,37 +28,97 @@
 <!-- ====== Supabase UMD (sin imports) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
+ <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <style>
-  .card {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      width: 300px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+ /* Fondo de video cubriendo toda la pantalla */
+    video#background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
     }
-    .card h2, .card h3 {
-      margin-top: 0;
+    /* Contenedor principal */
+    .contenedor {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+      justify-content: center;
+    }
+    /* Tarjetas */
+    .card {
+      background: rgba(0,0,0,0.7);
+      padding: 20px;
+      border-radius: 10px;
+      width: 320px;
+      backdrop-filter: blur(5px);
+    }
+    h3 {
+      text-align: center;
     }
     input, button {
       width: 100%;
-      margin: 5px 0;
-      padding: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 14px;
     }
     button {
-      background: #007BFF; color: white;
-      border: none; cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
     }
     button:hover {
-      background: #0056b3;
+      background-color: #45a049;
+      transform: scale(1.02);
     }
-    .credenciales-box {
+    .submit-btn {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .qr-container {
+    #qr-preview {
+      display: block;
+      margin: 15px auto;
+    }
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    .modal-content {
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+      border-radius: 10px;
       text-align: center;
-      margin-top: 10px;
+      color: white;
+      max-width: 300px;
     }
+    .modal-content img {
+      max-width: 100px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+    .close-btn {
+      background: red;
+      margin-top: 15px;
+    }
+
   /* Video de fondo pegado a toda la pantalla */
   #bg-video {
     position: fixed;
@@ -125,11 +185,10 @@
 <body>
 
   <!-- ====== Video de fondo global (VISIBLE EN TODAS LAS SECCIONES) ====== -->
-  <video autoplay muted loop id="bg-video">
-    <source src="videos/fondo.webm" type="video/webm">
-    <source src="videos/fondo.mp4" type="video/mp4">
-    Tu navegador no soporta el video de fondo.
-  </video>
+ <video autoplay muted loop id="background-video">
+  <source src="fondo.webm" type="video/webm">
+  <source src="fondo.mp4" type="video/mp4">
+</video>
   <div id="bg-overlay"></div>
 
   <!-- ====== Header / Navegación ====== -->
@@ -183,26 +242,43 @@
   <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
 <main>
    <!-- Generar credenciales -->
+  <div class="contenedor">
+  <!-- Generar credenciales -->
   <div class="card">
     <h3>Generar credenciales</h3>
     <input type="email" id="email" placeholder="Correo">
     <input type="password" id="password" placeholder="Contraseña">
-    <label for="foto-perfil">Subir foto de perfil:</label>
-    <input type="file" id="foto-perfil" accept="image/*">
-    <button id="crear-credenciales">Crear Usuario</button>
-    <div class="qr-container">
-      <canvas id="qr-canvas"></canvas>
-    </div>
+    <input type="file" id="fotoPerfil" accept="image/*">
+    <button id="crear-credenciales"><i class="fa-solid fa-user-plus"></i> Crear Usuario</button>
+    <canvas id="qr-preview"></canvas>
+  </div>
     <button id="ver-credencial" style="display:none;">Ver Credencial</button>
   </div>
       </div>
 
-     <!-- Validar credencial -->
+   <!-- Validar credencial -->
   <div class="card">
-    <h2>Validar Credencial</h2>
-    <p>Escanea el código QR para verificar la validez.</p>
-    <button onclick="window.location.href='validar.html'">Ir a validar</button>
+    <h3>Validar Credencial</h3>
+    <p>Escanea el código QR o revisa el ID para verificar validez.</p>
+    <button class="submit-btn" onclick="window.location.href='validar.html'">
+      <i class="fa-solid fa-qrcode"></i> Ir a validar
+    </button>
+    <button id="ver-credencial"><i class="fa-solid fa-id-card"></i> Ver Credencial</button>
   </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modalCredencial">
+  <div class="modal-content">
+    <h3>Credencial</h3>
+    <img id="foto-modal" src="" alt="Foto de perfil">
+    <canvas id="qr-modal"></canvas>
+    <p id="correo-modal"></p>
+    <p id="id-modal"></p>
+    <button class="close-btn" onclick="document.getElementById('modalCredencial').style.display='none'">Cerrar</button>
+  </div>
+</div>
+
 
     <br><br>
     <button id="ver-credencial" class="submit-btn">
@@ -335,7 +411,79 @@
   <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
 
 <!-- ================== JS ================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+  /* =============================
+     Supabase (pendientes & familias)
+  const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
+  let ultimoUsuario = null;
+
+// Crear usuario
+  document.getElementById("crear-credenciales").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const foto = document.getElementById("fotoPerfil").files[0];
+
+    if (!email || !password || !foto) {
+      alert("Completa todos los campos y sube una foto.");
+      return;
+    }
+
+    try {
+      console.log("📌 Creando usuario en Supabase...");
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+
+      const userId = data.user.id;
+      ultimoUsuario = { email, id: userId };
+
+      console.log("✅ Usuario creado:", userId);
+
+      // Subir foto
+      const { error: uploadError } = await supabaseClient.storage
+        .from("fotos-perfil")
+        .upload(`${userId}.jpg`, foto, { cacheControl: "3600", upsert: true });
+      if (uploadError) throw uploadError;
+
+      // Generar QR en vista previa
+      QRCode.toCanvas(document.getElementById("qr-preview"), userId, (err) => {
+        if (err) console.error(err);
+      });
+
+      alert("✅ Usuario creado con éxito y QR generado.");
+    } catch (err) {
+      console.error("❌ Error inesperado:", err);
+      alert("Error: " + err.message);
+    }
+  });
+
+  // Ver credencial
+  document.getElementById("ver-credencial").addEventListener("click", async () => {
+    if (!ultimoUsuario) {
+      alert("Primero crea un usuario.");
+      return;
+    }
+    const { data } = supabaseClient.storage
+      .from("fotos-perfil")
+      .getPublicUrl(`${ultimoUsuario.id}.jpg`);
+
+    document.getElementById("foto-modal").src = data.publicUrl;
+    document.getElementById("correo-modal").innerText = ultimoUsuario.email;
+    document.getElementById("id-modal").innerText = ultimoUsuario.id;
+
+    // QR en modal
+    QRCode.toCanvas(document.getElementById("qr-modal"), ultimoUsuario.id, (err) => {
+      if (err) console.error(err);
+    });
+
+    document.getElementById("modalCredencial").style.display = "flex";
+  });
+</script>
+</script>
 
  <script type="module">
   import { supabase } from './supabase-config.js';
@@ -412,18 +560,7 @@
   });
 </script>
 
-    // === Botón para ver credencial ===
-    document.getElementById("ver-credencial").addEventListener("click", () => {
-      const qrImg = document.querySelector("#qrContainer img");
-      if (qrImg) {
-        const win = window.open("");
-        win.document.write(`<h1>Credencial</h1>`);
-        win.document.write(qrImg.outerHTML);
-      } else {
-        alert("No hay credencial generada todavía.");
-      }
-    });
-</script>
+  
 
 <script>
   /* =============================
@@ -532,6 +669,8 @@
   /* =============================
      Supabase (pendientes & familias)
   ==============================*/
+
+  
   const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
   const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
   const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
