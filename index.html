@@ -183,6 +183,14 @@
       <button type="button" class="submit-btn" onclick="showSubSection('agendamiento')">🗓️ Agenda</button>
       <button type="button" id="btn-admin-familias" class="submit-btn" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
     </div>
+<div id="pendientes">
+  <h3>Pendientes</h3>
+  <button onclick="addPendRow()">➕ Añadir</button>
+  <button onclick="savePendientes()">💾 Guardar</button>
+
+  <table id="pendientesTable"><tbody></tbody></table>
+  <div id="pendientesStatus"></div> <!-- ⬅️ este faltaba -->
+</div>
 
    <!-- ====== Supabase UMD (CDN, sin imports) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
