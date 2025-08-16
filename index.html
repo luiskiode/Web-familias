@@ -184,30 +184,87 @@
       <button type="button" id="btn-admin-familias" class="submit-btn" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
     </div>
 
-    <!-- PENDIENTES (Supabase) -->
-    <div id="pendientes" class="subsection" style="display:none; margin-top:1rem;">
-      <h3>Pendientes de grupo</h3>
-      <p>Las tareas pendientes se almacenan en Supabase; puedes editarlas aquí y guardarlas.</p>
+    <!-- Supabase (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Inicializar Supabase
+  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const SUPABASE_KEY = "TU_PUBLIC_KEY"; // Usa la anon key
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      <div style="display:flex; gap:.5rem; margin:.5rem 0;">
-        <button class="submit-btn" type="button" onclick="addPendRow()">➕ Añadir fila</button>
-        <button class="submit-btn" type="button" onclick="savePendientes()">💾 Guardar cambios</button>
-        <span id="pendientesStatus" style="margin-left:.5rem;"></span>
-      </div>
+  // ==================
+  // FUNCIONES PENDIENTES
+  // ==================
 
-      <table id="pendientesTable">
-        <thead>
-          <tr>
-            <th style="width:70%;">Descripción (editable)</th>
-            <th style="width:15%;">Hecho</th>
-            <th style="width:15%;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  // Añadir nueva fila
+  window.addPendRow = function () {
+    const tbody = document.querySelector('#pendientesTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable="true"></td>
+      <td style="text-align:center;"><input type="checkbox"></td>
+      <td style="text-align:center;">
+        <button type="button" onclick="this.closest('tr').remove()">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  };
 
-      <div id="pendientesError" style="color:#b00020; margin-top:.5rem;"></div>
-    </div>
+  // Guardar pendientes en Supabase
+  window.savePendientes = async function () {
+    const status = document.getElementById("pendientesStatus");
+    status.textContent = "⏳ Guardando...";
+
+    const rows = document.querySelectorAll("#pendientesTable tbody tr");
+    const data = Array.from(rows).map(row => ({
+      descripcion: row.cells[0].innerText.trim(),
+      hecho: row.cells[1].querySelector("input").checked
+    }));
+
+    const { error } = await supabase
+      .from("pendientes")
+      .upsert(data);
+
+    if (error) {
+      status.textContent = "❌ Error al guardar";
+      console.error(error);
+    } else {
+      status.textContent = "✅ Guardado";
+    }
+  };
+
+  // Cargar pendientes al abrir
+  async function loadPendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    tbody.innerHTML = "";
+
+    const { data, error } = await supabase.from("pendientes").select("*");
+
+    if (error) {
+      document.getElementById("pendientesError").textContent = "Error cargando pendientes.";
+      console.error(error);
+      return;
+    }
+
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td contenteditable="true">${item.descripcion || ""}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" ${item.hecho ? "checked" : ""}>
+        </td>
+        <td style="text-align:center;">
+          <button type="button" onclick="this.closest('tr').remove()">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Auto-cargar al entrar a la sección
+  document.addEventListener("DOMContentLoaded", loadPendientes);
+</script>
+
 
        <!-- CALENDARIO -->
     <div id="agendamiento" class="subsection" style="display:none; margin-top:1rem;">
