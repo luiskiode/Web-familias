@@ -184,14 +184,107 @@
       <button type="button" id="btn-admin-familias" class="submit-btn" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
     </div>
 
-    <!-- Supabase (CDN) -->
+   <!-- ====== Supabase UMD (CDN, sin imports) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // Inicializar Supabase
+  // 🚀 Inicializa Supabase
   const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw"; // Usa la anon key
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ===== LOGIN =====
+  function goLogin() {
+    alert("Aquí irá la lógica de login con Firebase o Supabase.");
+    // Ejemplo futuro: supabase.auth.signInWithPassword({ email, password });
+  }
+
+  function logout() {
+    alert("Cerrar sesión aún no implementado");
+    // Ejemplo futuro: supabase.auth.signOut();
+  }
+
+  // ===== PENDIENTES (Admin) =====
+  async function loadPendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    const status = document.getElementById("pendientesStatus");
+    if (!tbody) return; // seguridad
+
+    tbody.innerHTML = "";
+    status.innerHTML = "Cargando...";
+
+    try {
+      // 🔹 Ejemplo: leer de tabla "pendientes" en Supabase
+      const { data, error } = await supabase.from("pendientes").select("*");
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='3'>Sin pendientes</td></tr>";
+      } else {
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td contenteditable="true">${row.descripcion || ""}</td>
+            <td><input type="checkbox" ${row.hecho ? "checked" : ""}></td>
+            <td><button onclick="this.closest('tr').remove()">🗑️</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      status.innerHTML = "✅ Listo";
+    } catch (err) {
+      console.error("Error cargando pendientes:", err);
+      status.innerHTML = "❌ Error";
+    }
+  }
+
+  function addPendRow() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    if (!tbody) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td contenteditable="true">Nueva tarea</td>
+      <td><input type="checkbox"></td>
+      <td><button onclick="this.closest('tr').remove()">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  async function savePendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll("tr");
+    const data = [];
+    rows.forEach((tr) => {
+      data.push({
+        descripcion: tr.cells[0].innerText,
+        hecho: tr.cells[1].querySelector("input").checked,
+      });
+    });
+
+    try {
+      // 🔹 Borro y re-inserto todo (ejemplo simple)
+      await supabase.from("pendientes").delete().neq("id", 0);
+      const { error } = await supabase.from("pendientes").insert(data);
+      if (error) throw error;
+
+      alert("Pendientes guardados ✅");
+    } catch (err) {
+      console.error("Error guardando pendientes:", err);
+      alert("❌ Error guardando pendientes");
+    }
+  }
+
+  // ===== Al cargar la página =====
+  document.addEventListener("DOMContentLoaded", () => {
+    loadPendientes();
+  });
+</script>
+
+<script>
+ 
   // ==================
   // FUNCIONES PENDIENTES
   // ==================
