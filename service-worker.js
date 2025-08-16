@@ -1,41 +1,95 @@
-const CACHE_NAME = "caritas-v1";
+const CACHE_NAME = "caritasCNC-v3";
+
 const urlsToCache = [
   "./",
   "./index.html",
   "./login.html",
   "./styles.css",
+  "./manifest.json",
   "./firebase-config.js",
   "./supabase-config.js",
-  "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+  "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css",
+  "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
 ];
 
-// Instalar y cachear archivos
-self.addEventListener("install", event => {
+// =============================
+// INSTALACIÓN DEL SERVICE WORKER
+// =============================
+self.addEventListener("install", (event) => {
+  console.log("📦 Instalando Service Worker...");
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .catch(err => console.error("Falló el cacheo inicial", err))
+      .then((cache) => cache.addAll(urlsToCache))
+      .catch((err) => console.error("❌ Falló el cacheo inicial:", err))
   );
 });
 
-// Limpiar versiones anteriores del caché
-self.addEventListener("activate", event => {
+// =============================
+// ACTIVACIÓN Y LIMPIEZA DE CACHÉ ANTIGUO
+// =============================
+self.addEventListener("activate", (event) => {
+  console.log("🚀 Activando Service Worker...");
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      )
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => {
+        if (k !== CACHE_NAME) {
+          console.log("🧹 Borrando caché antiguo:", k);
+          return caches.delete(k);
+        }
+      }))
     )
   );
 });
 
-// Interceptar peticiones
-self.addEventListener("fetch", event => {
+// =============================
+// INTERCEPTAR PETICIONES (OFFLINE SUPPORT)
+// =============================
+self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then(resp => resp || fetch(event.request))
-      .catch(() => new Response("Sin conexión", { status: 503 }))
+    caches.match(event.request).then((res) => {
+      if (res) {
+        console.log("⚡ Sirviendo desde caché:", event.request.url);
+        return res;
+      }
+      return fetch(event.request).catch(() => {
+        console.warn("🌐 Sin conexión, mostrando fallback.");
+        return caches.match("./index.html");
+      });
+    })
+  );
+});
+
+// =============================
+// NOTIFICACIONES PUSH
+// =============================
+self.addEventListener("push", (event) => {
+  const data = event.data?.json() || {
+    title: "Nueva alerta Cáritas CNC",
+    body: "Tienes una nueva notificación."
+  };
+
+  console.log("🔔 Push recibido:", data);
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "./icon-192.png",
+      badge: "./icon-192.png"
+    })
+  );
+});
+
+// =============================
+// CLICK EN NOTIFICACIÓN
+// =============================
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow("./index.html") // redirige a la app al hacer clic
   );
 });

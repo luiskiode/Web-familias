@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Cáritas CNC</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cáritas CNC</title>
 
 <!-- ====== Estilos propios ====== -->
 <link rel="stylesheet" href="styles.css" />
 
 <!-- ====== Iconos ====== -->
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <!-- ====== Leaflet (Mapa) ====== -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+<link 
+  rel="stylesheet" 
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
   crossorigin=""
 />
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  crossorigin=""
-></script>
+<script 
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+  crossorigin="">
+</script>
 
 <!-- ====== FullCalendar (CDN oficial) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
@@ -28,167 +28,17 @@
 <!-- ====== Supabase UMD (sin imports) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
- <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<style>
- /* Fondo de video cubriendo toda la pantalla */
-    video#background-video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -1;
-    }
-    /* Contenedor principal */
-    .contenedor {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      padding: 20px;
-      justify-content: center;
-    }
-    /* Tarjetas */
-    .card {
-      background: rgba(0,0,0,0.7);
-      padding: 20px;
-      border-radius: 10px;
-      width: 320px;
-      backdrop-filter: blur(5px);
-    }
-    h3 {
-      text-align: center;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: none;
-      font-size: 14px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    button:hover {
-      background-color: #45a049;
-      transform: scale(1.02);
-    }
-    .submit-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    #qr-preview {
-      display: block;
-      margin: 15px auto;
-    }
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-    }
-    .modal-content {
-      background: rgba(0,0,0,0.9);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      color: white;
-      max-width: 300px;
-    }
-    .modal-content img {
-      max-width: 100px;
-      border-radius: 50%;
-      margin-bottom: 10px;
-    }
-    .close-btn {
-      background: red;
-      margin-top: 15px;
-    }
+<!-- ====== QRCode ====== -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-  /* Video de fondo pegado a toda la pantalla */
-  #bg-video {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -2;
-    filter: brightness(0.45) saturate(1.2);
-    pointer-events: none;
-  }
-  /* Capa sutil encima del video para contraste */
-  #bg-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.06), transparent 45%),
-                linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35));
-    pointer-events: none;
-  }
-  /* Ajustes mínimos si no tienes styles.css aún */
-  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
-  .app-header {
-    position: sticky; top: 0; z-index: 5;
-    background: rgba(183, 28, 28, 0.95); color:#fff;
-    border-bottom: 1px solid rgba(255,255,255,.2);
-    display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; flex-wrap:wrap;
-  }
-  .app-header h1 { margin:0; font-weight:800; font-size:1.25rem; letter-spacing:.2px; }
-  .app-header nav { display:flex; gap:.5rem; flex-wrap:wrap; }
-  .app-header nav button {
-    border:1px solid rgba(255,255,255,.35); background:transparent; color:#fff;
-    padding:.45rem .75rem; border-radius:999px; font-weight:600; cursor:pointer;
-  }
-  .seccion { display:none; padding:1rem; max-width:1000px; margin:1rem auto; }
-  .seccion.active { display:block; }
-  .card {
-    background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:1rem;
-    box-shadow: 0 8px 20px rgba(0,0,0,.06);
-  }
-  .row{display:flex; gap:.5rem; align-items:center;}
-  input, textarea, select, button.submit-btn{
-    font:inherit; border-radius:12px;
-  }
-  input, textarea, select { width:100%; padding:.7rem .85rem; border:1px solid #dedede; background:#fff; }
-  .submit-btn{ border:0; background:linear-gradient(180deg,#b71c1c,#d32f2f); color:#fff; padding:.7rem 1rem; cursor:pointer; font-weight:700; }
-  table{ width:100%; border-collapse:separate; border-spacing:0 8px; }
-  thead th{ text-align:left; font-size:.9rem; color:#616b74; padding:.4rem .6rem; }
-  tbody tr{ background:#fff; border:1px solid #dedede; box-shadow:0 2px 8px rgba(0,0,0,.03);}
-  tbody td{ padding:.6rem; vertical-align:middle; }
-  footer {
-    margin-top:1rem; padding:1rem; text-align:center; color:#fff;
-    background: rgba(183, 28, 28, 0.95); border-top:1px solid rgba(255,255,255,.15);
-  }
-  /* Inicio: layout de imágenes laterales + texto */
-  .contenido-inicio{ display:flex; gap:1rem; flex-wrap:wrap; }
-  .imagenes-laterales{ display:flex; flex-direction:column; gap:10px; min-width:100px; }
-  .imagenes-laterales img{ width:90px; border-radius:8px; box-shadow:0 2px 5px rgba(183,28,28,.35); }
-  .inicio-card{ background:#fff; color:#1b1b1b; border-radius:14px; padding:20px; box-shadow:0 4px 10px rgba(183,28,28,.25); }
-  #map{ min-height:320px; border-radius:14px; border:1px solid #e7e7e7; background:#f6f7f9; }
-  #calendar{ background:#fff; border:1px solid #e7e7e7; border-radius:14px; padding:.5rem; min-height:520px; }
-</style>
 </head>
-<body>
 
-  <!-- ====== Video de fondo global (VISIBLE EN TODAS LAS SECCIONES) ====== -->
- <video autoplay muted loop id="background-video">
-  <source src="fondo.webm" type="video/webm">
-  <source src="fondo.mp4" type="video/mp4">
-</video>
+<body>
+  <!-- Fondo de video -->
+  <video autoplay muted loop playsinline id="video-background">
+    <source src="fondo.webm" type="video/webm">
+    <source src="fondo.mp4" type="video/mp4">
+  </video>
   <div id="bg-overlay"></div>
 
   <!-- ====== Header / Navegación ====== -->
@@ -205,7 +55,8 @@
     </nav>
   </header>
 
-  <!-- ====== INICIO ====== -->
+  <main>
+    <!-- ====== INICIO ====== -->
   <section id="inicio" class="seccion active">
     <div class="inicio-card">
       <h2>Bienvenido a Cáritas CNC ❤️</h2>
@@ -237,60 +88,40 @@
     </div>
   </section>
 
- <!-- ====== SECCIÓN DE CREDENCIALES ====== -->
+  <!-- ====== SECCIÓN DE CREDENCIALES ====== -->
 <section id="credenciales" class="seccion">
-  <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
-<main>
-   <!-- Generar credenciales -->
-  <div class="contenedor">
-  <!-- Generar credenciales -->
-  <div class="card">
-    <h3>Generar credenciales</h3>
-    <input type="email" id="email" placeholder="Correo">
-    <input type="password" id="password" placeholder="Contraseña">
-    <input type="file" id="fotoPerfil" accept="image/*">
-    <button id="crear-credenciales"><i class="fa-solid fa-user-plus"></i> Crear Usuario</button>
-    <canvas id="qr-preview"></canvas>
-  </div>
-    <button id="ver-credencial" style="display:none;">Ver Credencial</button>
-  </div>
-      </div>
+  <h2>Credenciales</h2>
 
-   <!-- Validar credencial -->
+  <!-- Crear credencial -->
+  <div class="card">
+    <h3>Crear Credencial</h3>
+    <input type="email" id="cred-email" placeholder="Correo electrónico" />
+    <input type="password" id="cred-password" placeholder="Contraseña" />
+    <input type="file" id="foto-perfil" accept="image/*" />
+
+    <!-- Botón más grande -->
+    <button id="btn-crear-credencial" class="btn-big">Crear credencial</button>
+
+    <canvas id="qr-canvas"></canvas>
+    <button id="btn-ver-credencial" style="display:none;">
+      <i class="fa-solid fa-id-card"></i> Ver Credencial
+    </button>
+  </div>
+
+  <!-- Validar credencial -->
   <div class="card">
     <h3>Validar Credencial</h3>
     <p>Escanea el código QR o revisa el ID para verificar validez.</p>
     <button class="submit-btn" onclick="window.location.href='validar.html'">
       <i class="fa-solid fa-qrcode"></i> Ir a validar
     </button>
-    <button id="ver-credencial"><i class="fa-solid fa-id-card"></i> Ver Credencial</button>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal" id="modalCredencial">
-  <div class="modal-content">
-    <h3>Credencial</h3>
-    <img id="foto-modal" src="" alt="Foto de perfil">
-    <canvas id="qr-modal"></canvas>
-    <p id="correo-modal"></p>
-    <p id="id-modal"></p>
-    <button class="close-btn" onclick="document.getElementById('modalCredencial').style.display='none'">Cerrar</button>
-  </div>
-</div>
-
-
-    <br><br>
-    <button id="ver-credencial" class="submit-btn">
+    <button id="btn-ver-credencial-secundario" class="submit-btn">
       <i class="fa-solid fa-id-card"></i> Ver Credencial
     </button>
-  </section>
-  </main>
+  </div>
+</section>
 
-
-
-
-  <!-- ====== REGISTRO ====== -->
+    <!-- ====== REGISTRO ====== -->
   <section id="registro" class="seccion">
     <h2>Registro de Familias</h2>
     <div id="msg"></div>
@@ -333,7 +164,8 @@
     </div>
   </section>
 
-  <!-- ====== CONTACTO ====== -->
+
+   <!-- ====== CONTACTO ====== -->
   <section id="contacto" class="seccion">
     <div class="card">
       <h2>Contacto</h2>
@@ -342,7 +174,7 @@
     </div>
   </section>
 
-  <!-- ====== ADMINISTRACIÓN ====== -->
+   <!-- ====== ADMINISTRACIÓN ====== -->
   <section id="administracion" class="seccion">
     <h2>Administración</h2>
 
@@ -377,7 +209,7 @@
       <div id="pendientesError" style="color:#b00020; margin-top:.5rem;"></div>
     </div>
 
-    <!-- CALENDARIO -->
+       <!-- CALENDARIO -->
     <div id="agendamiento" class="subsection" style="display:none; margin-top:1rem;">
       <h3>Agenda</h3>
       <div id="calendar"></div>
@@ -406,95 +238,29 @@
 
       <div id="familiasAdminError" class="error" style="display:none;margin-top:.5rem;">No se pudo cargar el listado.</div>
     </div>
+
+
   </section>
 
-  <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
+  </main>
 
-<!-- ================== JS ================== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
+</body>
+
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<script>
-  /* =============================
-     Supabase (pendientes & familias)
-  const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
-  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+<script type="module">
+  import { supabase } from './supabase-config.js';
+
+  const emailInput = document.getElementById('cred-email');
+  const passInput = document.getElementById('cred-password');
+  const fotoInput = document.getElementById('foto-perfil');
+  const crearBtn = document.getElementById('btn-crear-credencial');
+  const qrCanvas = document.getElementById('qr-canvas');
+  const verCredencialBtn = document.getElementById('btn-ver-credencial');
 
   let ultimoUsuario = null;
 
-// Crear usuario
-  document.getElementById("crear-credenciales").addEventListener("click", async () => {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const foto = document.getElementById("fotoPerfil").files[0];
-
-    if (!email || !password || !foto) {
-      alert("Completa todos los campos y sube una foto.");
-      return;
-    }
-
-    try {
-      console.log("📌 Creando usuario en Supabase...");
-      const { data, error } = await supabaseClient.auth.signUp({ email, password });
-      if (error) throw error;
-
-      const userId = data.user.id;
-      ultimoUsuario = { email, id: userId };
-
-      console.log("✅ Usuario creado:", userId);
-
-      // Subir foto
-      const { error: uploadError } = await supabaseClient.storage
-        .from("fotos-perfil")
-        .upload(`${userId}.jpg`, foto, { cacheControl: "3600", upsert: true });
-      if (uploadError) throw uploadError;
-
-      // Generar QR en vista previa
-      QRCode.toCanvas(document.getElementById("qr-preview"), userId, (err) => {
-        if (err) console.error(err);
-      });
-
-      alert("✅ Usuario creado con éxito y QR generado.");
-    } catch (err) {
-      console.error("❌ Error inesperado:", err);
-      alert("Error: " + err.message);
-    }
-  });
-
-  // Ver credencial
-  document.getElementById("ver-credencial").addEventListener("click", async () => {
-    if (!ultimoUsuario) {
-      alert("Primero crea un usuario.");
-      return;
-    }
-    const { data } = supabaseClient.storage
-      .from("fotos-perfil")
-      .getPublicUrl(`${ultimoUsuario.id}.jpg`);
-
-    document.getElementById("foto-modal").src = data.publicUrl;
-    document.getElementById("correo-modal").innerText = ultimoUsuario.email;
-    document.getElementById("id-modal").innerText = ultimoUsuario.id;
-
-    // QR en modal
-    QRCode.toCanvas(document.getElementById("qr-modal"), ultimoUsuario.id, (err) => {
-      if (err) console.error(err);
-    });
-
-    document.getElementById("modalCredencial").style.display = "flex";
-  });
-</script>
-</script>
-
- <script type="module">
-  import { supabase } from './supabase-config.js';
-
-  const emailInput = document.getElementById('email');
-  const passInput = document.getElementById('password');
-  const fotoInput = document.getElementById('foto-perfil');
-  const crearBtn = document.getElementById('crear-credenciales');
-  const qrCanvas = document.getElementById('qr-canvas');
-  const verCredencialBtn = document.getElementById('ver-credencial');
-
+  // Crear credencial
   crearBtn.addEventListener('click', async () => {
     try {
       console.log("📌 Creando usuario en Supabase...");
@@ -515,8 +281,9 @@
       });
       if (authError) throw authError;
 
+      const userId = authData.user?.id || crypto.randomUUID();
+
       // 2. Subir foto a Supabase Storage
-      const userId = crypto.randomUUID();
       const file = fotoInput.files[0];
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}.${fileExt}`;
@@ -524,11 +291,11 @@
       const { error: uploadError } = await supabase
         .storage
         .from('fotos-perfil')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // 3. Generar URL pública de la foto
+      // 3. Obtener URL pública de la foto
       const { data: publicUrlData } = supabase
         .storage
         .from('fotos-perfil')
@@ -536,16 +303,16 @@
 
       const fotoUrl = publicUrlData.publicUrl;
 
-      // 4. Guardar registro en tabla "credenciales"
+      // 4. Guardar en tabla "credenciales"
       const { error: insertError } = await supabase
         .from('credenciales')
-        .insert([
-          { id: userId, email: emailInput.value, foto_url: fotoUrl }
-        ]);
+        .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl }]);
 
       if (insertError) throw insertError;
 
-      // 5. Generar QR con enlace a credencial
+      ultimoUsuario = { id: userId, email: emailInput.value, fotoUrl };
+
+      // 5. Generar QR
       const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
       await QRCode.toCanvas(qrCanvas, credencialUrl);
 
@@ -558,255 +325,38 @@
       alert("Error: " + err.message);
     }
   });
+
+  // Ver credencial en modal
+  verCredencialBtn.addEventListener("click", async () => {
+    if (!ultimoUsuario) return alert("Primero crea un usuario.");
+
+    document.getElementById("foto-modal").src = ultimoUsuario.fotoUrl;
+    document.getElementById("correo-modal").innerText = ultimoUsuario.email;
+    document.getElementById("id-modal").innerText = ultimoUsuario.id;
+    QRCode.toCanvas(document.getElementById("qr-modal"), ultimoUsuario.id);
+
+    document.getElementById("modalCredencial").style.display = "flex";
+  });
 </script>
-
-  
-
 <script>
-  /* =============================
-     Navegación entre secciones
-  ==============================*/
+  function showSection(id) {
+    // Oculta todas las secciones
+    document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
+    // Muestra la sección seleccionada
+    document.getElementById(id).classList.add("active");
+  }
+</script>
+<script>
   function showSection(id) {
     document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
     if (id === 'administracion') showSubSection('pendientes');
   }
-  
 
   function showSubSection(id) {
     document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
     const el = document.getElementById(id);
-    if (!el) return;
-    // Mostrar primero
-    el.style.display = 'block';
-    // Inicializaciones perezosas
-    if (id === 'pendientes') loadPendientes();
-    if (id === 'agendamiento') initCalendar();
-    if (id === 'familiasAdmin') {
-      // Si no usas Firebase Auth aquí, quita la puerta y carga directamente:
-      // loadFamiliasAdmin();
-      // Si más adelante activas Auth, muestra/oculta en consecuencia:
-      document.getElementById('familiasNotice').style.display = 'none';
-      loadFamiliasAdmin();
-    }
-  }
-
-  function goLogin(){ window.location.href = 'login.html'; }
-  function logout(){ /* si luego activas Firebase Auth aquí */ showSection('inicio'); }
-
-  /* =============================
-     Registro (API Render absoluta)
-  ==============================*/
-  document.getElementById('familiaForm').addEventListener('submit', async function(e){
-    e.preventDefault();
-    const msgDiv = document.getElementById('msg');
-    msgDiv.innerHTML = '';
-    const formData = new FormData(this);
-    try {
-      const res = await fetch('https://api-familias.onrender.com/familias', { method:'POST', body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
-        this.reset();
-      } else {
-        msgDiv.innerHTML = "<div class='error'>❌ Error al registrar</div>";
-        console.error(data);
-      }
-    } catch(err){
-      msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
-    }
-  });
-
-  /* =============================
-     Leaflet + Nominatim
-  ==============================*/
-  let map, marker;
-  function initMap() {
-    map = L.map('map', { center: [-12.0464, -77.0428], zoom: 12 });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-  }
-  function centerMap(lat, lng, label='') {
-    const pos = [lat, lng];
-    map.setView(pos, 16);
-    if (!marker) marker = L.marker(pos).addTo(map);
-    else marker.setLatLng(pos);
-    if (label) marker.bindPopup(label).openPopup();
-  }
-  async function geocodeAddress(q, limit=1){
-    const u = new URL('https://nominatim.openstreetmap.org/search');
-    u.searchParams.set('format','json'); u.searchParams.set('q', q);
-    u.searchParams.set('addressdetails','1'); u.searchParams.set('limit', String(limit));
-    const r = await fetch(u, { headers: { 'Accept-Language':'es' } });
-    if (!r.ok) throw new Error('Nominatim error');
-    return r.json();
-  }
-  const dirInput = document.getElementById('reg-direccion');
-  const dl = document.getElementById('dl-direcciones');
-  let sugTimer;
-  dirInput.addEventListener('input', () => {
-    clearTimeout(sugTimer);
-    const q = dirInput.value.trim();
-    if (q.length < 3) { dl.innerHTML = ''; return; }
-    sugTimer = setTimeout(async () => {
-      try {
-        const results = await geocodeAddress(q, 5);
-        dl.innerHTML = results.map(r => `<option value="${escapeHtml(r.display_name)}"></option>`).join('');
-      } catch {}
-    }, 350);
-  });
-  document.getElementById('btn-ver-mapa').addEventListener('click', async () => {
-    const q = dirInput.value.trim(); if (!q) return;
-    try {
-      const [r] = await geocodeAddress(q, 1) || [];
-      if (r) centerMap(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
-      else alert('No se encontró esa dirección.');
-    } catch { alert('Error al buscar la dirección.'); }
-  });
-  function escapeHtml(s=''){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-  document.addEventListener('DOMContentLoaded', initMap);
-
-  /* =============================
-     Supabase (pendientes & familias)
-  ==============================*/
-
-  
-  const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
-  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-  // UI helpers para "Pendientes"
-  function trPendiente({ id, descripcion = "", estado = false } = {}) {
-    const tr = document.createElement('tr');
-    if (id != null) tr.dataset.id = id;
-    tr.innerHTML = `
-      <td contenteditable="true">${escapeHtml(descripcion ?? "")}</td>
-      <td style="text-align:center;"><input type="checkbox" ${estado ? 'checked' : ''}></td>
-      <td style="text-align:center;"><button type="button" onclick="deletePendRow(this)">🗑️</button></td>
-    `;
-    return tr;
-  }
-  function addPendRow(){ document.querySelector('#pendientesTable tbody').appendChild(trPendiente({ descripcion:"", estado:false })); }
-  function deletePendRow(btn){ btn.closest('tr').remove(); }
-
-  async function loadPendientes(){
-    const tbody = document.querySelector('#pendientesTable tbody');
-    const status = document.getElementById('pendientesStatus');
-    const err = document.getElementById('pendientesError');
-    status.textContent = '⏳ Cargando...'; err.textContent = '';
-    try {
-      const { data, error } = await supabaseClient
-        .from('pendientes')
-        .select('id, descripcion, estado')
-        .order('id', { ascending: true });
-      if (error) throw error;
-      tbody.innerHTML = '';
-      data.forEach(item => tbody.appendChild(trPendiente(item)));
-      status.textContent = `✔ ${data.length} tareas`;
-    } catch(e){
-      err.textContent = 'No se pudieron cargar los pendientes.'; status.textContent = '';
-    }
-  }
-  async function savePendientes(){
-    const tbody = document.querySelector('#pendientesTable tbody');
-    const status = document.getElementById('pendientesStatus');
-    const err = document.getElementById('pendientesError');
-    const rows = [...tbody.querySelectorAll('tr')];
-    const payload = rows.map(tr => {
-      const [tdDesc, tdCheck] = tr.children;
-      const id = tr.dataset.id ? Number(tr.dataset.id) : undefined;
-      const descripcion = (tdDesc.textContent || '').trim();
-      const estado = tdCheck.querySelector('input[type="checkbox"]').checked;
-      const obj = { descripcion, estado };
-      if (id) obj.id = id;
-      return obj;
-    });
-    status.textContent = '💾 Guardando...'; err.textContent = '';
-    try {
-      const { data, error } = await supabaseClient
-        .from('pendientes')
-        .upsert(payload, { onConflict: 'id' })
-        .select('id, descripcion, estado');
-      if (error) throw error;
-      tbody.innerHTML = '';
-      data.sort((a,b)=>a.id-b.id).forEach(item => tbody.appendChild(trPendiente(item)));
-      status.textContent = '✅ Cambios guardados';
-    } catch(e){ err.textContent = 'No se pudieron guardar los cambios.'; status.textContent = ''; }
-  }
-
-  // Familias (Admin) — ejemplo simple leyendo una vista/tabla "familias"
-  let familiasAdminData = [];
-  const famSearch = () => (document.getElementById('fam-search').value || '').trim().toLowerCase();
-
-  function renderFamiliasAdmin(){
-    const q = famSearch();
-    const tbody = document.querySelector('#familiasAdminTable tbody');
-    const rows = (q.length >= 2)
-      ? familiasAdminData.filter(f =>
-          (f.nombres_apellidos||'').toLowerCase().includes(q) ||
-          (f.apellido_familia||'').toLowerCase().includes(q) ||
-          (f.direccion||'').toLowerCase().includes(q) ||
-          (String(f.dni_solicitante||'')).includes(q))
-      : familiasAdminData;
-
-    tbody.innerHTML = rows.map(f => `
-      <tr>
-        <td>${escapeHtml(f.nombres_apellidos||'')}</td>
-        <td>${escapeHtml(String(f.dni_solicitante||''))}</td>
-        <td>${escapeHtml(f.apellido_familia||'')}</td>
-        <td>${escapeHtml(f.direccion||'')}</td>
-        <td>${escapeHtml(f.fecha_registro||'')}</td>
-        <td>${escapeHtml(f.telefono_contacto||'')}</td>
-        <td>${escapeHtml(f.observaciones||'')}</td>
-      </tr>
-    `).join('');
-    document.getElementById('fam-count').textContent = `${rows.length} resultados`;
-  }
-
-  async function loadFamiliasAdmin(){
-    const err = document.getElementById('familiasAdminError');
-    err.style.display = 'none';
-    try {
-      const { data, error } = await supabaseClient
-        .from('familias')
-        .select('nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones')
-        .order('fecha_registro', { ascending: false });
-      if (error) throw error;
-      familiasAdminData = data || [];
-      renderFamiliasAdmin();
-    } catch(e){
-      err.style.display = 'block';
-    }
-  }
-
-  document.getElementById('fam-search').addEventListener('input', renderFamiliasAdmin);
-  document.getElementById('fam-refresh').addEventListener('click', loadFamiliasAdmin);
-
-  /* =============================
-     FullCalendar (básico)
-  ==============================*/
-  let calendarInstance = null;
-  function initCalendar(){
-    if (calendarInstance) return; // evitar doble init
-    const el = document.getElementById('calendar');
-    if (!el) return;
-    calendarInstance = new FullCalendar.Calendar(el, {
-      initialView: 'dayGridMonth',
-      height: 'auto',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,listWeek'
-      },
-      dateClick: (info) => {
-        const title = prompt('Título del evento:');
-        if (title) {
-          calendarInstance.addEvent({ title, start: info.dateStr, allDay: true });
-        }
-      }
-    });
-    calendarInstance.render();
+    if (el) el.style.display = 'block';
   }
 </script>
-</body>
-</html>

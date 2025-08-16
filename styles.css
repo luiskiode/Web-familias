@@ -15,9 +15,8 @@
   --err: #dc2626;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
 html, body {
   height: 100%;
   margin: 0;
@@ -73,7 +72,7 @@ html, body {
 }
 
 /* =========
-   Secciones / pestañas
+   Secciones
    ========= */
 .seccion, .tabcontent {
   display: none;
@@ -84,9 +83,7 @@ html, body {
   max-width: 900px;
   margin: 1rem auto;
 }
-.seccion.active, .tabcontent.active {
-  display: block;
-}
+.seccion.active, .tabcontent.active { display: block; }
 
 /* =========
    Tipografía y layout
@@ -100,12 +97,10 @@ h2 {
   gap: 0.5rem;
   align-items: center;
 }
-.row > * {
-  flex: 1;
-}
+.row > * { flex: 1; }
 
 /* =========
-   Tarjetas, tablas, formularios
+   Tarjetas, formularios
    ========= */
 .card {
   background: var(--card);
@@ -115,7 +110,6 @@ h2 {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Inputs */
 input, textarea, select {
   width: 100%;
   padding: 0.75rem 0.85rem;
@@ -130,7 +124,7 @@ textarea {
   resize: vertical;
 }
 
-/* Botones principales */
+/* Botones */
 .submit-btn, button.submit-btn {
   appearance: none;
   border: none;
@@ -144,14 +138,28 @@ textarea {
   transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
   box-shadow: 0 6px 14px rgba(183, 28, 28, 0.25);
 }
-.submit-btn:hover {
-  filter: brightness(1.03);
-}
-.submit-btn:active {
-  transform: translateY(1px);
-}
+.submit-btn:hover { filter: brightness(1.03); }
+.submit-btn:active { transform: translateY(1px); }
 
-/* Mensajes */
+.btn-big {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: var(--red-1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.btn-big:hover { background-color: var(--red-3); }
+
+/* =========
+   Mensajes
+   ========= */
 .success {
   margin: 0.6rem 0;
   padding: 0.6rem 0.8rem;
@@ -169,7 +177,9 @@ textarea {
   border: 1px solid #f5c2c7;
 }
 
-/* Tablas (listado/pendientes) */
+/* =========
+   Tablas
+   ========= */
 table {
   width: 100%;
   border-collapse: separate;
@@ -190,16 +200,10 @@ tbody td {
   padding: 0.6rem;
   vertical-align: middle;
 }
-tbody td:first-child {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-tbody td:last-child {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
+tbody td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+tbody td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 
-/* Botón borrar fila de pendientes */
+/* Botón borrar fila pendientes */
 #pendientesTable button {
   appearance: none;
   border: 1px solid var(--border2);
@@ -209,12 +213,10 @@ tbody td:last-child {
   border-radius: 10px;
   cursor: pointer;
 }
-#pendientesTable button:hover {
-  background: #f7f7f7;
-}
+#pendientesTable button:hover { background: #f7f7f7; }
 
 /* =========
-   Mapa (Leaflet) + calendario (FullCalendar)
+   Mapa y calendario
    ========= */
 #map {
   min-height: 320px;
@@ -223,23 +225,6 @@ tbody td:last-child {
   background: #f6f7f9;
   margin-bottom: 1rem;
 }
-.leaflet-container {
-  border-radius: 14px;
-}
-.leaflet-popup-content-wrapper, .leaflet-popup-tip {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border2);
-}
-.leaflet-control-zoom a {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border2);
-}
-.leaflet-control-zoom a:hover {
-  background: #f4f4f4;
-}
-
 #calendar {
   background: #fff;
   border: 1px solid var(--border);
@@ -253,8 +238,6 @@ tbody td:last-child {
    Footer
    ========= */
 footer {
-  position: relative;
-  z-index: 1;
   margin-top: 1rem;
   padding: 1.2rem 0.8rem;
   background: rgba(183, 28, 28, 0.95);
@@ -267,13 +250,9 @@ footer {
 }
 
 /* =========
-   Contenido inicio
+   Inicio
    ========= */
-#inicio {
-  padding: 20px;
-  background-color: var(--red-1);
-  color: #fff;
-}
+#inicio { padding: 20px; background-color: var(--red-1); color: #fff; }
 
 .inicio-card {
   background: #fff;
@@ -285,18 +264,8 @@ footer {
   margin: 20px auto;
 }
 
-.inicio-content {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.inicio-content img {
-  width: 120px;
-  height: auto;
-  border-radius: 8px;
-}
+.inicio-content { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.inicio-content img { width: 120px; border-radius: 8px; }
 
 .imagenes-laterales {
   display: flex;
@@ -305,35 +274,86 @@ footer {
   min-width: 100px;
   margin-right: 20px;
 }
-
 .imagenes-laterales img {
   width: 80px;
-  height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(183, 28, 28, 0.4);
   cursor: pointer;
   transition: transform 0.2s ease;
-  margin-bottom: 10px;
 }
+.imagenes-laterales img:hover { transform: scale(1.05); }
 
-.imagenes-laterales img:hover {
-  transform: scale(1.05);
-}
-
-.contenido-texto {
-  flex: 1;
-}
 /* =========
    Video de fondo
    ========= */
-#video-fondo {
+#video-background {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ajusta sin distorsionar */
-  z-index: -1;       /* Queda detrás de todo */
-  opacity: 0.35;     /* Ajusta transparencia para que no opaque el contenido */
-  pointer-events: none; /* Evita que bloquee clics */
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: -1;
 }
+
+/* =========
+   Credenciales
+   ========= */
+.credenciales-container { display: flex; gap: 20px; flex-wrap: wrap; }
+.credenciales-box {
+  background-color: rgba(0,0,0,0.6);
+  padding: 20px;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 250px;
+}
+.credenciales-box input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+}
+.credenciales-box button {
+  background: var(--red-1);
+  color: #fff;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.credenciales-box button:hover { background: var(--red-3); }
+
+/* =========
+   Modal credencial
+   ========= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 350px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.modal-content img { max-width: 120px; border-radius: 10px; margin-bottom: 10px; }
+.modal-content button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  border: none;
+  background: var(--red-1);
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.modal-content button:hover { background: var(--red-3); }
