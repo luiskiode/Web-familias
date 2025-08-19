@@ -25,8 +25,7 @@
 <!-- ====== FullCalendar (CDN oficial) ====== -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-<!-- ====== Supabase UMD (sin imports) ====== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 
 <!-- ====== QRCode ====== -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -192,37 +191,16 @@
   <div id="pendientesStatus"></div> <!-- ⬅️ este faltaba -->
 </div>
 
-   <!-- ====== Supabase UMD (CDN, sin imports) ====== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
-<!-- Tu config -->
-<script src="supabase-config.js"></script>
 
 <script>
-  // 🚀 Inicializa Supabase
-  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ===== LOGIN =====
   function goLogin() {
-    alert("Aquí irá la lógica de login con Firebase o Supabase.");
-    // Ejemplo futuro: supabase.auth.signInWithPassword({ email, password });
-  }
+  alert("Aquí irá la lógica de login con Firebase o Supabase.");
+}
 
-  function logout() {
-    alert("Cerrar sesión aún no implementado");
-    // Ejemplo futuro: supabase.auth.signOut();
-  }
 
-  // ===== PENDIENTES (Admin) =====
-  async function loadPendientes() {
-    const tbody = document.querySelector("#pendientesTable tbody");
-    const status = document.getElementById("pendientesStatus");
-    if (!tbody) return; // seguridad
 
-    tbody.innerHTML = "";
-    status.innerHTML = "Cargando...";
 
     try {
       // 🔹 Ejemplo: leer de tabla "pendientes" en Supabase
@@ -248,7 +226,7 @@
       console.error("Error cargando pendientes:", err);
       status.innerHTML = "❌ Error";
     }
-  }
+  
 
   function addPendRow() {
     const tbody = document.querySelector("#pendientesTable tbody");
@@ -338,18 +316,7 @@
     }
   };
 
-  // Cargar pendientes al abrir
-  async function loadPendientes() {
-    const tbody = document.querySelector("#pendientesTable tbody");
-    tbody.innerHTML = "";
 
-    const { data, error } = await supabase.from("pendientes").select("*");
-
-    if (error) {
-      document.getElementById("pendientesError").textContent = "Error cargando pendientes.";
-      console.error(error);
-      return;
-    }
 
     data.forEach(item => {
       const tr = document.createElement("tr");
@@ -364,7 +331,7 @@
       `;
       tbody.appendChild(tr);
     });
-  }
+  
 
   // Auto-cargar al entrar a la sección
   document.addEventListener("DOMContentLoaded", loadPendientes);
@@ -508,29 +475,6 @@
   });
 </script>
 
-<script>
-  function showSection(id) {
-    // Oculta todas las secciones
-    document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
-    // Muestra la sección seleccionada
-    document.getElementById(id).classList.add("active");
-  }
-</script>
-<script>
-  function showSection(id) {
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
-    if (id === 'administracion') showSubSection('pendientes');
-  }
-
-  function showSubSection(id) {
-    document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'block';
-  }
-</script>
-
 <script type="module">
   /* =============================
      Navegación entre secciones
@@ -558,13 +502,7 @@
     }
   }
 
-  function goLogin() {
-    window.location.href = "login.html";
-  }
-  function logout() {
-    // Si luego activas Firebase Auth, pon aquí el logout
-    showSection("inicio");
-  }
+  
 
   /* =============================
      Registro (API Render absoluta)
@@ -690,7 +628,7 @@
     status.textContent = "⏳ Cargando..."; err.textContent = "";
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from("pendientes")
         .select("id, descripcion, estado")
         .order("id", { ascending: true });
@@ -724,7 +662,7 @@
     status.textContent = "💾 Guardando..."; err.textContent = "";
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from("pendientes")
         .upsert(payload, { onConflict: "id" })
         .select("id, descripcion, estado");
@@ -772,7 +710,7 @@
     const err = document.getElementById("familiasAdminError");
     err.style.display = "none";
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from("familias")
         .select("nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones")
         .order("fecha_registro", { ascending: false });
