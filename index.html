@@ -1,168 +1,831 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cáritas CNC - Registro de Familias</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#b71c1c">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cáritas CNC</title>
+
+<!-- ====== Estilos propios ====== -->
 <link rel="stylesheet" href="styles.css" />
+
+<!-- ====== Iconos ====== -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- ====== Leaflet (Mapa) ====== -->
+<link 
+  rel="stylesheet" 
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+  crossorigin=""
+/>
+<script 
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+  crossorigin="">
+</script>
+
+<!-- ====== FullCalendar (CDN oficial) ====== -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+<!-- ====== Supabase UMD (sin imports) ====== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- ====== QRCode ====== -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
 </head>
+
 <body>
+  <!-- Fondo de video -->
+  <video autoplay muted loop playsinline id="video-background">
+    <source src="fondo.webm" type="video/webm">
+    <source src="fondo.mp4" type="video/mp4">
+  </video>
+  <div id="bg-overlay"></div>
 
-<header>Cáritas CNC - Registro y Listado de Familias</header>
+  <!-- ====== Header / Navegación ====== -->
+  <header class="app-header">
+    <h1><i class="fas fa-church"></i> Cáritas CNC</h1>
+    <nav>
+      <button type="button" onclick="showSection('inicio')" class="tabbtn">Inicio</button>
+      <button type="button" onclick="showSection('credenciales')" class="tabbtn">Credenciales</button>
+      <button type="button" onclick="showSection('registro')" class="tabbtn">Registro</button>
+      <button type="button" onclick="showSection('contacto')" class="tabbtn">Contacto</button>
+      <button type="button" onclick="showSection('administracion')" class="tabbtn">Administración</button>
+      <button type="button" id="btn-login" onclick="goLogin()">Iniciar sesión</button>
+      <button type="button" id="btn-logout" style="display:none" onclick="logout()">Cerrar sesión</button>
+    </nav>
+  </header>
 
-<nav>
-    <button onclick="showSection('inicio')">Inicio</button>
-    <button onclick="showSection('registro')">Registro</button>
-    <button onclick="showSection('contacto')">Contacto</button>
-</nav>
+  <main>
+    <!-- ====== INICIO ====== -->
+  <section id="inicio" class="seccion active">
+    <div class="inicio-card">
+      <h2>Bienvenido a Cáritas CNC ❤️</h2>
+      <div class="contenido-inicio">
+        <div class="imagenes-laterales">
+          <img src="img/imagen de grupo 1.jpeg" alt="Foto 1" />
+          <img src="img/imagen de grupo 2.jpeg" alt="Foto 2" />
+          <img src="img/imagen de grupo 3.jpeg" alt="Foto 3" />
+          <img src="img/imagen de grupo 4.jpeg" alt="Foto 4" />
+          <img src="img/imagen de grupo 5.jpeg" alt="Foto 5" />
+        </div>
+        <div style="flex:1;">
+          <p>Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.</p>
+          <p>Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.</p>
 
-<section id="inicio" class="active">
-    <h2>Bienvenido</h2>
-    <p>Registra y gestiona familias beneficiarias de Cáritas CNC.</p>
-    <br />
-    <button class="submit-btn" onclick="goToListado()">📋 Ver Listado de Familias</button>
+          <h3>Nuestra Misión</h3>
+          <p>Como voluntarios de Cáritas CNC, nuestra misión es servir con amor, respeto y empatía a las familias más necesitadas.</p>
+          <p>Nos guiamos por la fe, el compromiso y la compasión para acompañar, escuchar y brindar apoyo a quienes más lo requieren, promoviendo siempre la dignidad, la justicia y la solidaridad.</p>
+
+          <h3>Nuestra Visión</h3>
+          <p>Ser un referente de servicio y apoyo a las familias en situación de vulnerabilidad, construyendo una comunidad más justa y solidaria, donde cada persona sea valorada y tenga la oportunidad de vivir con dignidad.</p>
+          <p>Soñamos con una comunidad más justa, fraterna y solidaria, donde cada persona en situación de vulnerabilidad sea acogida, acompañada y valorada con dignidad. Aspiramos a ser un voluntariado comprometido y cercano, inspirado por el Evangelio, que transforme realidades a través del amor, la fe y el servicio.</p>
+
+          <p>¡Gracias por ser parte de esta misión!</p>
+          <p><b>Gracias por usar Cáritas CNC</b></p>
+          <p class="muted" style="color:#eee;">Versión 1.1.0</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== SECCIÓN DE CREDENCIALES ====== -->
+<section id="credenciales" class="seccion">
+  <h2>Credenciales</h2>
+
+  <!-- Crear credencial -->
+  <div class="card">
+    <h3>Crear Credencial</h3>
+    <input type="email" id="cred-email" placeholder="Correo electrónico" />
+    <input type="password" id="cred-password" placeholder="Contraseña" />
+    <input type="file" id="foto-perfil" accept="image/*" />
+
+    <!-- Botón más grande -->
+    <button id="btn-crear-credencial" class="btn-big">Crear credencial</button>
+
+    <canvas id="qr-canvas"></canvas>
+    <button id="btn-ver-credencial" style="display:none;">
+      <i class="fa-solid fa-id-card"></i> Ver Credencial
+    </button>
+  </div>
+
+  <!-- Validar credencial -->
+  <div class="card">
+    <h3>Validar Credencial</h3>
+    <p>Escanea el código QR o revisa el ID para verificar validez.</p>
+    <button class="submit-btn" onclick="window.location.href='validar.html'">
+      <i class="fa-solid fa-qrcode"></i> Ir a validar
+    </button>
+    <button id="btn-ver-credencial-secundario" class="submit-btn">
+      <i class="fa-solid fa-id-card"></i> Ver Credencial
+    </button>
+  </div>
 </section>
 
-<section id="registro">
+    <!-- ====== REGISTRO ====== -->
+  <section id="registro" class="seccion">
     <h2>Registro de Familias</h2>
     <div id="msg"></div>
-    <form id="familiaForm" enctype="multipart/form-data">
-        <label>Nombres y Apellidos*</label>
-        <input type="text" name="nombres_apellidos" required />
-        <label>DNI*</label>
-        <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
-        <label>Apellido Familia*</label>
-        <input type="text" name="apellido_familia" required />
-        <label>Fecha de Registro*</label>
-        <input type="date" name="fecha_registro" required />
-        <label>Teléfono*</label>
-        <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
-        <label>Observaciones</label>
-        <textarea name="observaciones"></textarea>
-        <label>Adjuntar documento</label>
-        <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
-        <label><input type="checkbox" required> Acepto los términos y condiciones</label>
-        <button type="submit" class="submit-btn">Registrar</button>
+
+    <form id="familiaForm" enctype="multipart/form-data" class="card">
+      <label>Nombres y Apellidos*</label>
+      <input type="text" name="nombres_apellidos" required />
+
+      <label>DNI*</label>
+      <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
+
+      <label>Apellido Familia*</label>
+      <input type="text" name="apellido_familia" required />
+
+      <label>Dirección* (con sugerencias)</label>
+      <div class="row">
+        <input type="text" id="reg-direccion" name="direccion" list="dl-direcciones" autocomplete="off" required />
+        <button type="button" class="submit-btn" id="btn-ver-mapa">📍 Ver en mapa</button>
+      </div>
+      <datalist id="dl-direcciones"></datalist>
+
+      <label>Fecha de Registro*</label>
+      <input type="date" name="fecha_registro" required />
+
+      <label>Teléfono*</label>
+      <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+
+      <label>Observaciones</label>
+      <textarea name="observaciones"></textarea>
+
+      <label>Adjuntar documento</label>
+      <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
+
+      <label><input type="checkbox" required> Acepto los términos y condiciones</label>
+      <button type="submit" class="submit-btn">Registrar</button>
     </form>
-</section>
 
-<section id="listado" style="display:none;">
-    <h2>Listado de Familias</h2>
-    <input type="text" id="search" placeholder="Buscar familia...">
-    <table id="familiasTable">
-        <thead>
-            <tr>
-                <th>Nombres</th>
-                <th>DNI</th>
-                <th>Apellido</th>
-                <th>Fecha</th>
-                <th>Teléfono</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <br />
-    <button class="submit-btn" onclick="logout()">Cerrar Sesión</button>
-</section>
+    <div style="margin-top:12px">
+      <div id="map"></div>
+    </div>
+  </section>
 
-<section id="contacto">
-    <h2>Contacto</h2>
-    <p>Email: contacto@caritas.org</p>
-    <p>Teléfono: +51 999 888 777</p>
-</section>
 
-<footer>
-    © 2025 Cáritas CNC. Todos los derechos reservados.
-</footer>
+   <!-- ====== CONTACTO ====== -->
+  <section id="contacto" class="seccion">
+    <div class="card">
+      <h2>Contacto</h2>
+      <p><i class="fa-solid fa-envelope"></i> Email: contacto@caritas.org</p>
+      <p><i class="fa-solid fa-phone"></i> Teléfono: +51 999 888 777</p>
+    </div>
+  </section>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="firebase-config.js"></script>
+   <!-- ====== ADMINISTRACIÓN ====== -->
+  <section id="administracion" class="seccion">
+    <h2>Administración</h2>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div style="display:flex; gap:.5rem; margin:.5rem 0; flex-wrap:wrap;">
+      <button type="button" class="submit-btn" onclick="showSubSection('pendientes')">✅ Pendientes de grupo</button>
+      <button type="button" class="submit-btn" onclick="showSubSection('agendamiento')">🗓️ Agenda</button>
+      <button type="button" id="btn-admin-familias" class="submit-btn" onclick="showSubSection('familiasAdmin')">👪 Familias registradas</button>
+    </div>
+<div id="pendientes">
+  <h3>Pendientes</h3>
+  <button onclick="addPendRow()">➕ Añadir</button>
+  <button onclick="savePendientes()">💾 Guardar</button>
+
+  <table id="pendientesTable"><tbody></tbody></table>
+  <div id="pendientesStatus"></div> <!-- ⬅️ este faltaba -->
+</div>
+
+   <!-- ====== Supabase UMD (CDN, sin imports) ====== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- Tu config -->
 <script src="supabase-config.js"></script>
 
 <script>
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  // 🚀 Inicializa Supabase
+  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  function showSection(id) {
-    document.querySelectorAll("section").forEach((sec) => sec.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
+  // ===== LOGIN =====
+  function goLogin() {
+    alert("Aquí irá la lógica de login con Firebase o Supabase.");
+    // Ejemplo futuro: supabase.auth.signInWithPassword({ email, password });
   }
 
-  function goToListado() {
-    if (auth.currentUser) {
-      loadFamilias();
-      showSection("listado");
-    } else {
-      window.location.href = "login.html";
+  function logout() {
+    alert("Cerrar sesión aún no implementado");
+    // Ejemplo futuro: supabase.auth.signOut();
+  }
+
+  // ===== PENDIENTES (Admin) =====
+  async function loadPendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    const status = document.getElementById("pendientesStatus");
+    if (!tbody) return; // seguridad
+
+    tbody.innerHTML = "";
+    status.innerHTML = "Cargando...";
+
+    try {
+      // 🔹 Ejemplo: leer de tabla "pendientes" en Supabase
+      const { data, error } = await supabase.from("pendientes").select("*");
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='3'>Sin pendientes</td></tr>";
+      } else {
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td contenteditable="true">${row.descripcion || ""}</td>
+            <td><input type="checkbox" ${row.hecho ? "checked" : ""}></td>
+            <td><button onclick="this.closest('tr').remove()">🗑️</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      status.innerHTML = "✅ Listo";
+    } catch (err) {
+      console.error("Error cargando pendientes:", err);
+      status.innerHTML = "❌ Error";
     }
   }
 
+  function addPendRow() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    if (!tbody) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td contenteditable="true">Nueva tarea</td>
+      <td><input type="checkbox"></td>
+      <td><button onclick="this.closest('tr').remove()">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  async function savePendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll("tr");
+    const data = [];
+    rows.forEach((tr) => {
+      data.push({
+        descripcion: tr.cells[0].innerText,
+        hecho: tr.cells[1].querySelector("input").checked,
+      });
+    });
+
+    try {
+      // 🔹 Borro y re-inserto todo (ejemplo simple)
+      await supabase.from("pendientes").delete().neq("id", 0);
+      const { error } = await supabase.from("pendientes").insert(data);
+      if (error) throw error;
+
+      alert("Pendientes guardados ✅");
+    } catch (err) {
+      console.error("Error guardando pendientes:", err);
+      alert("❌ Error guardando pendientes");
+    }
+  }
+
+  // ===== Al cargar la página =====
+  document.addEventListener("DOMContentLoaded", () => {
+    loadPendientes();
+  });
+</script>
+
+<script>
+ 
+  // ==================
+  // FUNCIONES PENDIENTES
+  // ==================
+
+  // Añadir nueva fila
+  window.addPendRow = function () {
+    const tbody = document.querySelector('#pendientesTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td contenteditable="true"></td>
+      <td style="text-align:center;"><input type="checkbox"></td>
+      <td style="text-align:center;">
+        <button type="button" onclick="this.closest('tr').remove()">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  };
+
+  // Guardar pendientes en Supabase
+  window.savePendientes = async function () {
+    const status = document.getElementById("pendientesStatus");
+    status.textContent = "⏳ Guardando...";
+
+    const rows = document.querySelectorAll("#pendientesTable tbody tr");
+    const data = Array.from(rows).map(row => ({
+      descripcion: row.cells[0].innerText.trim(),
+      hecho: row.cells[1].querySelector("input").checked
+    }));
+
+    const { error } = await supabase
+      .from("pendientes")
+      .upsert(data);
+
+    if (error) {
+      status.textContent = "❌ Error al guardar";
+      console.error(error);
+    } else {
+      status.textContent = "✅ Guardado";
+    }
+  };
+
+  // Cargar pendientes al abrir
+  async function loadPendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    tbody.innerHTML = "";
+
+    const { data, error } = await supabase.from("pendientes").select("*");
+
+    if (error) {
+      document.getElementById("pendientesError").textContent = "Error cargando pendientes.";
+      console.error(error);
+      return;
+    }
+
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td contenteditable="true">${item.descripcion || ""}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" ${item.hecho ? "checked" : ""}>
+        </td>
+        <td style="text-align:center;">
+          <button type="button" onclick="this.closest('tr').remove()">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Auto-cargar al entrar a la sección
+  document.addEventListener("DOMContentLoaded", loadPendientes);
+</script>
+
+
+       <!-- CALENDARIO -->
+    <div id="agendamiento" class="subsection" style="display:none; margin-top:1rem;">
+      <h3>Agenda</h3>
+      <div id="calendar"></div>
+    </div>
+
+    <!-- FAMILIAS (SOLO LOGUEADO, pero mostramos aviso si no hay sesión) -->
+    <div id="familiasAdmin" class="subsection" style="display:none; margin-top:1rem;">
+      <h3>Familias registradas</h3>
+      <p class="muted" id="familiasNotice" style="display:none;">Debes iniciar sesión para ver esta información.</p>
+
+      <div class="row" style="margin:.5rem 0;">
+        <input id="fam-search" placeholder="🔎 Buscar por nombres, apellido, dirección o DNI…" />
+        <button type="button" class="submit-btn" id="fam-refresh">↻ Actualizar</button>
+        <span class="muted" id="fam-count"></span>
+      </div>
+
+      <table id="familiasAdminTable">
+        <thead>
+          <tr>
+            <th>Nombres</th><th>DNI</th><th>Apellido</th><th>Dirección</th>
+            <th>Fecha</th><th>Teléfono</th><th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="familiasAdminError" class="error" style="display:none;margin-top:.5rem;">No se pudo cargar el listado.</div>
+    </div>
+
+
+  </section>
+
+  </main>
+
+  <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
+</body>
+
+<!-- Cargar Supabase con ESM -->
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const supabaseUrl = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+
+  // Crear cliente global
+  window.supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log("✅ Supabase conectado con ESM:", supabase);
+
+  // ========= DOM elements =========
+  const emailInput = document.getElementById("cred-email");
+  const passInput = document.getElementById("cred-password");
+  const fotoInput = document.getElementById("foto-perfil");
+  const crearBtn = document.getElementById("btn-crear-credencial");
+  const qrCanvas = document.getElementById("qr-canvas");
+  const verCredencialBtn = document.getElementById("btn-ver-credencial");
+
+  let ultimoUsuario = null;
+
+  // ========= Crear credencial =========
+  crearBtn.addEventListener("click", async () => {
+    try {
+      console.log("📌 Creando usuario en Supabase...");
+
+      if (!emailInput.value || !passInput.value) {
+        alert("Por favor complete correo y contraseña");
+        return;
+      }
+      if (!fotoInput.files.length) {
+        alert("Por favor seleccione una foto de perfil");
+        return;
+      }
+
+      // 1. Crear usuario en Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: emailInput.value,
+        password: passInput.value,
+      });
+      if (authError) throw authError;
+
+      const userId = authData.user?.id || crypto.randomUUID();
+
+      // 2. Subir foto a Supabase Storage
+      const file = fotoInput.files[0];
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("fotos-perfil")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // 3. Obtener URL pública de la foto
+      const { data: publicUrlData } = supabase
+        .storage
+        .from("fotos-perfil")
+        .getPublicUrl(filePath);
+
+      const fotoUrl = publicUrlData.publicUrl;
+
+      // 4. Guardar en tabla "credenciales"
+      const { error: insertError } = await supabase
+        .from("credenciales")
+        .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl }]);
+
+      if (insertError) throw insertError;
+
+      ultimoUsuario = { id: userId, email: emailInput.value, fotoUrl };
+
+      // 5. Generar QR
+      const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
+      await QRCode.toCanvas(qrCanvas, credencialUrl);
+
+      verCredencialBtn.style.display = "block";
+      verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
+
+      alert("✅ Usuario creado con éxito. QR generado.");
+    } catch (err) {
+      console.error("❌ Error inesperado:", err);
+      alert("Error: " + err.message);
+    }
+  });
+
+  // ========= Ver credencial =========
+  verCredencialBtn.addEventListener("click", async () => {
+    if (!ultimoUsuario) return alert("Primero crea un usuario.");
+
+    document.getElementById("foto-modal").src = ultimoUsuario.fotoUrl;
+    document.getElementById("correo-modal").innerText = ultimoUsuario.email;
+    document.getElementById("id-modal").innerText = ultimoUsuario.id;
+    QRCode.toCanvas(document.getElementById("qr-modal"), ultimoUsuario.id);
+
+    document.getElementById("modalCredencial").style.display = "flex";
+  });
+</script>
+
+<script>
+  function showSection(id) {
+    // Oculta todas las secciones
+    document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
+    // Muestra la sección seleccionada
+    document.getElementById(id).classList.add("active");
+  }
+</script>
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    if (id === 'administracion') showSubSection('pendientes');
+  }
+
+  function showSubSection(id) {
+    document.querySelectorAll('.subsection').forEach(s => s.style.display = 'none');
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  }
+</script>
+
+<script type="module">
+  /* =============================
+     Navegación entre secciones
+  ==============================*/
+  function showSection(id) {
+    document.querySelectorAll(".seccion").forEach(s => s.classList.remove("active"));
+    const el = document.getElementById(id);
+    if (el) el.classList.add("active");
+    if (id === "administracion") showSubSection("pendientes");
+  }
+
+  function showSubSection(id) {
+    document.querySelectorAll(".subsection").forEach(s => s.style.display = "none");
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.style.display = "block"; // mostrar sección activa
+
+    // Inicializaciones perezosas
+    if (id === "pendientes") loadPendientes();
+    if (id === "agendamiento") initCalendar();
+    if (id === "familiasAdmin") {
+      document.getElementById("familiasNotice").style.display = "none";
+      loadFamiliasAdmin();
+    }
+  }
+
+  function goLogin() {
+    window.location.href = "login.html";
+  }
+  function logout() {
+    // Si luego activas Firebase Auth, pon aquí el logout
+    showSection("inicio");
+  }
+
+  /* =============================
+     Registro (API Render absoluta)
+  ==============================*/
   document.getElementById("familiaForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const msgDiv = document.getElementById("msg");
     msgDiv.innerHTML = "";
+
     const formData = new FormData(this);
     try {
-      const res = await fetch("https://api-familias.onrender.com/familias", { method: "POST", body: formData });
+      const res = await fetch("https://api-familias.onrender.com/familias", {
+        method: "POST",
+        body: formData
+      });
       const data = await res.json();
+
       if (res.ok) {
         msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
         this.reset();
       } else {
-        msgDiv.innerHTML = `<div class='error'>❌ Error: ${data.error || "No se pudo registrar"}</div>`;
+        msgDiv.innerHTML = "<div class='error'>❌ Error al registrar</div>";
+        console.error(data);
       }
-    } catch {
+    } catch (err) {
       msgDiv.innerHTML = "<div class='error'>❌ No se pudo conectar</div>";
     }
   });
 
-  async function loadFamilias() {
-    const { data, error } = await supabaseClient.from("familias").select("*");
-    const tbody = document.querySelector("#familiasTable tbody");
-    tbody.innerHTML = "";
-    if (error) {
-      tbody.innerHTML = `<tr><td colspan="6">Error al cargar</td></tr>`;
-    } else {
-      data.forEach((f) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${f.nombres_apellidos || ""}</td>
-          <td>${f.dni_solicitante || ""}</td>
-          <td>${f.apellido_familia || ""}</td>
-          <td>${f.fecha_registro || ""}</td>
-          <td>${f.telefono_contacto || ""}</td>
-          <td>${f.observaciones || ""}</td>`;
-        tbody.appendChild(tr);
-      });
+  /* =============================
+     Leaflet + Nominatim
+  ==============================*/
+  let map, marker;
+  function initMap() {
+    map = L.map("map", { center: [-12.0464, -77.0428], zoom: 12 });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19
+    }).addTo(map);
+  }
+
+  function centerMap(lat, lng, label = "") {
+    const pos = [lat, lng];
+    map.setView(pos, 16);
+    if (!marker) marker = L.marker(pos).addTo(map);
+    else marker.setLatLng(pos);
+    if (label) marker.bindPopup(label).openPopup();
+  }
+
+  async function geocodeAddress(q, limit = 1) {
+    const u = new URL("https://nominatim.openstreetmap.org/search");
+    u.searchParams.set("format", "json");
+    u.searchParams.set("q", q);
+    u.searchParams.set("addressdetails", "1");
+    u.searchParams.set("limit", String(limit));
+
+    const r = await fetch(u, { headers: { "Accept-Language": "es" } });
+    if (!r.ok) throw new Error("Nominatim error");
+    return r.json();
+  }
+
+  const dirInput = document.getElementById("reg-direccion");
+  const dl = document.getElementById("dl-direcciones");
+  let sugTimer;
+
+  dirInput.addEventListener("input", () => {
+    clearTimeout(sugTimer);
+    const q = dirInput.value.trim();
+    if (q.length < 3) { dl.innerHTML = ""; return; }
+
+    sugTimer = setTimeout(async () => {
+      try {
+        const results = await geocodeAddress(q, 5);
+        dl.innerHTML = results.map(r =>
+          `<option value="${escapeHtml(r.display_name)}"></option>`
+        ).join("");
+      } catch {}
+    }, 350);
+  });
+
+  document.getElementById("btn-ver-mapa").addEventListener("click", async () => {
+    const q = dirInput.value.trim();
+    if (!q) return;
+    try {
+      const [r] = await geocodeAddress(q, 1) || [];
+      if (r) centerMap(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
+      else alert("No se encontró esa dirección.");
+    } catch {
+      alert("Error al buscar la dirección.");
+    }
+  });
+
+  function escapeHtml(s = "") {
+    return s.replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[m]));
+  }
+
+  document.addEventListener("DOMContentLoaded", initMap);
+
+ 
+
+  // Helpers de tabla pendientes
+  function trPendiente({ id, descripcion = "", estado = false } = {}) {
+    const tr = document.createElement("tr");
+    if (id != null) tr.dataset.id = id;
+    tr.innerHTML = `
+      <td contenteditable="true">${escapeHtml(descripcion ?? "")}</td>
+      <td style="text-align:center;"><input type="checkbox" ${estado ? "checked" : ""}></td>
+      <td style="text-align:center;"><button type="button" onclick="deletePendRow(this)">🗑️</button></td>
+    `;
+    return tr;
+  }
+  function addPendRow() {
+    document.querySelector("#pendientesTable tbody")
+      .appendChild(trPendiente({ descripcion: "", estado: false }));
+  }
+  function deletePendRow(btn) { btn.closest("tr").remove(); }
+
+  async function loadPendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    const status = document.getElementById("pendientesStatus");
+    const err = document.getElementById("pendientesError");
+    status.textContent = "⏳ Cargando..."; err.textContent = "";
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("pendientes")
+        .select("id, descripcion, estado")
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+      tbody.innerHTML = "";
+      data.forEach(item => tbody.appendChild(trPendiente(item)));
+      status.textContent = `✔ ${data.length} tareas`;
+    } catch {
+      err.textContent = "No se pudieron cargar los pendientes.";
+      status.textContent = "";
     }
   }
 
-  document.getElementById("search").addEventListener("input", function () {
-    const filter = this.value.toLowerCase();
-    document.querySelectorAll("#familiasTable tbody tr").forEach(row => {
-      row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
-    });
-  });
+  async function savePendientes() {
+    const tbody = document.querySelector("#pendientesTable tbody");
+    const status = document.getElementById("pendientesStatus");
+    const err = document.getElementById("pendientesError");
 
-  function logout() {
-    auth.signOut().then(() => {
-      showSection("inicio");
+    const rows = [...tbody.querySelectorAll("tr")];
+    const payload = rows.map(tr => {
+      const [tdDesc, tdCheck] = tr.children;
+      const id = tr.dataset.id ? Number(tr.dataset.id) : undefined;
+      const descripcion = (tdDesc.textContent || "").trim();
+      const estado = tdCheck.querySelector("input[type='checkbox']").checked;
+      const obj = { descripcion, estado };
+      if (id) obj.id = id;
+      return obj;
     });
+
+    status.textContent = "💾 Guardando..."; err.textContent = "";
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("pendientes")
+        .upsert(payload, { onConflict: "id" })
+        .select("id, descripcion, estado");
+
+      if (error) throw error;
+      tbody.innerHTML = "";
+      data.sort((a, b) => a.id - b.id).forEach(item => tbody.appendChild(trPendiente(item)));
+      status.textContent = "✅ Cambios guardados";
+    } catch {
+      err.textContent = "No se pudieron guardar los cambios.";
+      status.textContent = "";
+    }
   }
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
+  // Familias (Admin)
+  let familiasAdminData = [];
+  const famSearch = () => (document.getElementById("fam-search").value || "").trim().toLowerCase();
+
+  function renderFamiliasAdmin() {
+    const q = famSearch();
+    const tbody = document.querySelector("#familiasAdminTable tbody");
+    const rows = (q.length >= 2)
+      ? familiasAdminData.filter(f =>
+          (f.nombres_apellidos || "").toLowerCase().includes(q) ||
+          (f.apellido_familia || "").toLowerCase().includes(q) ||
+          (f.direccion || "").toLowerCase().includes(q) ||
+          (String(f.dni_solicitante || "")).includes(q))
+      : familiasAdminData;
+
+    tbody.innerHTML = rows.map(f => `
+      <tr>
+        <td>${escapeHtml(f.nombres_apellidos || "")}</td>
+        <td>${escapeHtml(String(f.dni_solicitante || ""))}</td>
+        <td>${escapeHtml(f.apellido_familia || "")}</td>
+        <td>${escapeHtml(f.direccion || "")}</td>
+        <td>${escapeHtml(f.fecha_registro || "")}</td>
+        <td>${escapeHtml(f.telefono_contacto || "")}</td>
+        <td>${escapeHtml(f.observaciones || "")}</td>
+      </tr>
+    `).join("");
+    document.getElementById("fam-count").textContent = `${rows.length} resultados`;
+  }
+
+  async function loadFamiliasAdmin() {
+    const err = document.getElementById("familiasAdminError");
+    err.style.display = "none";
+    try {
+      const { data, error } = await supabaseClient
+        .from("familias")
+        .select("nombres_apellidos, dni_solicitante, apellido_familia, direccion, fecha_registro, telefono_contacto, observaciones")
+        .order("fecha_registro", { ascending: false });
+
+      if (error) throw error;
+      familiasAdminData = data || [];
+      renderFamiliasAdmin();
+    } catch {
+      err.style.display = "block";
+    }
+  }
+
+  document.getElementById("fam-search").addEventListener("input", renderFamiliasAdmin);
+  document.getElementById("fam-refresh").addEventListener("click", loadFamiliasAdmin);
+
+  /* =============================
+     FullCalendar (básico)
+  ==============================*/
+  let calendarInstance = null;
+  function initCalendar() {
+    if (calendarInstance) return; // evitar doble init
+    const el = document.getElementById("calendar");
+    if (!el) return;
+    calendarInstance = new FullCalendar.Calendar(el, {
+      initialView: "dayGridMonth",
+      height: "auto",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,listWeek"
+      },
+      dateClick: (info) => {
+        const title = prompt("Título del evento:");
+        if (title) {
+          calendarInstance.addEvent({ title, start: info.dateStr, allDay: true });
+        }
+      }
+    });
+    calendarInstance.render();
   }
 </script>
 
-</body>
-</html>
+<script>
+  async function logout() {
+    try {
+      await firebase.auth().signOut();
+      alert("✅ Sesión cerrada correctamente");
+      showSection("inicio"); // vuelve a la sección de inicio
+    } catch (err) {
+      console.error("❌ Error al cerrar sesión:", err);
+      alert("No se pudo cerrar sesión");
+    }
+  }
+</script>
+
+

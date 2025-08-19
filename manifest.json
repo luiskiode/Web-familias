@@ -1,11 +1,11 @@
 {
-  "name": "Cáritas CNC",
-  "short_name": "Cáritas",
+  "name": "Cáritas CNC – Gestión",
+  "short_name": "Cáritas CNC",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
   "background_color": "#b71c1c",
   "theme_color": "#b71c1c",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
