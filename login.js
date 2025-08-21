@@ -21,7 +21,7 @@ function login(event) {
       const user = userCredential.user;
       console.log("🔑 Usuario autenticado:", user.email);
 
-      // Valida si es admin (puedes mover esto a Firestore más adelante)
+      // Valida si es admin
       if (user.email === "admin@caritas.com") {
         msg.textContent = "Inicio de sesión exitoso. Redirigiendo...";
         msg.classList.add("success");

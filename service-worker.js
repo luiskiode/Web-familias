@@ -1,20 +1,21 @@
-const CACHE_NAME = "caritasCNC-v3";
+// =============================
+// CONFIG
+// =============================
+const CACHE_NAME = "caritasCNC-v4";
 
 const urlsToCache = [
   "./",
   "./index.html",
-  "./login.html",
   "./styles.css",
-  "./manifest.json",
-  "./firebase-config.js",
-  "./supabase-config.js",
+  "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-  "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css",
-  "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
+  "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css",
+  "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"
 ];
 
 // =============================
@@ -53,11 +54,9 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((res) => {
       if (res) {
-        console.log("⚡ Sirviendo desde caché:", event.request.url);
         return res;
       }
       return fetch(event.request).catch(() => {
-        console.warn("🌐 Sin conexión, mostrando fallback.");
         return caches.match("./index.html");
       });
     })
@@ -72,8 +71,6 @@ self.addEventListener("push", (event) => {
     title: "Nueva alerta Cáritas CNC",
     body: "Tienes una nueva notificación."
   };
-
-  console.log("🔔 Push recibido:", data);
 
   event.waitUntil(
     self.registration.showNotification(data.title, {
@@ -90,7 +87,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow("./index.html") // redirige a la app al hacer clic
+    clients.openWindow("./index.html")
   );
 });
 
@@ -98,22 +95,25 @@ self.addEventListener("notificationclick", (event) => {
 // MENSAJES DESDE LA PÁGINA
 // =============================
 self.addEventListener("message", (event) => {
-  console.log("📩 Mensaje recibido en SW:", event.data);
-
-  // Respuesta segura a cualquier mensaje
   if (event.data?.action === "ping") {
     event.source.postMessage({ reply: "pong" });
   }
 
-  // Ejemplo de tarea asíncrona
-  if (event.data?.action === "asyncTask") {
-    doAsyncTask()
-      .then(result => event.source.postMessage({ success: true, result }))
-      .catch(err => event.source.postMessage({ success: false, error: err.message }));
+  if (event.data?.action === "programarRecordatorio") {
+    const { texto, delay } = event.data;
+    setTimeout(() => {
+      self.registration.showNotification("⏰ Recordatorio Cáritas CNC", {
+        body: texto,
+        icon: "./icon-192.png",
+        badge: "./icon-192.png"
+      });
+    }, delay);
   }
 });
 
-// Función de ejemplo para tareas asíncronas
+// =============================
+// FUNCIÓN ASÍNCRONA DE EJEMPLO
+// =============================
 function doAsyncTask() {
   return new Promise((resolve) => {
     setTimeout(() => resolve("✅ Tarea completada"), 1000);

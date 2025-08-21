@@ -13,6 +13,10 @@
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+<<<<<<< HEAD
+    "express": "^4.18.2"
+  },
+=======
     "express": "^4.18.2",
     "fullcalendar": "^6.1.8",
     "multer": "^2.0.2",
@@ -22,6 +26,7 @@
     "nodemon": "^3.0.2"
   },
   "author": "Luis Kiode",
+>>>>>>> 2f6b862eaadeaae75197048f29d1c96d4bcf7495
   "license": "MIT",
   "repository": {
     "type": "git",

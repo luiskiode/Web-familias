@@ -29,17 +29,38 @@ crearBtn.addEventListener('click', async () => {
     });
     if (authError) throw authError;
 
-    // 2. Generar ID y subir foto
-    const userId = authData.user?.id || crypto.randomUUID();
-    const file = fotoInput.files[0];
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${userId}.${fileExt}`;
+ // 2. Generar ID y subir foto
+const userId = authData.user?.id || crypto.randomUUID();
+const file = fotoInput.files[0];
+const fileExt = file.name.split('.').pop();
+const filePath = `${userId}.${fileExt}`;
 
-    const { error: uploadError } = await supabase
-      .storage
-      .from('fotos-perfil')
-      .upload(filePath, file, { upsert: true });
-    if (uploadError) throw uploadError;
+// Guardar extensión en tabla
+await supabase
+  .from('credenciales')
+  .insert([{ id: userId, email: emailInput.value, foto_url: filePath, ext: fileExt }]);
+
+// Modal QR
+verCredencialBtn.addEventListener("click", async () => {
+  if (!ultimoUsuario) {
+    alert("Primero crea un usuario.");
+    return;
+  }
+
+  const { data: publicUrlData } = supabase
+    .storage
+    .from("fotos-perfil")
+    .getPublicUrl(`${ultimoUsuario.id}.${ultimoUsuario.ext}`);
+
+  document.getElementById("foto-modal").src = publicUrlData.publicUrl;
+  document.getElementById("correo-modal").innerText = ultimoUsuario.email;
+  document.getElementById("id-modal").innerText = ultimoUsuario.id;
+
+  const credencialUrl = `${window.location.origin}/credencial.html?id=${ultimoUsuario.id}`;
+  QRCode.toCanvas(document.getElementById("qr-modal"), credencialUrl);
+
+  document.getElementById("modalCredencial").style.display = "flex";
+});
 
     // 3. URL pública de la foto
     const { data: publicUrlData } = supabase

@@ -1,4 +1,32 @@
 {
+<<<<<<< HEAD
+  "name": "caritas-cnc-backend",
+  "version": "1.0.0",
+  "description": "API y servidor para Cáritas CNC con Supabase y Firebase",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luiskiode/Web-familias.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/luiskiode/Web-familias/issues"
+  },
+  "homepage": "https://github.com/luiskiode/Web-familias#readme"
+=======
   "name": "Cáritas CNC – Gestión",
   "short_name": "Cáritas CNC",
   "start_url": "./index.html",
@@ -18,4 +46,5 @@
       "type": "image/png"
     }
   ]
+>>>>>>> 2f6b862eaadeaae75197048f29d1c96d4bcf7495
 }
