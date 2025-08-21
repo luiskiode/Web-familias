@@ -12,58 +12,132 @@
   <script defer src="firebase-config.js"></script>
 </head>
 <body class="login-body">
-  <main class="login-container" role="main">
-    <h1>Cáritas CNC</h1>
-    <h2>Iniciar sesión</h2>
 
-    <form id="loginForm" autocomplete="on" novalidate>
-      <label for="email">Correo</label>
-      <input type="email" id="email" autocomplete="username" required />
+<main class="login-container" role="main">
+  <h1>Cáritas CNC</h1>
+  <h2>Iniciar sesión</h2>
 
-      <label for="password">Contraseña</label>
-      <input type="password" id="password" autocomplete="current-password" required />
+  <form id="loginForm" autocomplete="on" novalidate>
+    <label for="email">Correo</label>
+    <input type="email" id="email" autocomplete="username" required />
 
-      <button type="submit" class="submit-btn">Ingresar</button>
-    </form>
-    <p id="loginMessage" role="alert" aria-live="polite"></p>
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" autocomplete="current-password" required />
 
-    <div style="text-align:center; margin-top:.5rem;">
-      <a href="#" onclick="resetPass();return false;">¿Olvidaste tu contraseña?</a>
-    </div>
-  </main>
+    <button type="submit" class="submit-btn">Ingresar</button>
+  </form>
 
-  <script>
-  // Login con Firebase Auth (compat)
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById('loginMessage');
-    msg.textContent = '';
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+  <p id="loginMessage" role="alert" aria-live="polite"></p>
 
-    try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
-      msg.style.color = '#0a7b2e';
-      msg.textContent = '✔ Acceso concedido. Redirigiendo…';
-      setTimeout(() => window.location.href = 'index.html', 1000);
-    } catch (err) {
-      msg.style.color = '#b00020';
-      msg.textContent = '❌ ' + (err?.message || 'No se pudo iniciar sesión');
-      console.error(err);
-    }
-  });
+  <div style="text-align:center; margin-top:.5rem;">
+    <button class="btn-big" id="resetPassBtn">¿Olvidaste tu contraseña?</button>
+  </div>
+</main>
 
-  async function resetPass(){
-    const email = prompt('Ingresa tu correo para recuperar la contraseña:');
-    if (!email) return;
-    try {
-      await firebase.auth().sendPasswordResetEmail(email);
-      alert('📩 Si el correo existe, se envió un enlace de recuperación.');
-    } catch (err) {
-      alert('❌ No se pudo enviar el correo de recuperación.');
-      console.error(err);
-    }
+<!-- Modal recuperación de contraseña -->
+<div id="modalReset" class="modal">
+  <div class="modal-content">
+    <h3>Recuperar contraseña</h3>
+    <input type="email" id="resetEmail" placeholder="Ingresa tu correo" />
+    <button id="sendReset">Enviar enlace</button>
+    <button onclick="closeModal()">Cerrar</button>
+    <p id="resetMessage"></p>
+  </div>
+</div>
+
+<script>
+console.log("✅ login.js cargado");
+
+// LOGIN
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('loginMessage');
+  msg.textContent = '';
+  msg.classList.remove('error', 'success');
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!email || !password) {
+    msg.textContent = 'Por favor completa email y contraseña.';
+    msg.classList.add('error');
+    return;
   }
-  </script>
+
+  try {
+    const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+
+    // Verificar si es admin
+    if (user.email !== 'admin@caritas.com') {
+      await firebase.auth().signOut();
+      msg.textContent = '⛔ No tienes permisos para acceder a esta página.';
+      msg.classList.add('error');
+      return;
+    }
+
+    msg.textContent = '✔ Acceso concedido. Redirigiendo…';
+    msg.classList.add('success');
+
+    // Guardar sesión en localStorage
+    localStorage.setItem("caritasUser", JSON.stringify({ email: user.email, uid: user.uid }));
+
+    setTimeout(() => window.location.href = 'index.html', 1000);
+
+  } catch (err) {
+    console.error(err);
+    let errorMessage = 'Usuario o contraseña incorrectos.';
+    if (err.code === 'auth/network-request-failed') {
+      errorMessage = 'Error de red. Verifica tu conexión.';
+    }
+    msg.textContent = errorMessage;
+    msg.classList.add('error');
+  }
+});
+
+// MODAL DE RECUPERACIÓN DE CONTRASEÑA
+const modal = document.getElementById('modalReset');
+const resetBtn = document.getElementById('resetPassBtn');
+const sendResetBtn = document.getElementById('sendReset');
+const resetMessage = document.getElementById('resetMessage');
+
+resetBtn.addEventListener('click', () => {
+  modal.style.display = 'flex';
+  resetMessage.textContent = '';
+  document.getElementById('resetEmail').value = '';
+});
+
+function closeModal() {
+  modal.style.display = 'none';
+}
+
+sendResetBtn.addEventListener('click', async () => {
+  const email = document.getElementById('resetEmail').value.trim();
+  resetMessage.textContent = '';
+  resetMessage.classList.remove('success', 'error');
+
+  if (!email) {
+    resetMessage.textContent = 'Por favor ingresa un correo.';
+    resetMessage.classList.add('error');
+    return;
+  }
+
+  try {
+    await firebase.auth().sendPasswordResetEmail(email);
+    resetMessage.textContent = '📩 Si el correo existe, se envió un enlace de recuperación.';
+    resetMessage.classList.add('success');
+  } catch (err) {
+    console.error(err);
+    resetMessage.textContent = '❌ No se pudo enviar el correo de recuperación.';
+    resetMessage.classList.add('error');
+  }
+});
+
+// Cerrar modal al hacer clic fuera
+window.addEventListener('click', (e) => {
+  if (e.target === modal) closeModal();
+});
+</script>
+
 </body>
 </html>
