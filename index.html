@@ -13,38 +13,38 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
-  <!-- Librería QR -->
+  <!-- ====== Librería QR ====== -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-  <!-- Manifest y Service Worker -->
+  <!-- ====== Manifest y Service Worker ====== -->
   <link rel="manifest" href="manifest.json" />
 
-  <!-- Firebase -->
+  <!-- ====== Firebase ====== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
   <!-- ================== Header ================== -->
   <header class="app-header">
-    <h1>Cáritas CNC</h1>
+    <h1>📌 Cáritas CNC</h1>
     <nav>
-      <button onclick="mostrarSeccion('inicio')">Inicio</button>
-      <button onclick="mostrarSeccion('registro-fam')">Registro Familias</button>
-      <button onclick="mostrarSeccion('servicios')">Servicios</button>
+      <button onclick="mostrarSeccion('inicio')">🏠 Inicio</button>
+      <button onclick="mostrarSeccion('registro-fam')">👨‍👩‍👧 Registro Familias</button>
+      <button onclick="mostrarSeccion('servicios')">⚙️ Servicios</button>
     </nav>
   </header>
 
-  <!-- ================== Inicio ================== -->
+  <!-- ================== Sección: Inicio ================== -->
   <section id="inicio" class="seccion active">
     <div class="inicio-card">
       <h2>Bienvenido</h2>
-      <p>Plataforma Cáritas CNC - Gestión de Familias y Credenciales.</p>
+      <p>Plataforma <b>Cáritas CNC</b> - Gestión de Familias y Credenciales.</p>
     </div>
   </section>
 
-  <!-- ================== Registro Familias ================== -->
+  <!-- ================== Sección: Registro Familias ================== -->
   <section id="registro-fam" class="seccion">
-    <h2>Registro de Familias</h2>
+    <h2>📋 Registro de Familias</h2>
     <form id="familiaForm" enctype="multipart/form-data" class="card">
       <label>Nombres y Apellidos*</label>
       <input type="text" name="nombres_apellidos" required />
@@ -73,39 +73,40 @@
       <label>Adjuntar documento</label>
       <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
 
-    <label>
-  <input type="checkbox" required>
-  Acepto los <a href="terminos.html" target="_blank">términos y condiciones</a>
-</label>
+      <label>
+        <input type="checkbox" required>
+        Acepto los <a href="terminos.html" target="_blank">términos y condiciones</a>
+      </label>
+
+      <button type="submit" class="submit-btn">Guardar Familia</button>
     </form>
+  </section>
 
-
-    
-
-  <!-- ================== Servicios ================== -->
+  <!-- ================== Sección: Servicios ================== -->
   <section id="servicios" class="seccion">
-    <h2>Servicios</h2>
+    <h2>⚙️ Servicios</h2>
 
-    <!-- Login con Firebase -->
+    <!-- === Login con Firebase === -->
     <div id="loginCard" class="card">
+      <h3>🔑 Iniciar Sesión</h3>
       <input type="email" id="login-email" placeholder="Correo" required />
       <input type="password" id="login-password" placeholder="Contraseña" required />
       <button id="btn-login" class="submit-btn">Iniciar Sesión</button>
     </div>
 
-    <!-- Opciones privadas -->
+    <!-- === Opciones privadas (solo usuarios logueados) === -->
     <div id="serviciosPrivados" class="card" style="display:none;">
-      <h3>Gestión de Credenciales</h3>
+      <h3>🎫 Gestión de Credenciales</h3>
       <form id="credencialForm" class="card">
         <input type="email" id="email" placeholder="Correo" required />
         <input type="password" id="password" placeholder="Contraseña" required />
         <input type="file" id="foto-perfil" accept="image/*" required />
-        <button type="button" id="crear-credenciales" class="submit-btn">Crear</button>
+        <button type="button" id="crear-credenciales" class="submit-btn">Crear Credencial</button>
       </form>
       <canvas id="qr-canvas" style="margin-top:1rem;"></canvas>
       <button id="ver-credencial" style="display:none;" class="btn-big">Ver Credencial</button>
 
-      <h3>Calendario</h3>
+      <h3>📅 Calendario de Actividades</h3>
       <div id="calendar"></div>
 
       <button id="btn-logout" class="submit-btn" style="margin-top:1rem;">Cerrar Sesión</button>
@@ -131,7 +132,7 @@
     const auth = firebase.auth();
   </script>
 
-  <!-- ================== Scripts ================== -->
+  <!-- ================== Scripts globales ================== -->
   <script>
     function mostrarSeccion(id) {
       document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
@@ -145,11 +146,11 @@
     }
   </script>
 
-  <!-- Supabase -->
+  <!-- ================== Supabase ================== -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
 
-  <!-- Scripts -->
+  <!-- ================== Scripts propios ================== -->
   <script src="./login-supabase.js"></script>
   <script src="./credenciales.js"></script>
   <script src="./familias.js"></script>
