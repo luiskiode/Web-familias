@@ -8,21 +8,22 @@ const tabla = document.getElementById("familiasTable");
 
 // Función para cargar familias desde Supabase
 async function cargarFamilias() {
+  if (!tabla) {
+    console.warn("⚠ No se encontró la tabla con id='familiasTable'");
+    return;
+  }
+
   try {
+    // 1. Obtener datos
     const { data, error } = await supabase
-      .from("familias")  // 👈 nombre de tu tabla en Supabase
+      .from("familias") // 👈 asegúrate que la tabla se llama así en Supabase
       .select("*");
 
     if (error) throw error;
 
     console.log("✅ Familias cargadas:", data);
 
-    if (!tabla) {
-      console.warn("⚠ No se encontró la tabla con id='familiasTable'");
-      return;
-    }
-
-    // Limpia antes de renderizar
+    // 2. Renderizar encabezado
     tabla.innerHTML = `
       <thead>
         <tr>
@@ -37,22 +38,33 @@ async function cargarFamilias() {
 
     const tbody = tabla.querySelector("tbody");
 
+    // 3. Renderizar filas
+    if (data.length === 0) {
+      const fila = document.createElement("tr");
+      fila.innerHTML = `<td colspan="4" style="text-align:center;">Sin registros</td>`;
+      tbody.appendChild(fila);
+      return;
+    }
+
     data.forEach(familia => {
       const fila = document.createElement("tr");
       fila.innerHTML = `
-        <td>${familia.id || ""}</td>
-        <td>${familia.nombre || ""}</td>
-        <td>${familia.direccion || ""}</td>
-        <td>${familia.telefono || ""}</td>
+        <td>${familia.id ?? ""}</td>
+        <td>${familia.nombre ?? ""}</td>
+        <td>${familia.direccion ?? ""}</td>
+        <td>${familia.telefono ?? ""}</td>
       `;
       tbody.appendChild(fila);
     });
 
   } catch (err) {
     console.error("❌ Error al cargar familias:", err);
-    if (tabla) {
-      tabla.innerHTML = "<tr><td colspan='4'>Error al cargar familias</td></tr>";
-    }
+    tabla.innerHTML = `
+      <tr>
+        <td colspan="4" style="color:red; text-align:center;">
+          Error al cargar familias
+        </td>
+      </tr>`;
   }
 }
 

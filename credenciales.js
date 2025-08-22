@@ -29,18 +29,50 @@ crearBtn.addEventListener('click', async () => {
     });
     if (authError) throw authError;
 
- // 2. Generar ID y subir foto
-const userId = authData.user?.id || crypto.randomUUID();
-const file = fotoInput.files[0];
-const fileExt = file.name.split('.').pop();
-const filePath = `${userId}.${fileExt}`;
+    // 2. Generar ID y preparar foto
+    const userId = authData.user?.id || crypto.randomUUID();
+    const file = fotoInput.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${userId}.${fileExt}`;
 
-// Guardar extensión en tabla
-await supabase
-  .from('credenciales')
-  .insert([{ id: userId, email: emailInput.value, foto_url: filePath, ext: fileExt }]);
+    // 3. Subir foto a Supabase Storage
+    const { error: uploadError } = await supabase
+      .storage
+      .from('fotos-perfil')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) throw uploadError;
 
-// Modal QR
+    // 4. Obtener URL pública de la foto
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('fotos-perfil')
+      .getPublicUrl(filePath);
+    const fotoUrl = publicUrlData.publicUrl;
+
+    // 5. Guardar credencial en tabla
+    const { error: insertError } = await supabase
+      .from('credenciales')
+      .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl, ext: fileExt }]);
+    if (insertError) throw insertError;
+
+    // 6. Guardar usuario en memoria
+    ultimoUsuario = { id: userId, email: emailInput.value, ext: fileExt };
+
+    // 7. Generar QR con enlace
+    const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
+    await QRCode.toCanvas(qrCanvas, credencialUrl);
+
+    verCredencialBtn.style.display = "block";
+    verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
+
+    alert("✅ Usuario creado con éxito. QR generado.");
+  } catch (err) {
+    console.error("❌ Error inesperado:", err);
+    alert("Error: " + err.message);
+  }
+});
+
+// ✅ Un solo listener para mostrar modal
 verCredencialBtn.addEventListener("click", async () => {
   if (!ultimoUsuario) {
     alert("Primero crea un usuario.");
@@ -59,54 +91,5 @@ verCredencialBtn.addEventListener("click", async () => {
   const credencialUrl = `${window.location.origin}/credencial.html?id=${ultimoUsuario.id}`;
   QRCode.toCanvas(document.getElementById("qr-modal"), credencialUrl);
 
-  document.getElementById("modalCredencial").style.display = "flex";
-});
-
-    // 3. URL pública de la foto
-    const { data: publicUrlData } = supabase
-      .storage
-      .from('fotos-perfil')
-      .getPublicUrl(filePath);
-    const fotoUrl = publicUrlData.publicUrl;
-
-    // 4. Guardar en tabla "credenciales"
-    const { error: insertError } = await supabase
-      .from('credenciales')
-      .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl }]);
-    if (insertError) throw insertError;
-
-    // 5. Guardar usuario para ver luego
-    ultimoUsuario = { id: userId, email: emailInput.value };
-
-    // 6. Generar QR con enlace
-    const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
-    await QRCode.toCanvas(qrCanvas, credencialUrl);
-
-    verCredencialBtn.style.display = "block";
-    verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
-
-    alert("✅ Usuario creado con éxito. QR generado.");
-  } catch (err) {
-    console.error("❌ Error inesperado:", err);
-    alert("Error: " + err.message);
-  }
-});
-
-verCredencialBtn.addEventListener("click", async () => {
-  if (!ultimoUsuario) {
-    alert("Primero crea un usuario.");
-    return;
-  }
-
-  const { data } = supabase
-    .storage
-    .from("fotos-perfil")
-    .getPublicUrl(`${ultimoUsuario.id}.jpg`);
-
-  document.getElementById("foto-modal").src = data.publicUrl;
-  document.getElementById("correo-modal").innerText = ultimoUsuario.email;
-  document.getElementById("id-modal").innerText = ultimoUsuario.id;
-
-  QRCode.toCanvas(document.getElementById("qr-modal"), ultimoUsuario.id);
   document.getElementById("modalCredencial").style.display = "flex";
 });
