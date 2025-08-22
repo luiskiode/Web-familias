@@ -56,15 +56,34 @@ crearBtn.addEventListener("click", async () => {
     }
     const fotoUrl = publicUrlData.publicUrl;
 
-    // Guardar credencial en tabla foto_perfil (RLS habilitado)
-    const { error: insertError } = await supabase
+    // Guardar en tabla foto_perfil
+    const { error: insertFotoError } = await supabase
       .from("foto_perfil")
       .upsert([{ user_id: userId, filename: filePath, url: fotoUrl }]);
 
-    if (insertError) throw insertError;
-    console.log("✅ Credencial registrada en la tabla foto_perfil");
+    if (insertFotoError) throw insertFotoError;
+    console.log("✅ Registro en tabla foto_perfil correcto");
 
-    // Guardar en memoria
+    // 📌 Generar código único para la credencial
+    const codigo = `CCNC-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Guardar en tabla credenciales
+    const { error: insertCredError } = await supabase
+      .from("credenciales")
+      .upsert([
+        {
+          uid: userId,
+          email,
+          codigo,
+          foto_url: fotoUrl,
+          fecha: new Date().toISOString()
+        }
+      ]);
+
+    if (insertCredError) throw insertCredError;
+    console.log("✅ Registro en tabla credenciales correcto");
+
+    // Guardar en memoria para el modal
     ultimoUsuario = { id: userId, email, ext: fileExt };
 
     // Generar QR
