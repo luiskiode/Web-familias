@@ -14,31 +14,27 @@ async function cargarFamilias() {
   try {
     // 1. Obtener datos
     const { data, error } = await window.supabase
-      .from("familias") // 👈 asegúrate que la tabla se llama así en Supabase
+      .from("familias") // 👈 nombre de tu tabla en Supabase
       .select("*");
 
     if (error) throw error;
-
     console.log("✅ Familias cargadas:", data);
-// 2. Renderizar encabezado
-tabla.innerHTML = `
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Dirección</th>
-      <th>Teléfono</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-`;
 
-let tbody = tabla.querySelector("tbody");
-if (!tbody) {
-  tbody = document.createElement("tbody");
-  tabla.appendChild(tbody);
-}
+    // 2. Limpiar tabla y crear cabecera
+    tabla.innerHTML = `
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Teléfono</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
 
+    let tbody = tabla.querySelector("tbody");
+    if (!tbody) { tbody = document.createElement("tbody"); tabla.appendChild(tbody); }
 
     // 3. Renderizar filas
     if (!data || data.length === 0) {
