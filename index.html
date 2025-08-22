@@ -4,14 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cáritas CNC</title>
-  <link rel="stylesheet" href="styles.css?v=4" />
+
+  <!-- ====== Estilos propios ====== -->
+  <link rel="stylesheet" href="styles.css?v=5" />
 
   <!-- ====== Librerías externas ====== -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- ====== FullCalendar ====== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <!-- ====== Librería QR ====== -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -22,6 +25,10 @@
   <!-- ====== Firebase ====== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <!-- ====== Supabase ====== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
 </head>
 <body>
   <!-- ================== Header ================== -->
@@ -81,79 +88,55 @@
       <button type="submit" class="submit-btn">Guardar Familia</button>
     </form>
   </section>
-
+  
   <!-- ================== Sección: Servicios ================== -->
   <section id="servicios" class="seccion">
     <h2>⚙️ Servicios</h2>
+    <div class="card">
+      <p>Selecciona un módulo:</p>
+      <details>
+        <summary>🪪 Credenciales</summary>
+        <div>
+          <form id="credencialForm">
+            <label>Correo*</label>
+            <input type="email" id="email" required />
 
-    <!-- === Login con Firebase === -->
-    <div id="loginCard" class="card">
-      <h3>🔑 Iniciar Sesión</h3>
-      <input type="email" id="login-email" placeholder="Correo" required />
-      <input type="password" id="login-password" placeholder="Contraseña" required />
-      <button id="btn-login" class="submit-btn">Iniciar Sesión</button>
-    </div>
+            <label>Contraseña*</label>
+            <input type="password" id="password" required />
 
-    <!-- === Opciones privadas (solo usuarios logueados) === -->
-    <div id="serviciosPrivados" class="card" style="display:none;">
-      <h3>🎫 Gestión de Credenciales</h3>
-      <form id="credencialForm" class="card">
-        <input type="email" id="email" placeholder="Correo" required />
-        <input type="password" id="password" placeholder="Contraseña" required />
-        <input type="file" id="foto-perfil" accept="image/*" required />
-        <button type="button" id="crear-credenciales" class="submit-btn">Crear Credencial</button>
-      </form>
-      <canvas id="qr-canvas" style="margin-top:1rem;"></canvas>
-      <button id="ver-credencial" style="display:none;" class="btn-big">Ver Credencial</button>
+            <label>Foto*</label>
+            <input type="file" id="foto" accept="image/*" required />
 
-      <h3>📅 Calendario de Actividades</h3>
-      <div id="calendar"></div>
+            <button type="submit">Generar Credencial</button>
+          </form>
+          <div id="credencialPreview" class="preview"></div>
+        </div>
+      </details>
 
-      <button id="btn-logout" class="submit-btn" style="margin-top:1rem;">Cerrar Sesión</button>
+      <details>
+        <summary>📅 Calendario</summary>
+        <div id="calendar"></div>
+      </details>
+
+      <details>
+        <summary>📋 Pendientes</summary>
+        <div>
+          <form id="pendienteForm">
+            <input type="text" id="pendienteInput" placeholder="Escribe un pendiente..." required />
+            <button type="submit">➕ Agregar</button>
+          </form>
+          <ul id="pendientesList"></ul>
+        </div>
+      </details>
     </div>
   </section>
-
-  <!-- ================== Footer ================== -->
-  <footer>
-    Cáritas CNC © 2025
-  </footer>
-
-  <!-- ================== Configuración Firebase ================== -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-      authDomain: "web-familias.firebaseapp.com",
-      projectId: "web-familias",
-      storageBucket: "web-familias.firebasestorage.app",
-      messagingSenderId: "261699620792",
-      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-  </script>
-
-  <!-- ================== Scripts globales ================== -->
-  <script>
-    function mostrarSeccion(id) {
-      document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-    }
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("✅ Service Worker registrado"))
-        .catch(err => console.error("❌ Error SW:", err));
-    }
-  </script>
-
-  <!-- ================== Supabase ================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase-config.js"></script>
 
   <!-- ================== Scripts propios ================== -->
   <script src="./login-supabase.js"></script>
   <script src="./credenciales.js"></script>
   <script src="./familias.js"></script>
   <script src="./servicios.js"></script>
+  <script src="./calendario.js"></script>
+  <script src="./pendientes.js"></script>
 </body>
 </html>

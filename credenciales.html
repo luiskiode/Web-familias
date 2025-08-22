@@ -3,131 +3,133 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cáritas CNC - Credenciales</title>
-  <link rel="stylesheet" href="styles.css">
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="firebase-config.js"></script>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-
-  <!-- QR -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <script src="jsQR.js"></script>
-
+  <title>Credencial Cáritas CNC</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .credencial { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
-    #previewQR { margin-top: 10px; }
-    video { width: 100%; max-width: 400px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .credencial {
+      width: 400px;
+      height: 220px;
+      background: white;
+      border: 2px solid #004aad;
+      border-radius: 12px;
+      display: flex;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .foto {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .foto img {
+      width: 100px;
+      height: 120px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid #004aad;
+    }
+    .datos {
+      flex: 2;
+      margin-left: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .datos h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #004aad;
+    }
+    .datos p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    .codigo {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: bold;
+      color: #004aad;
+    }
+    .qr {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+    }
+    .qr canvas {
+      width: 60px;
+      height: 60px;
+    }
+    .contenedor {
+      position: relative;
+    }
   </style>
 </head>
 <body>
-  <h1>Generar Credencial</h1>
-  <form id="formCredencial">
-      <input type="text" id="nombre" placeholder="Nombre completo" required>
-      <input type="text" id="dni" placeholder="DNI" required>
-      <button type="submit">Generar</button>
-  </form>
-
-  <div id="previewQR"></div>
-
-  <hr>
-  <h2>Validar Credencial (Escanear QR)</h2>
-  <video id="video" autoplay></video>
-  <canvas id="canvas" hidden></canvas>
-  <p id="resultado"></p>
-
-<script>
-/* ================== 1. Proteger acceso con Firebase ================== */
-firebase.auth().onAuthStateChanged(user => {
-  if (!user || user.email !== "admin@caritas.com") {
-    alert("Acceso restringido. Solo administrador.");
-    window.location.href = "login.html";
-  }
-});
-
-/* ================== 2. Conectar con Supabase ================== */
-const { createClient } = supabase;
-const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ================== 3. Generar Credencial ================== */
-const form = document.getElementById("formCredencial");
-const preview = document.getElementById("previewQR");
-
-form.addEventListener("submit", async e => {
-  e.preventDefault();
-  const nombre = document.getElementById("nombre").value.trim();
-  const dni = document.getElementById("dni").value.trim();
-  const codigo = `CCNC-${Date.now()}-${Math.floor(Math.random()*1000)}`;
-
-  // Guardar en Supabase
-  const { error } = await supa.from("credenciales").insert([
-    { nombre, dni, codigo, fecha: new Date().toISOString() }
-  ]);
-
-  if (error) {
-    console.error("Error al guardar en Supabase:", error);
-    alert("❌ Error al guardar la credencial.");
-    return;
-  }
-
-  // Mostrar en pantalla
-  preview.innerHTML = `
+  <div class="contenedor">
     <div class="credencial">
-      <p><b>${nombre}</b></p>
-      <p>DNI: ${dni}</p>
-      <p>Código: ${codigo}</p>
-      <canvas id="qrCanvas"></canvas>
+      <div class="foto">
+        <img id="foto" src="" alt="Foto usuario">
+      </div>
+      <div class="datos">
+        <h2 id="nombre">Usuario</h2>
+        <p id="correo">correo@ejemplo.com</p>
+        <p><strong>ID:</strong> <span id="uid"></span></p>
+      </div>
     </div>
-  `;
-  QRCode.toCanvas(document.getElementById("qrCanvas"), codigo, { width: 200 });
-});
+    <div class="codigo" id="codigo">CCNC-XXXX</div>
+    <div class="qr">
+      <canvas id="qr"></canvas>
+    </div>
+  </div>
 
-/* ================== 4. Escaneo con jsQR ================== */
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const resultado = document.getElementById("resultado");
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-  .then(stream => video.srcObject = stream);
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get("id");
 
-video.addEventListener("play", () => {
-  const loop = () => {
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height);
-      if (code) {
-        validarCodigo(code.data);
+    const supabase = createClient("https://YOUR_PROJECT.supabase.co", "YOUR_ANON_KEY");
+
+    async function cargarCredencial() {
+      if (!userId) return alert("❌ No se encontró el ID del usuario.");
+
+      const { data, error } = await supabase
+        .from("credenciales")
+        .select("*")
+        .eq("uid", userId)
+        .single();
+
+      if (error || !data) {
+        alert("❌ No se encontró la credencial.");
+        console.error(error);
+        return;
       }
+
+      document.getElementById("foto").src = data.foto_url;
+      document.getElementById("correo").innerText = data.email;
+      document.getElementById("uid").innerText = data.uid;
+      document.getElementById("codigo").innerText = data.codigo;
+
+      // Generar QR con URL pública de la credencial
+      const credencialUrl = `${window.location.origin}/credencial.html?id=${data.uid}`;
+      QRCode.toCanvas(document.getElementById("qr"), credencialUrl, { width: 60 });
     }
-    requestAnimationFrame(loop);
-  };
-  loop();
-});
 
-/* ================== 5. Validar Credencial ================== */
-async function validarCodigo(codigo) {
-  const { data, error } = await supa
-    .from("credenciales")
-    .select("*")
-    .eq("codigo", codigo)
-    .single();
-
-  if (error || !data) {
-    resultado.textContent = "❌ Credencial no válida";
-  } else {
-    resultado.textContent = `✅ Credencial válida: ${data.nombre} (DNI: ${data.dni})`;
-  }
-}
-</script>
+    cargarCredencial();
+  </script>
 </body>
 </html>
