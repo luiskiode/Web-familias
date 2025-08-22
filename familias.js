@@ -86,22 +86,43 @@ if (formFamilia) {
   formFamilia.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const nombre = formFamilia.nombre.value;
+    // Obtener valores del formulario
+    const nombres_apellidos = formFamilia.nombres_apellidos.value;
+    const dni_solicitante = formFamilia.dni_solicitante.value;
+    const apellido_familia = formFamilia.apellido_familia.value;
     const direccion = formFamilia.direccion.value;
-    const telefono = formFamilia.telefono.value;
+    const fecha_registro = formFamilia.fecha_registro.value;
+    const telefono_contacto = formFamilia.telefono_contacto.value;
+    const observaciones = formFamilia.observaciones.value;
 
     try {
+      // Geocoding si tienes lat/lng
       const { lat, lng } = await geocodeDireccion(direccion);
 
-      const { error } = await window.supabase
+      // Insertar en Supabase
+      const { error } = await supabase
         .from("familias")
-        .insert([{ nombre, direccion, telefono, lat, lng }]);
+        .insert([{
+          nombres_apellidos,
+          dni_solicitante,
+          apellido_familia,
+          direccion,
+          fecha_registro,
+          telefono_contacto,
+          observaciones,
+          lat,
+          lng
+        }]);
 
       if (error) throw error;
 
       alert("✅ Familia registrada correctamente");
+
       if (typeof enviarNotificacion === "function") {
-        enviarNotificacion("Nueva familia registrada", `👨‍👩‍👧‍👦 ${nombre} fue añadida al sistema`);
+        enviarNotificacion(
+          "Nueva familia registrada",
+          `👨‍👩‍👧‍👦 ${nombres_apellidos} fue añadida al sistema`
+        );
       }
 
       formFamilia.reset();
@@ -112,6 +133,7 @@ if (formFamilia) {
     }
   });
 }
+
 
 // ================== Botón "Ver en mapa" ==================
 if (direccionInput) {
