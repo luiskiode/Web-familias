@@ -45,36 +45,42 @@
   <!-- ================== Registro Familias ================== -->
   <section id="registro-fam" class="seccion">
     <h2>Registro de Familias</h2>
-    <form id="familiaForm" class="card">
-      <label>Nombre de familia</label>
-      <input type="text" name="nombre" required />
+    <form id="familiaForm" enctype="multipart/form-data" class="card">
+      <label>Nombres y Apellidos*</label>
+      <input type="text" name="nombres_apellidos" required />
 
-      <label>Dirección</label>
-      <input type="text" name="direccion" required />
+      <label>DNI*</label>
+      <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
 
-      <label>Teléfono</label>
-      <input type="tel" name="telefono" />
+      <label>Apellido Familia*</label>
+      <input type="text" name="apellido_familia" required />
 
-      <button type="submit" class="submit-btn">Guardar</button>
+      <label>Dirección* (con sugerencias)</label>
+      <div class="row">
+        <input type="text" id="reg-direccion" name="direccion" list="dl-direcciones" autocomplete="off" required />
+      </div>
+      <datalist id="dl-direcciones"></datalist>
+
+      <label>Fecha de Registro*</label>
+      <input type="date" name="fecha_registro" required />
+
+      <label>Teléfono*</label>
+      <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+
+      <label>Observaciones</label>
+      <textarea name="observaciones"></textarea>
+
+      <label>Adjuntar documento</label>
+      <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
+
+    <label>
+  <input type="checkbox" required>
+  Acepto los <a href="terminos.html" target="_blank">términos y condiciones</a>
+</label>
     </form>
 
-    <!-- Aquí integramos el mapa -->
-    <div id="mapa" class="card" style="margin-top:1rem; height:300px;"></div>
 
-    <div id="familiasList" class="card" style="margin-top:1rem;">
-      <h3>Listado de Familias</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Dirección</th>
-            <th>Teléfono</th>
-          </tr>
-        </thead>
-        <tbody id="familiasTable"></tbody>
-      </table>
-    </div>
-  </section>
+    
 
   <!-- ================== Servicios ================== -->
   <section id="servicios" class="seccion">
