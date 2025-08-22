@@ -20,21 +20,25 @@ async function cargarFamilias() {
     if (error) throw error;
 
     console.log("✅ Familias cargadas:", data);
+// 2. Renderizar encabezado
+tabla.innerHTML = `
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Dirección</th>
+      <th>Teléfono</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+`;
 
-    // 2. Renderizar encabezado
-    tabla.innerHTML = `
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Dirección</th>
-          <th>Teléfono</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
+let tbody = tabla.querySelector("tbody");
+if (!tbody) {
+  tbody = document.createElement("tbody");
+  tabla.appendChild(tbody);
+}
 
-    const tbody = tabla.querySelector("tbody");
 
     // 3. Renderizar filas
     if (!data || data.length === 0) {
