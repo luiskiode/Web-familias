@@ -22,9 +22,10 @@
   <!-- ================== SUPABASE ================== -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const supabaseClient = supabase.createClient(
+    // Cliente global Supabase
+    window.supabaseClient = supabase.createClient(
       "https://qivjlsvcjyqymommfdke.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw"
+      "TU_ANON_KEY_AQUI"
     );
   </script>
 </head>
@@ -50,15 +51,12 @@
       <div class="inicio-card">
         <h2>Bienvenido a Cáritas CNC ❤️</h2>
         <p>Plataforma de gestión para el voluntariado de Cáritas CNC.</p>
-        <p>Desde aquí puedes registrar nuevas familias, gestionar credenciales y acceder a la agenda.</p>
       </div>
     </section>
 
     <!-- ====== SECCIÓN: CREDENCIALES ====== -->
     <section id="credenciales" class="seccion">
       <h2>Credenciales</h2>
-
-      <!-- Crear Credencial -->
       <div class="card">
         <h3>Crear Credencial</h3>
         <input type="email" id="cred-email" placeholder="Correo electrónico" />
@@ -70,43 +68,27 @@
           <i class="fa-solid fa-id-card"></i> Ver Credencial
         </button>
       </div>
-
-      <!-- Validar Credencial -->
-      <div class="card">
-        <h3>Validar Credencial</h3>
-        <button id="btn-ver-credencial-secundario" class="submit-btn">
-          <i class="fa-solid fa-id-card"></i> Ver Credencial
-        </button>
-      </div>
     </section>
 
     <!-- ====== SECCIÓN: REGISTRO DE FAMILIAS ====== -->
     <section id="registro" class="seccion">
       <h2>Registro de Familias</h2>
       <div id="msg"></div>
-
       <form id="familiaForm" enctype="multipart/form-data" class="card">
         <label>Nombres y Apellidos*</label>
         <input type="text" name="nombres_apellidos" required />
-
         <label>DNI*</label>
         <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
-
         <label>Apellido Familia*</label>
         <input type="text" name="apellido_familia" required />
-
         <label>Dirección*</label>
         <input type="text" name="direccion" required />
-
         <label>Fecha de Registro*</label>
         <input type="date" name="fecha_registro" required />
-
         <label>Teléfono*</label>
         <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
-
         <label>Observaciones</label>
         <textarea name="observaciones"></textarea>
-
         <button type="submit" class="submit-btn">Registrar</button>
       </form>
     </section>
@@ -118,145 +100,35 @@
         <input type="email" id="email" placeholder="Correo electrónico" required />
         <input type="password" id="password" placeholder="Contraseña" required />
         <button type="submit" class="submit-btn">Entrar</button>
-        <button type="button" onclick="resetPass()">¿Olvidaste tu contraseña?</button>
       </form>
       <div id="loginMessage"></div>
+      <div style="text-align:center; margin-top:.5rem;">
+        <a href="#" onclick="resetPass();return false;">¿Olvidaste tu contraseña?</a>
+      </div>
     </section>
   </main>
 
   <!-- ================== FOOTER ================== -->
   <footer>© 2025 Cáritas CNC. Todos los derechos reservados.</footer>
 
-<!-- ================== SCRIPTS FUNCIONALES ================== -->
-<script type="module">
-  /* ====== Inicializar Firebase ====== */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } 
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-    authDomain: "web-familias.firebaseapp.com",
-    projectId: "web-familias",
-    storageBucket: "web-familias.firebasestorage.app",
-    messagingSenderId: "261699620792",
-    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  /* ====== Funciones de Credenciales con Supabase ====== */
-  async function guardarCredencial(usuario, clave) {
-    const { error } = await supabaseClient.from('credenciales').insert([{ usuario, clave }]);
-    if (error) throw error;
-  }
-
-  async function validarCredencial(usuario, clave) {
-    const { data, error } = await supabaseClient
-      .from('credenciales')
-      .select('*')
-      .eq('usuario', usuario)
-      .eq('clave', clave);
-    if (error) throw error;
-    return data.length > 0;
-  }
-
-  /* ====== Botón Crear Credencial ====== */
-  document.getElementById("btn-crear-credencial")?.addEventListener("click", async () => {
-    const email = document.getElementById("cred-email").value.trim();
-    const password = document.getElementById("cred-password").value.trim();
-    if (!email || !password) {
-      alert("⚠ Ingresa correo y contraseña");
-      return;
+  <!-- ================== SCRIPTS ================== -->
+  <script src="credenciales.js" type="module"></script>
+  <script src="familias.js" type="module"></script>
+  <script src="login-supabase.js" type="module"></script>
+  <script>
+    // Navegación entre secciones
+    function showSection(id) {
+      document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id)?.classList.add('active');
     }
-    try {
-      await guardarCredencial(email, password);
-      const canvas = document.getElementById("qr-canvas");
-      await QRCode.toCanvas(canvas, email, { width: 180 });
-      document.getElementById("btn-ver-credencial").style.display = "inline-block";
-      alert("✅ Credencial creada con éxito");
-    } catch (err) {
-      alert("❌ No se pudo crear la credencial");
+
+    // Cerrar sesión
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      document.getElementById("btn-login").style.display = "inline-block";
+      document.getElementById("btn-logout").style.display = "none";
+      showSection("inicio");
     }
-  });
-
-  document.getElementById("btn-ver-credencial-secundario")?.addEventListener("click", async () => {
-    const email = prompt("Correo:");
-    const password = prompt("Contraseña:");
-    const valido = await validarCredencial(email, password);
-    alert(valido ? "✔ Credencial válida" : "❌ Credencial inválida");
-  });
-
-  /* ====== Registro de Familias en Supabase ====== */
-  document.getElementById('familiaForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const msgDiv = document.getElementById('msg');
-    msgDiv.innerHTML = '';
-    const formData = new FormData(this);
-    const familia = {
-      nombres_apellidos: formData.get("nombres_apellidos"),
-      dni_solicitante: formData.get("dni_solicitante"),
-      apellido_familia: formData.get("apellido_familia"),
-      direccion: formData.get("direccion"),
-      fecha_registro: formData.get("fecha_registro"),
-      telefono_contacto: formData.get("telefono_contacto"),
-      observaciones: formData.get("observaciones") || null
-    };
-    try {
-      const { error } = await supabaseClient.from("familias").insert([familia]);
-      if (error) throw error;
-      msgDiv.innerHTML = "<div class='success'>✅ Registro exitoso</div>";
-      this.reset();
-    } catch (err) {
-      msgDiv.innerHTML = "<div class='error'>❌ Error al registrar: " + err.message + "</div>";
-    }
-  });
-
-  /* ====== Login con Firebase ====== */
-  document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById('loginMessage');
-    msg.textContent = '';
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      msg.style.color = '#0a7b2e';
-      msg.textContent = '✔ Acceso concedido';
-      document.getElementById("btn-login").style.display = "none";
-      document.getElementById("btn-logout").style.display = "inline-block";
-      showSection('inicio');
-    } catch (err) {
-      msg.style.color = '#b00020';
-      msg.textContent = '❌ ' + (err?.message || 'Error');
-    }
-  });
-
-  async function resetPass() {
-    const email = prompt('Ingresa tu correo:');
-    if (!email) return;
-    try {
-      await sendPasswordResetEmail(auth, email);
-      alert('📩 Hemos enviado un enlace de recuperación si el correo existe.');
-    } catch (err) {
-      alert('❌ Error al enviar el correo de recuperación.');
-    }
-  }
-
-  async function logout() {
-    await signOut(auth);
-    alert("👋 Sesión cerrada");
-    document.getElementById("btn-login").style.display = "inline-block";
-    document.getElementById("btn-logout").style.display = "none";
-    showSection("inicio");
-  }
-
-  /* ====== Navegación entre Secciones ====== */
-  window.showSection = function(id) {
-    document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(id)?.classList.add('active');
-  };
-</script>
+  </script>
 </body>
 </html>
