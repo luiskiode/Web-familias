@@ -131,27 +131,91 @@ if (direccionInput) {
     window.open(url, "_blank");
   });
 }
-
 // ================== Mapa ==================
 let map;
+
+// Inicializa el mapa
 function initMapa() {
-  map = L.map("map").setView([-12.0464, -77.0428], 13); // ejemplo: Lima
+  map = L.map("mapa").setView([-12.0464, -77.0428], 13); // Ejemplo: Lima
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 }
 
-function mostrarEnMapa(familias) {
-  familias.forEach(fam => {
-    if (fam.lat && fam.lng) {
-      L.marker([fam.lat, fam.lng]).addTo(map)
-        .bindPopup(`<b>${fam.nombre}</b><br>${fam.direccion}`);
+// Geocodifica una dirección usando Nominatim
+async function geocodeDireccion(direccion) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon)
+      };
     }
-  });
+    return null;
+  } catch (err) {
+    console.error("❌ Error geocodificando dirección:", err);
+    return null;
+  }
 }
 
-// Ejecutar al inicio
-document.addEventListener("DOMContentLoaded", () => {
-  cargarFamilias();
-  initMapa();
+// Muestra familias en el mapa
+async function mostrarEnMapa(familias) {
+  for (const fam of familias) {
+    let lat = fam.lat;
+    let lng = fam.lng;
+
+    // Si no tiene coordenadas, geocodifica
+    if ((!lat || !lng) && fam.direccion) {
+      const coords = await geocodeDireccion(fam.direccion);
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+        // Aquí podrías actualizar la tabla de Supabase si quieres guardar coords
+      }
+    }
+
+    if (lat && lng) {
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(`<b>${fam.nombre}</b><br>${fam.direccion}`);
+    }
+  }
+}
+
+// Cargar familias desde Supabase
+async function cargarFamilias() {
+  try {
+    const { data, error } = await supabase
+      .from("familias")
+      .select("nombre, direccion, telefono, lat, lng");
+    if (error) throw error;
+
+    // Mostrar en tabla HTML
+    const tbody = document.getElementById("familiasTable");
+    tbody.innerHTML = "";
+    data.forEach(fam => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${fam.nombre}</td><td>${fam.direccion}</td><td>${fam.telefono || ""}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Mostrar en el mapa
+    await mostrarEnMapa(data);
+
+    console.log("✅ Familias cargadas:", data);
+    return data;
+  } catch (err) {
+    console.error("❌ Error al cargar familias:", err);
+    return [];
+  }
+}
+
+// ================== Ejecutar al cargar DOM ==================
+document.addEventListener("DOMContentLoaded", async () => {
+  initMapa();          // Inicializa mapa primero
+  await cargarFamilias(); // Luego carga familias y añade marcadores
 });
+

@@ -1,4 +1,3 @@
-// credenciales.js
 console.log("📌 credenciales.js cargado correctamente");
 
 // Inputs y botones
@@ -13,11 +12,12 @@ let ultimoUsuario = null;
 
 crearBtn.addEventListener("click", async () => {
   try {
-    console.log("📌 Creando usuario en Supabase...");
+    console.log("📌 Generando credencial...");
 
     // Validaciones iniciales
-    if (!emailInput.value || !passInput.value) {
-      alert("Por favor complete correo y contraseña");
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Debes iniciar sesión primero.");
       return;
     }
     if (!fotoInput.files.length) {
@@ -26,82 +26,74 @@ crearBtn.addEventListener("click", async () => {
     }
 
     const file = fotoInput.files[0];
-
-    // 🛑 Validación del archivo antes de subir
-    console.log("📤 Archivo seleccionado:", {
-      nombre: file.name,
-      tipo: file.type,
-      tamaño: file.size
-    });
-
     if (file.size === 0) {
       alert("El archivo seleccionado está vacío. Selecciona una imagen válida.");
       return;
     }
 
-    // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await window.supabase.auth.signUp({
-      email: emailInput.value,
-      password: passInput.value
-    });
-    if (authError) throw authError;
-
-    // 2. Generar ID y preparar foto
-    const userId = authData.user?.id || crypto.randomUUID();
+    const userId = user.uid;
+    const email = user.email;
     const fileExt = file.name.split(".").pop();
     const filePath = `${userId}.${fileExt}`;
 
     console.log("📌 Subiendo foto:", filePath);
 
-    // 3. Subir foto a Supabase Storage
-    const { error: uploadError } = await window.supabase.storage
+    // Subir foto a Supabase Storage (bucket fotos-perfil)
+    const { error: uploadError } = await supabase.storage
       .from("fotos-perfil")
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) throw uploadError;
-
     console.log("✅ Foto subida correctamente");
 
-    // 4. Obtener URL pública de la foto
-    const { data: publicUrlData } = window.supabase.storage
+    // Obtener URL pública
+    const { data: publicUrlData } = supabase.storage
       .from("fotos-perfil")
       .getPublicUrl(filePath);
+
+    if (!publicUrlData || !publicUrlData.publicUrl) {
+      throw new Error("No se pudo obtener la URL pública de la foto.");
+    }
     const fotoUrl = publicUrlData.publicUrl;
 
-    // 5. Guardar credencial en tabla
-    const { error: insertError } = await window.supabase
-      .from("credenciales")
-      .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl, ext: fileExt }]);
+    // Guardar credencial en tabla foto_perfil (RLS habilitado)
+    const { error: insertError } = await supabase
+      .from("foto_perfil")
+      .upsert([{ user_id: userId, filename: filePath, url: fotoUrl }]);
 
     if (insertError) throw insertError;
+    console.log("✅ Credencial registrada en la tabla foto_perfil");
 
-    console.log("✅ Credencial registrada en la tabla");
+    // Guardar en memoria
+    ultimoUsuario = { id: userId, email, ext: fileExt };
 
-    // 6. Guardar usuario en memoria
-    ultimoUsuario = { id: userId, email: emailInput.value, ext: fileExt };
-
-    // 7. Generar QR con enlace
+    // Generar QR
     const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
     await QRCode.toCanvas(qrCanvas, credencialUrl);
 
     verCredencialBtn.style.display = "block";
     verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
 
-    alert("✅ Usuario creado con éxito. QR generado.");
+    alert("✅ Credencial creada con éxito. QR generado.");
+
+    // Notificación (opcional)
+    if (typeof enviarNotificacion === "function") {
+      enviarNotificacion("Credencial creada", `🆔 Usuario: ${email}`);
+    }
   } catch (err) {
     console.error("❌ Error inesperado:", err);
     alert("Error: " + err.message);
   }
 });
 
-// ✅ Mostrar modal de credencial
+// Mostrar modal de credencial
 verCredencialBtn.addEventListener("click", async () => {
   if (!ultimoUsuario) {
     alert("Primero crea un usuario.");
     return;
   }
 
-  const { data: publicUrlData } = window.supabase.storage
+  const { data: publicUrlData } = supabase.storage
     .from("fotos-perfil")
     .getPublicUrl(`${ultimoUsuario.id}.${ultimoUsuario.ext}`);
 
