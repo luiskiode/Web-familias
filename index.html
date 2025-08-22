@@ -6,11 +6,7 @@
   <title>Cáritas CNC</title>
 
   <!-- ====== Estilos propios ====== -->
-  <link rel="stylesheet" href="styles.css?v=6" />
-
-  <!-- ====== Librerías externas ====== -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="styles.css?v=8" />
 
   <!-- ====== FullCalendar ====== -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
@@ -19,10 +15,10 @@
   <!-- ====== Librería QR ====== -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
 
-  <!-- ====== Manifest y Service Worker ====== -->
+  <!-- ====== Manifest ====== -->
   <link rel="manifest" href="manifest.json" />
 
-  <!-- ====== Firebase ====== -->
+  <!-- ====== Firebase (compat) ====== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
@@ -31,6 +27,13 @@
   <script src="./supabase-config.js"></script>
 </head>
 <body>
+
+  <!-- 🎥 Video de fondo -->
+<video autoplay muted loop playsinline id="video-fondo">
+  <source src="fondo-rojo.mp4" type="video/mp4">
+  Tu navegador no soporta video en HTML5.
+</video>
+
   <!-- ================== Header ================== -->
   <header class="app-header">
     <h1>📌 Cáritas CNC</h1>
@@ -41,13 +44,85 @@
     </nav>
   </header>
 
-  <!-- ================== Sección: Inicio ================== -->
-  <section id="inicio" class="seccion active">
-    <div class="inicio-card">
-      <h2>Bienvenido</h2>
-      <p>Plataforma <b>Cáritas CNC</b> - Gestión de Familias y Credenciales.</p>
-    </div>
-  </section>
+<!-- ================== Sección: Inicio ================== -->
+<section id="inicio" class="seccion active">
+  <div class="inicio-card">
+
+    <!-- Contenedor principal para todo el inicio -->
+    <div class="inicio-contenido">
+
+      <!-- Bienvenida personalizada -->
+      <h2 id="bienvenida">👋 Bienvenido a Cáritas CNC ❤️</h2>
+      <p id="mensajeInicio"><p>Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.</p>
+          <p>Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.</p>
+</p>
+
+      <!-- Pendientes en texto -->
+      <div class="pendientes-bloque">
+        <h3>📌 Resumen de pendientes</h3>
+        <p id="pendientesTexto">Los pendientes son: (sin pendientes aún)</p>
+        <button class="btn-peque" onclick="mostrarSeccion('servicios')">Ver más ➝</button>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="quick-actions">
+        <button class="btn-peque" onclick="alert('👉 Sección de donaciones próximamente')">💖 Donaciones</button>
+        <button class="btn-peque" onclick="alert('👉 Sección de patrocinio próximamente')">🤝 Patrocinio</button>
+      </div>
+
+     <!-- Misión y Visión estilizadas -->
+<div class="mision-vision">
+  <div class="mision">
+    <h3>🌟 Nuestra Misión</h3>
+    <ul>
+      <li>💖 Servir con amor, respeto y empatía a las familias más necesitadas.</li>
+      <li>🙏 Guiarnos por la fe, el compromiso y la compasión para acompañar, escuchar y brindar apoyo.</li>
+      <li>🤝 Promover dignidad, justicia y solidaridad en nuestra comunidad.</li>
+      <li>🌱 Trabajar unidos para construir oportunidades de desarrollo y esperanza.</li>
+      <li>🔥 Transformar vidas a través de la acción social y el amor al prójimo.</li>
+    </ul>
+  </div>
+
+  <div class="vision">
+    <h3>🚀 Nuestra Visión</h3>
+    <ul>
+      <li>🏛 Ser un referente de servicio y apoyo a familias en situación de vulnerabilidad.</li>
+      <li>💡 Construir una comunidad justa, fraterna y solidaria donde cada persona sea valorada.</li>
+      <li>✝ Inspirarnos en el Evangelio para transformar realidades con amor, fe y servicio.</li>
+      <li>🌍 Promover justicia social y desarrollo integral de cada persona.</li>
+      <li>🤗 Acompañar a cada familia para que encuentre en Cáritas CNC un lugar de acogida y transformación.</li>
+    </ul>
+  </div>
+
+  <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión!</p>
+  <p class="agradecimiento"><b>Gracias por usar Cáritas CNC</b></p>
+</div>
+
+
+      <!-- Galería lateral -->
+      <div class="galeria">
+        <h3>📷 Nuestra comunidad</h3>
+        <div class="galeria-grid">
+          <img src="img/imagen de grupo 1.jpeg" alt="Imagen 1" class="miniatura">
+          <img src="img/imagen de grupo 2.jpeg" alt="Imagen 2" class="miniatura">
+          <img src="img/imagen de grupo 3.jpeg" alt="Imagen 3" class="miniatura">
+          <img src="img/imagen de grupo 4.jpeg" alt="Imagen 4" class="miniatura">
+          <img src="img/imagen de grupo 5.jpeg" alt="Imagen 5" class="miniatura">
+        </div>
+      </div>
+     
+    </div> <!-- fin inicio-contenido -->
+
+  </div> <!-- fin inicio-card -->
+</section>
+
+<!-- Modal para imagen grande -->
+<div id="modal" class="modal">
+  <span class="cerrar">&times;</span>
+  <img class="modal-contenido" id="img-ampliada">
+  <div id="caption"></div>
+</div>
+
 
   <!-- ================== Sección: Registro Familias ================== -->
   <section id="registro-fam" class="seccion">
@@ -63,8 +138,9 @@
       <input type="text" name="apellido_familia" required />
 
       <label>Dirección* (con sugerencias)</label>
-      <div class="row">
+      <div class="row" style="gap:.5rem; align-items:center;">
         <input type="text" id="reg-direccion" name="direccion" list="dl-direcciones" autocomplete="off" required />
+        <button type="button" onclick="abrirMapa()" class="map-btn">📍 Validar</button>
       </div>
       <datalist id="dl-direcciones"></datalist>
 
@@ -87,67 +163,143 @@
 
       <button type="submit" class="submit-btn">Guardar Familia</button>
     </form>
-
-    <!-- Contenedor para el mapa -->
-    <div id="map" style="height:300px; margin-top:10px;"></div>
   </section>
   
   <!-- ================== Sección: Servicios ================== -->
-  <section id="servicios" class="seccion">
-    <h2>⚙️ Servicios</h2>
-    <div class="card">
-      <p>Selecciona un módulo:</p>
-      <details>
-        <summary>🪪 Credenciales</summary>
-        <div>
-          <form id="credencialForm">
-            <label>Correo*</label>
-            <input type="email" id="email" required />
-
-            <label>Contraseña*</label>
-            <input type="password" id="password" required />
-
-            <label>Foto*</label>
-            <input type="file" id="foto" accept="image/*" required />
-
-            <button type="submit">Generar Credencial</button>
-          </form>
-          <div id="credencialPreview" class="preview"></div>
-        </div>
-      </details>
-
-      <details>
-        <summary>📅 Calendario</summary>
-        <div id="calendar"></div>
-      </details>
-
-      <details>
-        <summary>📋 Pendientes</summary>
-        <div>
-          <form id="pendienteForm">
-            <input type="text" id="pendienteInput" placeholder="Escribe un pendiente..." required />
-            <button type="submit">➕ Agregar</button>
-          </form>
-          <ul id="pendientesList"></ul>
-        </div>
-      </details>
+<section id="servicios" class="seccion">
+  <h2>⚙️ Servicios</h2>
+  
+  <div class="servicios-grid">
+    
+    <!-- Credenciales -->
+    <div class="servicio-card">
+      <h3>🪪 Credenciales</h3>
+      <p>Gestiona las credenciales de usuarios y voluntarios de manera rápida y segura.</p>
+      <form id="credencialForm" class="form-servicio">
+        <input type="email" id="email" placeholder="Correo*" required />
+        <input type="password" id="password" placeholder="Contraseña*" required />
+        <input type="file" id="foto" accept="image/*" required />
+        <button type="submit">Generar Credencial</button>
+      </form>
+      <div id="credencialPreview" class="preview"></div>
     </div>
-  </section>
+    
+    <!-- Calendario -->
+    <div class="servicio-card">
+      <h3>📅 Calendario</h3>
+      <p>Visualiza y gestiona eventos de la comunidad, reuniones y actividades.</p>
+      <div id="calendar"></div>
+    </div>
 
-  <!-- ================== Scripts propios ================== -->
+    <!-- Pendientes -->
+    <div class="servicio-card">
+      <h3>📋 Pendientes</h3>
+      <p>Agrega y revisa tareas pendientes vinculadas a tus actividades.</p>
+      <form id="pendienteForm" class="form-servicio">
+        <input type="text" id="pendienteInput" placeholder="Escribe un pendiente..." required />
+        <button type="submit">➕ Agregar</button>
+      </form>
+      <ul id="pendientesList"></ul>
+    </div>
+
+  </div>
+</section>
+
+  <!-- ================== Inicialización Firebase (auth global) ================== -->
   <script>
-    // Manejo de navegación de secciones
+    // ⚠️ Reemplaza con tu propia config si cambia
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+      authDomain: "web-familias.firebaseapp.com",
+      projectId: "web-familias",
+      storageBucket: "web-familias.firebasestorage.app",
+      messagingSenderId: "261699620792",
+      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    // Auth global para servicios.js
+    window.auth = firebase.auth();
+  </script>
+
+  <!-- ================== Utilidades globales ================== -->
+  <script>
+    // Navegación por secciones
     function mostrarSeccion(id) {
       document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
       document.getElementById(id).classList.add("active");
     }
+
+    // Abrir mapa en pestaña nueva con la dirección
+    function abrirMapa() {
+      const direccion = document.getElementById("reg-direccion").value.trim();
+      const url = direccion 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`
+        : `https://www.google.com/maps/`;
+      window.open(url, "_blank");
+    }
   </script>
 
+  <!-- ================== Scripts propios (defer para ejecutar tras parseo) ================== -->
   <script src="./login-supabase.js" defer></script>
   <script src="./credenciales.js" defer></script>
   <script src="./familias.js" defer></script>
   <script src="./servicios.js" defer></script>
   <script src="./calendario.js" defer></script>
   <script src="./pendientes.js" defer></script>
+
+  
+
+  <script>
+  
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    // ✅ Bienvenida personalizada
+    auth.onAuthStateChanged(user => {
+      const bienvenida = document.getElementById("bienvenida");
+      const mensajeInicio = document.getElementById("mensajeInicio");
+
+      if (user) {
+        bienvenida.textContent = `👋 Bienvenido, ${user.email}`;
+        mensajeInicio.textContent = "Gracias por apoyar a Cáritas CNC.";
+      } else {
+        bienvenida.textContent = "👋 Bienvenido a Cáritas CNC";
+        mensajeInicio.textContent = "Conectando familias, fe y comunidad.";
+      }
+    });
+
+    // ✅ Pendientes como texto
+    if (typeof renderPendientesInicioTexto === "function") {
+      renderPendientesInicioTexto();
+    }
+  });
+</script>
+<script>
+// ================== GALERÍA DE IMÁGENES ==================
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("img-ampliada");
+const captionText = document.getElementById("caption");
+const spanCerrar = document.getElementsByClassName("cerrar")[0];
+
+// Cuando se hace click en cualquier miniatura
+document.querySelectorAll(".miniatura").forEach(img => {
+  img.addEventListener("click", () => {
+    modal.style.display = "flex"; // se usa flex para centrar
+    modalImg.src = img.src;
+    captionText.innerHTML = img.alt;
+  });
+});
+
+// Cerrar el modal al hacer click en la "x"
+spanCerrar.onclick = function() {
+  modal.style.display = "none";
+};
+
+// Cerrar modal al hacer click fuera de la imagen
+modal.addEventListener("click", (e) => {
+  if(e.target === modal) modal.style.display = "none";
+});
+</script>
+
+
 </body>
 </html>
