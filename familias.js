@@ -1,6 +1,4 @@
 // familias.js
-import { supabase } from './supabase-config.js';
-
 console.log("📌 familias.js cargado correctamente");
 
 // Referencia a la tabla en el HTML
@@ -15,7 +13,7 @@ async function cargarFamilias() {
 
   try {
     // 1. Obtener datos
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
       .from("familias") // 👈 asegúrate que la tabla se llama así en Supabase
       .select("*");
 
@@ -39,7 +37,7 @@ async function cargarFamilias() {
     const tbody = tabla.querySelector("tbody");
 
     // 3. Renderizar filas
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
       const fila = document.createElement("tr");
       fila.innerHTML = `<td colspan="4" style="text-align:center;">Sin registros</td>`;
       tbody.appendChild(fila);

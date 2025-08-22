@@ -1,5 +1,7 @@
-import { supabase } from './supabase-config.js';
+// credenciales.js
+console.log("📌 credenciales.js cargado correctamente");
 
+// Inputs y botones
 const emailInput = document.getElementById('email');
 const passInput = document.getElementById('password');
 const fotoInput = document.getElementById('foto-perfil');
@@ -23,7 +25,7 @@ crearBtn.addEventListener('click', async () => {
     }
 
     // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await window.supabase.auth.signUp({
       email: emailInput.value,
       password: passInput.value
     });
@@ -36,21 +38,21 @@ crearBtn.addEventListener('click', async () => {
     const filePath = `${userId}.${fileExt}`;
 
     // 3. Subir foto a Supabase Storage
-    const { error: uploadError } = await supabase
+    const { error: uploadError } = await window.supabase
       .storage
       .from('fotos-perfil')
       .upload(filePath, file, { upsert: true });
     if (uploadError) throw uploadError;
 
     // 4. Obtener URL pública de la foto
-    const { data: publicUrlData } = supabase
+    const { data: publicUrlData } = window.supabase
       .storage
       .from('fotos-perfil')
       .getPublicUrl(filePath);
     const fotoUrl = publicUrlData.publicUrl;
 
     // 5. Guardar credencial en tabla
-    const { error: insertError } = await supabase
+    const { error: insertError } = await window.supabase
       .from('credenciales')
       .insert([{ id: userId, email: emailInput.value, foto_url: fotoUrl, ext: fileExt }]);
     if (insertError) throw insertError;
@@ -72,14 +74,14 @@ crearBtn.addEventListener('click', async () => {
   }
 });
 
-// ✅ Un solo listener para mostrar modal
+// ✅ Mostrar modal de credencial
 verCredencialBtn.addEventListener("click", async () => {
   if (!ultimoUsuario) {
     alert("Primero crea un usuario.");
     return;
   }
 
-  const { data: publicUrlData } = supabase
+  const { data: publicUrlData } = window.supabase
     .storage
     .from("fotos-perfil")
     .getPublicUrl(`${ultimoUsuario.id}.${ultimoUsuario.ext}`);
