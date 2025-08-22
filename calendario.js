@@ -1,8 +1,12 @@
-// ================== CALENDARIO DE ACTIVIDADES ==================
 document.addEventListener("DOMContentLoaded", async function () {
   const toggleBtn = document.getElementById("toggle-calendario");
   const calendarioContainer = document.getElementById("calendario-container");
   const calendarEl = document.getElementById("calendar");
+
+  if (!toggleBtn || !calendarioContainer || !calendarEl) {
+    console.error("❌ Elementos del calendario no encontrados. Revisa los IDs");
+    return;
+  }
 
   // 🔽 Mostrar/ocultar calendario
   toggleBtn.addEventListener("click", () => {
@@ -14,11 +18,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       toggleBtn.textContent = "📅 Ver Calendario de Actividades";
     }
   });
-
-  if (!calendarEl) {
-    console.error("❌ No se encontró el contenedor del calendario (#calendar)");
-    return;
-  }
 
   // ================== Cargar eventos desde Supabase ==================
   async function fetchEventos() {
@@ -54,13 +53,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     editable: true,
     selectable: true,
 
-    // Crear evento nuevo
     dateClick: async function (info) {
       const titulo = prompt("Ingrese título del evento:");
       if (titulo) {
         try {
           const { data, error } = await supabase.from("eventos").insert([{
-            titulo: titulo,
+            titulo,
             fecha_inicio: info.dateStr,
             fecha_fin: null,
             all_day: true
@@ -81,13 +79,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     },
 
-    // Mover/editar evento existente
     eventChange: async function (info) {
       try {
         const { error } = await supabase.from("eventos")
           .update({
-            fecha_inicio: info.event.start,
-            fecha_fin: info.event.end,
+            fecha_inicio: info.event.start.toISOString(),
+            fecha_fin: info.event.end ? info.event.end.toISOString() : null,
             all_day: info.event.allDay
           })
           .eq("id", info.event.id);
@@ -99,7 +96,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     },
 
-    // Eliminar evento con clic
     eventClick: async function (info) {
       if (confirm(`¿Eliminar evento "${info.event.title}"?`)) {
         try {

@@ -1,4 +1,3 @@
-// index.js
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,21 +12,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ CORS dinámico (permitir solo orígenes confiables)
-const allowedOrigins = [
-  "https://luiskiode.github.io",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000"
-];
+// CORS dinámico
+const allowedOrigins = ["https://luiskiode.github.io","http://localhost:3000","http://127.0.0.1:3000"];
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permite requests sin origen (como Postman o CURL)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `El CORS para el origen ${origin} no está permitido.`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS no permitido para: ${origin}`), false);
   }
 }));
 
@@ -37,7 +27,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error("❌ Las variables SUPABASE_URL y SUPABASE_KEY deben estar definidas en .env");
+  console.error("❌ SUPABASE_URL y SUPABASE_KEY deben estar definidas");
   process.exit(1);
 }
 
@@ -46,94 +36,45 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Servir archivos estáticos desde /public
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
-  res.send("✅ Backend Cáritas CNC activo");
-});
+app.get("/", (_, res) => res.send("✅ Backend Cáritas CNC activo"));
 
-// 📌 Obtener familias
-app.get("/familias", async (req, res) => {
+// Obtener familias
+app.get("/familias", async (_, res) => {
   try {
-    const { data, error } = await supabase
-      .from("familias")
-      .select("*")
-      .order("id", { ascending: false });
-
-    if (error) {
-      console.error("❌ Error al obtener familias:", error);
-      return res.status(500).json({ error: error.message || error });
-    }
-
+    const { data, error } = await supabase.from("familias").select("*").order("id",{ascending:false});
+    if (error) throw error;
     res.json(data);
-  } catch (error) {
-    console.error("🔥 Error inesperado al obtener familias:", error);
-    res.status(500).json({ error: error.message || error });
+  } catch (err) {
+    console.error("❌ Error al obtener familias:", err);
+    res.status(500).json({ error: err.message || err });
   }
 });
 
-// 📌 Registrar familia con archivo opcional
+// Registrar familia
 app.post("/familias", upload.single("archivo"), async (req, res) => {
   try {
-    // Campos obligatorios
-    const camposObligatorios = [
-      "nombres_apellidos",
-      "dni_solicitante",
-      "apellido_familia",
-      "direccion",
-      "fecha_registro",
-      "telefono_contacto"
-    ];
-
-    for (const campo of camposObligatorios) {
-      if (!req.body[campo] || req.body[campo].trim() === "") {
-        return res.status(400).json({ error: `Falta el campo obligatorio: ${campo}` });
-      }
-    }
+    const required = ["nombres_apellidos","dni_solicitante","apellido_familia","direccion","fecha_registro","telefono_contacto"];
+    for (const field of required) if (!req.body[field]?.trim()) return res.status(400).json({ error: `Falta: ${field}` });
 
     let archivoURL = null;
-
     if (req.file) {
-      const nombreArchivoSeguro = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-
-      // Eliminar archivo si ya existe antes de subir (opcional)
-      // await supabase.storage.from("documentosfamilias").remove([nombreArchivoSeguro]);
-
-      const { error: uploadError } = await supabase.storage
-        .from("documentosfamilias")
-        .upload(nombreArchivoSeguro, req.file.buffer, {
-          contentType: req.file.mimetype,
-          cacheControl: "3600",
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error("❌ Error al subir archivo:", uploadError);
-        return res.status(500).json({ error: "Error al subir el archivo." });
-      }
-
-      archivoURL = `${supabaseUrl}/storage/v1/object/public/documentosfamilias/${nombreArchivoSeguro}`;
+      const safeName = `${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+      const { error: uploadError } = await supabase.storage.from("documentosfamilias").upload(safeName, req.file.buffer, { contentType:req.file.mimetype, upsert:false });
+      if (uploadError) throw uploadError;
+      archivoURL = `${supabaseUrl}/storage/v1/object/public/documentosfamilias/${safeName}`;
     }
 
-    // Insertar en base de datos
-    const { error: dbError } = await supabase
-      .from("familias")
-      .insert([{ ...req.body, archivo_url: archivoURL }]);
+    const { error: dbError } = await supabase.from("familias").insert([{ ...req.body, archivo_url: archivoURL }]);
+    if (dbError) throw dbError;
 
-    if (dbError) {
-      console.error("❌ Error al insertar familia:", dbError);
-      return res.status(500).json({ error: dbError.message || dbError });
-    }
-
-    res.status(200).json({ message: "✅ Familia registrada correctamente.", archivo: archivoURL });
-  } catch (error) {
-    console.error("🔥 ERROR AL REGISTRAR FAMILIA:", error);
-    res.status(500).json({ error: error.message || error });
+    res.status(200).json({ message:"✅ Familia registrada", archivo: archivoURL });
+  } catch (err) {
+    console.error("🔥 Error al registrar familia:", err);
+    res.status(500).json({ error: err.message || err });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ API escuchando en http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ API escuchando en http://localhost:${PORT}`));
