@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cáritas CNC</title>
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 
   <!-- ====== Librerías externas ====== -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -18,6 +18,10 @@
 
   <!-- Manifest y Service Worker -->
   <link rel="manifest" href="manifest.json" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
   <!-- ================== Header ================== -->
@@ -25,10 +29,8 @@
     <h1>Cáritas CNC</h1>
     <nav>
       <button onclick="mostrarSeccion('inicio')">Inicio</button>
-      <button onclick="mostrarSeccion('familias')">Familias</button>
-      <button onclick="mostrarSeccion('credenciales')">Credenciales</button>
-      <button onclick="mostrarSeccion('calendario')">Calendario</button>
-      <button onclick="mostrarSeccion('mapa')">Mapa</button>
+      <button onclick="mostrarSeccion('registro-fam')">Registro Familias</button>
+      <button onclick="mostrarSeccion('servicios')">Servicios</button>
     </nav>
   </header>
 
@@ -40,8 +42,8 @@
     </div>
   </section>
 
-  <!-- ================== Familias ================== -->
-  <section id="familias" class="seccion">
+  <!-- ================== Registro Familias ================== -->
+  <section id="registro-fam" class="seccion">
     <h2>Registro de Familias</h2>
     <form id="familiaForm" class="card">
       <label>Nombre de familia</label>
@@ -55,6 +57,9 @@
 
       <button type="submit" class="submit-btn">Guardar</button>
     </form>
+
+    <!-- Aquí integramos el mapa -->
+    <div id="mapa" class="card" style="margin-top:1rem; height:300px;"></div>
 
     <div id="familiasList" class="card" style="margin-top:1rem;">
       <h3>Listado de Familias</h3>
@@ -71,30 +76,34 @@
     </div>
   </section>
 
-  <!-- ================== Credenciales ================== -->
-  <section id="credenciales" class="seccion">
-    <h2>Crear Credencial</h2>
-    <form id="credencialForm" class="card">
-      <input type="email" id="email" placeholder="Correo" required />
-      <input type="password" id="password" placeholder="Contraseña" required />
-      <input type="file" id="foto-perfil" accept="image/*" required />
-      <button type="button" id="crear-credenciales" class="submit-btn">Crear</button>
-    </form>
+  <!-- ================== Servicios ================== -->
+  <section id="servicios" class="seccion">
+    <h2>Servicios</h2>
 
-    <canvas id="qr-canvas" style="margin-top:1rem;"></canvas>
-    <button id="ver-credencial" style="display:none;" class="btn-big">Ver Credencial</button>
-  </section>
+    <!-- Login con Firebase -->
+    <div id="loginCard" class="card">
+      <input type="email" id="login-email" placeholder="Correo" required />
+      <input type="password" id="login-password" placeholder="Contraseña" required />
+      <button id="btn-login" class="submit-btn">Iniciar Sesión</button>
+    </div>
 
-  <!-- ================== Calendario ================== -->
-  <section id="calendario" class="seccion">
-    <h2>Calendario</h2>
-    <div id="calendar"></div>
-  </section>
+    <!-- Opciones privadas -->
+    <div id="serviciosPrivados" class="card" style="display:none;">
+      <h3>Gestión de Credenciales</h3>
+      <form id="credencialForm" class="card">
+        <input type="email" id="email" placeholder="Correo" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
+        <input type="file" id="foto-perfil" accept="image/*" required />
+        <button type="button" id="crear-credenciales" class="submit-btn">Crear</button>
+      </form>
+      <canvas id="qr-canvas" style="margin-top:1rem;"></canvas>
+      <button id="ver-credencial" style="display:none;" class="btn-big">Ver Credencial</button>
 
-  <!-- ================== Mapa ================== -->
-  <section id="mapa" class="seccion">
-    <h2>Mapa</h2>
-    <div id="map"></div>
+      <h3>Calendario</h3>
+      <div id="calendar"></div>
+
+      <button id="btn-logout" class="submit-btn" style="margin-top:1rem;">Cerrar Sesión</button>
+    </div>
   </section>
 
   <!-- ================== Footer ================== -->
@@ -102,34 +111,42 @@
     Cáritas CNC © 2025
   </footer>
 
+  <!-- ================== Configuración Firebase ================== -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+      authDomain: "web-familias.firebaseapp.com",
+      projectId: "web-familias",
+      storageBucket: "web-familias.firebasestorage.app",
+      messagingSenderId: "261699620792",
+      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
+
   <!-- ================== Scripts ================== -->
   <script>
-    // Control de secciones
     function mostrarSeccion(id) {
       document.querySelectorAll(".seccion").forEach(sec => sec.classList.remove("active"));
       document.getElementById(id).classList.add("active");
     }
 
-    // Service Worker
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js").then(() => {
-        console.log("✅ Service Worker registrado");
-      }).catch(err => console.error("❌ Error SW:", err));
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker registrado"))
+        .catch(err => console.error("❌ Error SW:", err));
     }
   </script>
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
 
- <!-- Cargar Supabase desde CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Configuración de Supabase -->
-<script src="./supabase-config.js"></script>
-
-<!-- Tus scripts -->
-<script src="./login-supabase.js"></script>
-<script src="./credenciales.js"></script>
-<script src="./familias.js"></script>
-
-
+  <!-- Scripts -->
+  <script src="./login-supabase.js"></script>
+  <script src="./credenciales.js"></script>
+  <script src="./familias.js"></script>
+  <script src="./servicios.js"></script>
 </body>
 </html>
