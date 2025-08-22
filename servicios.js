@@ -1,5 +1,8 @@
 console.log("📌 servicios.js cargado correctamente");
 
+// Inicializar Firebase Auth (v8 UMD)
+const auth = firebase.auth();
+
 // Referencias HTML
 const loginCard = document.getElementById("loginCard");
 const serviciosPrivados = document.getElementById("serviciosPrivados");
