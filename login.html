@@ -48,19 +48,21 @@
 <script>
 console.log("✅ login.js cargado");
 
-// LOGIN
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
+// ================== LOGIN ==================
+const loginForm = document.getElementById('loginForm');
+const loginMsg = document.getElementById('loginMessage');
+
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const msg = document.getElementById('loginMessage');
-  msg.textContent = '';
-  msg.classList.remove('error', 'success');
+  loginMsg.textContent = '';
+  loginMsg.classList.remove('error', 'success');
 
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
 
   if (!email || !password) {
-    msg.textContent = 'Por favor completa email y contraseña.';
-    msg.classList.add('error');
+    loginMsg.textContent = 'Por favor completa email y contraseña.';
+    loginMsg.classList.add('error');
     return;
   }
 
@@ -68,75 +70,68 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // Verificar si es admin
+    // Solo admin
     if (user.email !== 'admin@caritas.com') {
       await firebase.auth().signOut();
-      msg.textContent = '⛔ No tienes permisos para acceder a esta página.';
-      msg.classList.add('error');
+      loginMsg.textContent = '⛔ No tienes permisos para acceder a esta página.';
+      loginMsg.classList.add('error');
       return;
     }
 
-    msg.textContent = '✔ Acceso concedido. Redirigiendo…';
-    msg.classList.add('success');
+    loginMsg.textContent = '✔ Acceso concedido. Redirigiendo…';
+    loginMsg.classList.add('success');
 
-    // Guardar sesión en localStorage
+    // Guardar sesión local
     localStorage.setItem("caritasUser", JSON.stringify({ email: user.email, uid: user.uid }));
 
     setTimeout(() => window.location.href = 'index.html', 1000);
-
   } catch (err) {
     console.error(err);
-    let errorMessage = 'Usuario o contraseña incorrectos.';
-    if (err.code === 'auth/network-request-failed') {
-      errorMessage = 'Error de red. Verifica tu conexión.';
-    }
-    msg.textContent = errorMessage;
-    msg.classList.add('error');
+    loginMsg.textContent = (err.code === 'auth/network-request-failed')
+      ? 'Error de red. Verifica tu conexión.'
+      : 'Usuario o contraseña incorrectos.';
+    loginMsg.classList.add('error');
   }
 });
 
-// MODAL DE RECUPERACIÓN DE CONTRASEÑA
+// ================== MODAL RECUPERACIÓN ==================
 const modal = document.getElementById('modalReset');
 const resetBtn = document.getElementById('resetPassBtn');
 const sendResetBtn = document.getElementById('sendReset');
-const resetMessage = document.getElementById('resetMessage');
+const resetMsg = document.getElementById('resetMessage');
 
 resetBtn.addEventListener('click', () => {
   modal.style.display = 'flex';
-  resetMessage.textContent = '';
+  resetMsg.textContent = '';
   document.getElementById('resetEmail').value = '';
 });
 
-function closeModal() {
-  modal.style.display = 'none';
-}
+function closeModal() { modal.style.display = 'none'; }
 
 sendResetBtn.addEventListener('click', async () => {
   const email = document.getElementById('resetEmail').value.trim();
-  resetMessage.textContent = '';
-  resetMessage.classList.remove('success', 'error');
+  resetMsg.textContent = '';
+  resetMsg.classList.remove('success', 'error');
 
   if (!email) {
-    resetMessage.textContent = 'Por favor ingresa un correo.';
-    resetMessage.classList.add('error');
+    resetMsg.textContent = 'Por favor ingresa un correo.';
+    resetMsg.classList.add('error');
     return;
   }
 
   try {
     await firebase.auth().sendPasswordResetEmail(email);
-    resetMessage.textContent = '📩 Si el correo existe, se envió un enlace de recuperación.';
-    resetMessage.classList.add('success');
+    resetMsg.textContent = '📩 Si el correo existe, se envió un enlace de recuperación.';
+    resetMsg.classList.add('success');
   } catch (err) {
     console.error(err);
-    resetMessage.textContent = '❌ No se pudo enviar el correo de recuperación.';
-    resetMessage.classList.add('error');
+    resetMsg.textContent = '❌ No se pudo enviar el correo de recuperación.';
+    resetMsg.classList.add('error');
   }
 });
 
 // Cerrar modal al hacer clic fuera
-window.addEventListener('click', (e) => {
-  if (e.target === modal) closeModal();
-});
+window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 </script>
 
 </body>

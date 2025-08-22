@@ -28,29 +28,25 @@
       font-size: 1.2em;
       font-weight: bold;
     }
-    #success {
-      color: green;
-    }
-    #error {
-      color: red;
-    }
+    #success { color: green; }
+    #error { color: red; }
   </style>
 </head>
 <body>
 
 <h1>Validar Credencial</h1>
-
-<video id="video" autoplay></video>
+<video id="video" autoplay playsinline></video>
 <div id="output">Escanea el código QR...</div>
 
+<!-- Firebase 8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<!-- Tu config de Firebase -->
+<!-- Config de Firebase -->
 <script src="firebase-config.js"></script>
 
-<!-- Librería jsQR -->
+<!-- jsQR -->
 <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 
 <script>
@@ -58,30 +54,42 @@ const db = firebase.firestore();
 const video = document.getElementById("video");
 const output = document.getElementById("output");
 
+// Canvas único para análisis
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+
+// Acceso a la cámara
 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
   .then(stream => {
     video.srcObject = stream;
-    video.setAttribute("playsinline", true);
-    requestAnimationFrame(tick);
+    video.addEventListener("loadedmetadata", () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      requestAnimationFrame(tick);
+    });
+  })
+  .catch(err => {
+    console.error("Error accediendo a la cámara:", err);
+    output.innerHTML = `<span id="error">❌ No se pudo acceder a la cámara</span>`;
   });
 
+// Analizar video frame a frame
 function tick() {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.height = video.videoHeight;
-    canvas.width = video.videoWidth;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-    if (code) {
-      validarCodigo(code.data);
-    }
+    if (code) validarCodigo(code.data);
   }
   requestAnimationFrame(tick);
 }
 
+// Validar código en Firestore
+let ultimoCodigo = null;
 async function validarCodigo(codigo) {
+  if (codigo === ultimoCodigo) return; // evitar repetir
+  ultimoCodigo = codigo;
+
   try {
     const doc = await db.collection("credenciales").doc(codigo).get();
     if (doc.exists) {
@@ -92,8 +100,9 @@ async function validarCodigo(codigo) {
     } else {
       output.innerHTML = `<span id="error">❌ Credencial inválida</span>`;
     }
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error("Error validando credencial:", err);
+    output.innerHTML = `<span id="error">❌ Error al validar</span>`;
   }
 }
 </script>

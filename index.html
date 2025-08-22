@@ -3,14 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cáritas CNC</title>
+<title>📌 Cáritas CNC</title>
 
 <!-- Estilos -->
-<link rel="stylesheet" href="styles.css?v=9" />
+<link rel="stylesheet" href="styles.css?v=10" />
 
 <!-- FullCalendar -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
+
+<!-- Leaflet (mapas) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
 <!-- QR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
@@ -36,7 +40,7 @@
 
 <!-- Header -->
 <header class="app-header">
-  <h1>📌 Cáritas CNC</h1>
+  <h1 id="appTitle">📌 Cáritas CNC</h1>
   <nav>
     <button onclick="mostrarSeccion('inicio')">🏠 Inicio</button>
     <button id="btnRegistro" onclick="mostrarSeccion('registro-fam')">👨‍👩‍👧 Registro Familias</button>
@@ -46,153 +50,93 @@
 </header>
 
 <!-- Sección Inicio -->
-<section id="inicio" class="seccion active">
-  <div class="inicio-card">
-    <div class="inicio-contenido">
-      <h2 id="bienvenida">👋 Bienvenido a Cáritas CNC ❤️</h2>
-      <p id="mensajeInicio">
-        Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.<br>
-        Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.
-      </p>
-
-      <div class="pendientes-bloque">
-        <h3>📌 Resumen de pendientes</h3>
-        <p id="pendientesTexto">Los pendientes son: (sin pendientes aún)</p>
-        <button class="btn-peque" onclick="mostrarSeccion('servicios')">Ver más ➝</button>
-      </div>
-
-      <div class="quick-actions">
-        <button class="btn-peque" onclick="alert('👉 Sección de donaciones próximamente')">💖 Donaciones</button>
-        <button class="btn-peque" onclick="alert('👉 Sección de patrocinio próximamente')">🤝 Patrocinio</button>
-      </div>
-
-      <div class="mision-vision">
-        <div class="mision">
-          <h3>🌟 Nuestra Misión</h3>
-          <ul>
-            <li>💖 Servir con amor, respeto y empatía a las familias más necesitadas.</li>
-            <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
-            <li>🤝 Promover dignidad, justicia y solidaridad.</li>
-            <li>🌱 Trabajar unidos para crear oportunidades de desarrollo y esperanza.</li>
-            <li>🔥 Transformar vidas a través de la acción social y el amor al prójimo.</li>
-          </ul>
-        </div>
-        <div class="vision">
-          <h3>🚀 Nuestra Visión</h3>
-          <ul>
-            <li>🏛 Ser un referente de servicio y apoyo a familias vulnerables.</li>
-            <li>💡 Construir una comunidad justa, fraterna y solidaria.</li>
-            <li>✝ Inspirarnos en el Evangelio para transformar realidades.</li>
-            <li>🌍 Promover justicia social y desarrollo integral de cada persona.</li>
-            <li>🤗 Acompañar a cada familia para que encuentre un lugar de acogida y transformación.</li>
-          </ul>
-        </div>
-        <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión!</p>
-        <p class="agradecimiento"><b>Gracias por usar Cáritas CNC</b></p>
-      </div>
-
-      <!-- Galería lateral -->
-      <div class="galeria">
-        <h3>📷 Nuestra comunidad</h3>
-        <div class="galeria-grid">
-          <img src="img/imagen de grupo 1.jpeg" alt="Imagen 1" class="miniatura">
-          <img src="img/imagen de grupo 2.jpeg" alt="Imagen 2" class="miniatura">
-          <img src="img/imagen de grupo 3.jpeg" alt="Imagen 3" class="miniatura">
-          <img src="img/imagen de grupo 4.jpeg" alt="Imagen 4" class="miniatura">
-          <img src="img/imagen de grupo 5.jpeg" alt="Imagen 5" class="miniatura">
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- Modal galería -->
-<div id="modal" class="modal">
-  <span class="cerrar">&times;</span>
-  <img class="modal-contenido" id="img-ampliada">
-  <div id="caption"></div>
-</div>
+  <section id="inicio" class="seccion active">
+     <div class="inicio-card">
+       <div class="inicio-contenido"> 
+        <h2 id="bienvenida">👋 bienvenida a Cáritas CNC ❤️</h2> 
+        <p id="mensajeInicio"> Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.
+          <br> Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo. </p> 
+          <div class="pendientes-bloque"> <h3>📌 Resumen de pendientes</h3>
+             <p id="pendientesTexto">Los pendientes son: (sin pendientes aún)</p> 
+             <button class="btn-peque" onclick="mostrarSeccion('servicios')">Ver más ➝</button> 
+            </div> <div class="quick-actions"> <button class="btn-peque" onclick="alert('👉 Sección de donaciones próximamente')">💖 Donaciones</button>
+             <button class="btn-peque" onclick="alert('👉 Sección de patrocinio próximamente')">🤝 Patrocinio</button> 
+            </div> <div class="mision-vision"> <div class="mision">
+               <h3>🌟 Nuestra Misión</h3> <ul> <li>💖 Servir con amor, respeto y empatía a las familias más necesitadas.</li> 
+                <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
+                 <li>🤝 Promover dignidad, justicia y solidaridad.</li>
+                  <li>🌱 Trabajar unidos para crear oportunidades de desarrollo y esperanza.</li>
+                   <li>🔥 Transformar vidas a través de la acción social y el amor al prójimo.</li> </ul>
+                   </div> <div class="vision"> <h3>🚀 Nuestra Visión</h3> <ul>
+                     <li>🏛 Ser un referente de servicio y apoyo a familias vulnerables.</li>
+                      <li>💡 Construir una comunidad justa, fraterna y solidaria.</li>
+                       <li>✝ Inspirarnos en el Evangelio para transformar realidades.</li> 
+                       <li>🌍 Promover justicia social y desarrollo integral de cada persona.</li>
+                        <li>🤗 Acompañar a cada familia para que encuentre un lugar de acogida y transformación.</li> </ul>
+                       </div> <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión!</p> 
+                       <p class="agradecimiento"><b>Gracias por usar Cáritas CNC</b>
+                      </p> </div> <!-- Galería lateral --> <div class="galeria">
+                         <h3>📷 Nuestra comunidad</h3> <div class="galeria-grid">
+                           <img src="img/imagen de grupo 1.jpeg" alt="Imagen 1" class="miniatura"> <img src="img/imagen de grupo 2.jpeg" alt="Imagen 2" class="miniatura"> <img src="img/imagen de grupo 3.jpeg" alt="Imagen 3" class="miniatura"> <img src="img/imagen de grupo 4.jpeg" alt="Imagen 4" class="miniatura"> <img src="img/imagen de grupo 5.jpeg" alt="Imagen 5" class="miniatura"> </div> </div> </div> </div> </section> <!-- Modal galería --> <div id="modal" class="modal"> <span class="cerrar">&times;</span> <img class="modal-contenido" id="img-ampliada"> <div id="caption"></div> </div>
 
 <!-- Registro Familias -->
 <section id="registro-fam" class="seccion">
   <h2>📋 Registro de Familias</h2>
-  <form id="familiaForm" enctype="multipart/form-data" class="card">
+  <form id="familiaForm" class="card">
     <label>Nombres y Apellidos*</label>
     <input type="text" name="nombres_apellidos" required />
-
     <label>DNI*</label>
     <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
-
     <label>Apellido Familia*</label>
     <input type="text" name="apellido_familia" required />
-
-    <label>Dirección* (con sugerencias)</label>
-    <div class="row" style="gap:.5rem; align-items:center;">
-      <input type="text" id="reg-direccion" name="direccion" list="dl-direcciones" autocomplete="off" required />
-      <button type="button" onclick="abrirMapa()" class="map-btn">📍 Validar</button>
+    <label>Dirección*</label>
+    <div style="display:flex; gap:0.5rem;">
+      <input type="text" id="reg-direccion" name="direccion" required />
+      <button type="button" onclick="abrirMapa()">📍 Validar</button>
     </div>
-    <datalist id="dl-direcciones"></datalist>
-
     <label>Fecha de Registro*</label>
     <input type="date" name="fecha_registro" required />
-
     <label>Teléfono*</label>
     <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
-
     <label>Observaciones</label>
     <textarea name="observaciones"></textarea>
-
     <label>Adjuntar documento</label>
     <input type="file" name="archivo" accept=".pdf,.jpg,.png" />
-
-    <label>
-      <input type="checkbox" required>
-      Acepto los <a href="terminos.html" target="_blank">términos y condiciones</a>
-    </label>
-
-    <button type="submit" class="submit-btn">Guardar Familia</button>
+    <label><input type="checkbox" required> Acepto los <a href="terminos.html" target="_blank">términos</a></label>
+    <button type="submit">Guardar Familia</button>
   </form>
 </section>
 
 <!-- Servicios -->
 <section id="servicios" class="seccion">
   <h2>⚙️ Servicios</h2>
-
-  <!-- Login (visible si NO hay sesión) -->
   <div id="loginCard" class="card">
     <h3>🔑 Iniciar Sesión</h3>
     <input type="email" id="login-email" placeholder="Correo" required />
     <input type="password" id="login-password" placeholder="Contraseña" required />
-    <button id="btn-login" class="submit-btn">Iniciar Sesión</button>
+    <button id="btn-login">Iniciar Sesión</button>
   </div>
 
-  <div class="servicios-grid" id="serviciosGrid" style="display:none;">
-    <!-- Credenciales -->
+  <div id="serviciosGrid" style="display:none;">
     <div class="servicio-card">
       <h3>🪪 Credenciales</h3>
-      <p>Gestiona las credenciales de usuarios y voluntarios.</p>
-      <form id="credencialForm" class="form-servicio">
+      <form id="credencialForm">
         <input type="email" id="email" placeholder="Correo*" required />
         <input type="password" id="password" placeholder="Contraseña*" required />
         <input type="file" id="foto" accept="image/*" required />
         <button type="submit">Generar Credencial</button>
       </form>
-      <div id="credencialPreview" class="preview"></div>
+      <div id="credencialPreview"></div>
     </div>
 
-    <!-- Calendario -->
     <div class="servicio-card">
       <h3>📅 Calendario</h3>
-      <p>Visualiza y gestiona eventos de la comunidad.</p>
       <div id="calendar"></div>
     </div>
 
-    <!-- Pendientes -->
     <div class="servicio-card">
       <h3>📋 Pendientes</h3>
-      <p>Agrega y revisa tareas pendientes.</p>
-      <form id="pendienteForm" class="form-servicio">
+      <form id="pendienteForm">
         <input type="text" id="pendienteInput" placeholder="Escribe un pendiente..." required />
         <button type="submit">➕ Agregar</button>
       </form>
@@ -201,41 +145,41 @@
   </div>
 </section>
 
-<!-- Scripts -->
 <script defer>
-const firebaseConfig = {
-  apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-  authDomain: "web-familias.firebaseapp.com",
-  projectId: "web-familias",
-  storageBucket: "web-familias.firebasestorage.app",
-  messagingSenderId: "261699620792",
-  appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-window.auth = auth;
-
 document.addEventListener("DOMContentLoaded", () => {
+
+  // === Firebase ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+    authDomain: "web-familias.firebaseapp.com",
+    projectId: "web-familias",
+    storageBucket: "web-familias.firebasestorage.app",
+    messagingSenderId: "261699620792",
+    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
   const btnLogout = document.getElementById("btnLogout");
   const btnServicios = document.getElementById("btnServicios");
   const serviciosGrid = document.getElementById("serviciosGrid");
   const loginCard = document.getElementById("loginCard");
   const bienvenida = document.getElementById("bienvenida");
   const mensajeInicio = document.getElementById("mensajeInicio");
-  const headerTitle = document.querySelector(".app-header h1");
+  const appTitle = document.getElementById("appTitle");
 
-  // Observador de autenticación
+  // Observador de sesión
   auth.onAuthStateChanged(user => {
     if(user){
-      bienvenida.textContent = `👋 Bienvenido, ${user.email}`;
-      mensajeInicio.textContent = "Gracias por apoyar a Cáritas CNC.";
+      bienvenida.textContent = `👋 Bienvenid@, ${user.email}`;
+      mensajeInicio.textContent = "Desde aqui puedes ver todo el contenido exclusivo para ti.";
       btnLogout.style.display = "inline-block";
       btnServicios.style.display = "inline-block";
       loginCard.style.display = "none";
       serviciosGrid.style.display = "grid";
     } else {
-      bienvenida.textContent = "👋 Bienvenido a Cáritas CNC";
-      mensajeInicio.textContent = "Conectando familias, fe y comunidad.";
+      bienvenida.textContent = "👋 Bienvenid@ a Cáritas CNC";
+      mensajeInicio.textContent = "Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.";
       btnLogout.style.display = "none";
       btnServicios.style.display = "none";
       loginCard.style.display = "block";
@@ -243,74 +187,58 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Hacer click en el título abre login
-headerTitle.addEventListener("click", () => {
-  mostrarSeccion('servicios');
-  loginCard.style.display = "block";
-  serviciosGrid.style.display = "none";
-  document.getElementById("login-email").focus();
-});
-
-
-
-
   // Login
-document.getElementById("btn-login").addEventListener("click", async () => {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    alert("✅ Sesión iniciada con éxito");
-  } catch (err) {
-    alert("❌ Error al iniciar sesión: " + err.message);
-  }
-});
-
-// Logout
-btnLogout.addEventListener("click", async () => {
-  try {
-    await auth.signOut();
-    alert("✅ Sesión cerrada con éxito");
-    mostrarSeccion('inicio');
-  } catch(err){
-    alert("❌ Error al cerrar sesión: "+err.message);
-  }
-});
-
-
-  // Galería
-  const modal=document.getElementById("modal");
-  const modalImg=document.getElementById("img-ampliada");
-  const captionText=document.getElementById("caption");
-  const spanCerrar=document.getElementsByClassName("cerrar")[0];
-
-  document.querySelectorAll(".miniatura").forEach(img=>{
-    img.addEventListener("click", ()=>{
-      modal.style.display="flex";
-      modalImg.src=img.src;
-      captionText.innerHTML=img.alt;
-    });
+  document.getElementById("btn-login").addEventListener("click", async () => {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    try{
+      await auth.signInWithEmailAndPassword(email,password);
+      alert("✅ Sesión iniciada con éxito");
+      loginCard.style.display="none";
+      serviciosGrid.style.display="grid";
+    }catch(err){
+      alert("❌ Error al iniciar sesión: "+err.message);
+    }
   });
-  spanCerrar.onclick=function(){modal.style.display="none";};
-  modal.addEventListener("click",(e)=>{if(e.target===modal) modal.style.display="none";});
+
+  // Logout
+  btnLogout.addEventListener("click", async ()=>{
+    try{
+      await auth.signOut();
+      alert("✅ Sesión cerrada");
+      mostrarSeccion("inicio");
+    }catch(err){console.error(err);}
+  });
+
+  // Click en título abre login
+  appTitle.addEventListener("click", ()=>{
+    mostrarSeccion("servicios");
+    if(!auth.currentUser){
+      loginCard.style.display="block";
+      serviciosGrid.style.display="none";
+    }
+    document.getElementById("login-email").focus();
+  });
+
+  // Mostrar sección
+  window.mostrarSeccion = function(id){
+    const sec = document.getElementById(id);
+    if(!sec) return console.error("Sección no encontrada:", id);
+    document.querySelectorAll(".seccion").forEach(s=>s.classList.remove("active"));
+    sec.classList.add("active");
+  };
+
+  // Abrir mapa
+  window.abrirMapa = function(){
+    const dir = document.getElementById("reg-direccion").value.trim();
+    const url = dir ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}` : "https://www.google.com/maps/";
+    window.open(url,"_blank");
+  };
 
 });
-
-function mostrarSeccion(id){
-  document.querySelectorAll(".seccion").forEach(sec=>sec.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
-function abrirMapa(){
-  const dir=document.getElementById("reg-direccion").value.trim();
-  const url=dir?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`:`https://www.google.com/maps/`;
-  window.open(url,"_blank");
-}
 </script>
 
-
-
-<!-- Scripts defer -->
+<!-- Scripts externos (deben usar defer) -->
 <script src="./login-supabase.js" defer></script>
 <script src="./credenciales.js" defer></script>
 <script src="./familias.js" defer></script>
