@@ -8,13 +8,13 @@ const crearBtn = document.getElementById("crear-credenciales");
 const qrCanvas = document.getElementById("qr-canvas");
 const verCredencialBtn = document.getElementById("ver-credencial");
 
-let ultimoUsuario = null;
+let ultimoUsuario = null; // guardará los datos del último usuario
 
 crearBtn.addEventListener("click", async () => {
   try {
     console.log("📌 Generando credencial...");
 
-    // Validaciones iniciales
+    // Validaciones
     const user = firebase.auth().currentUser;
     if (!user) {
       alert("Debes iniciar sesión primero.");
@@ -64,7 +64,7 @@ crearBtn.addEventListener("click", async () => {
     if (insertFotoError) throw insertFotoError;
     console.log("✅ Registro en tabla foto_perfil correcto");
 
-    // 📌 Generar código único para la credencial
+    // 📌 Generar código único
     const codigo = `CCNC-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     // Guardar en tabla credenciales
@@ -84,16 +84,16 @@ crearBtn.addEventListener("click", async () => {
     console.log("✅ Registro en tabla credenciales correcto");
 
     // Guardar en memoria para el modal
-    ultimoUsuario = { id: userId, email, ext: fileExt };
+    ultimoUsuario = { id: userId, email, ext: fileExt, foto: fotoUrl, codigo };
 
     // Generar QR
     const credencialUrl = `${window.location.origin}/credencial.html?id=${userId}`;
     await QRCode.toCanvas(qrCanvas, credencialUrl);
 
+    // Mostrar botón de ver credencial
     verCredencialBtn.style.display = "block";
-    verCredencialBtn.onclick = () => window.open(credencialUrl, "_blank");
 
-    alert("✅ Credencial creada con éxito. QR generado.");
+    mostrarMensaje("✅ Credencial generada con éxito");
 
     // Notificación (opcional)
     if (typeof enviarNotificacion === "function") {
@@ -101,27 +101,56 @@ crearBtn.addEventListener("click", async () => {
     }
   } catch (err) {
     console.error("❌ Error inesperado:", err);
-    alert("Error: " + err.message);
+    mostrarMensaje("❌ Error al generar credencial");
   }
 });
 
-// Mostrar modal de credencial
+// Mostrar modal tipo carnet
 verCredencialBtn.addEventListener("click", async () => {
   if (!ultimoUsuario) {
     alert("Primero crea un usuario.");
     return;
   }
 
-  const { data: publicUrlData } = supabase.storage
-    .from("fotos-perfil")
-    .getPublicUrl(`${ultimoUsuario.id}.${ultimoUsuario.ext}`);
-
-  document.getElementById("foto-modal").src = publicUrlData.publicUrl;
+  document.getElementById("foto-modal").src = ultimoUsuario.foto;
   document.getElementById("correo-modal").innerText = ultimoUsuario.email;
   document.getElementById("id-modal").innerText = ultimoUsuario.id;
+  document.getElementById("codigo-modal").innerText = ultimoUsuario.codigo;
 
   const credencialUrl = `${window.location.origin}/credencial.html?id=${ultimoUsuario.id}`;
   QRCode.toCanvas(document.getElementById("qr-modal"), credencialUrl);
 
   document.getElementById("modalCredencial").style.display = "flex";
 });
+
+// --- Toggle desplegable ---
+const toggleCredenciales = document.getElementById("toggle-credenciales");
+const contenidoCredenciales = document.getElementById("credenciales-contenido");
+const arrowIcon = document.getElementById("arrow-icon");
+
+toggleCredenciales.addEventListener("click", () => {
+  if (contenidoCredenciales.style.display === "none") {
+    contenidoCredenciales.style.display = "block";
+    arrowIcon.textContent = "▲";
+  } else {
+    contenidoCredenciales.style.display = "none";
+    arrowIcon.textContent = "▼";
+  }
+});
+
+// --- Mensaje de confirmación ---
+function mostrarMensaje(texto) {
+  const msg = document.createElement("div");
+  msg.textContent = texto;
+  msg.style.cssText = `
+    background: #4caf50; 
+    color: white; 
+    padding: 10px; 
+    border-radius: 8px; 
+    margin-top: 10px; 
+    text-align: center;
+    font-weight: bold;
+  `;
+  contenidoCredenciales.prepend(msg);
+  setTimeout(() => msg.remove(), 3000);
+}
