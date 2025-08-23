@@ -167,21 +167,33 @@
     <div id="serviciosGrid" style="display:none;">
 
       <!-- Credenciales -->
-      <div class="servicio-card">
-        <h3>🪪 Credenciales</h3>
-        <form id="credencialForm">
-          <input type="email" id="email" placeholder="Correo*" required />
-          <input type="password" id="password" placeholder="Contraseña*" required />
-          <input type="file" id="foto-perfil" accept="image/*" required />
-          <button type="button" id="crear-credenciales">Generar Credencial</button>
-        </form>
-        <div id="credenciales-contenido" style="display:block;">
-          <button id="toggle-credenciales">▼</button>
-          <span id="arrow-icon">▼</span>
-          <canvas id="qr-canvas"></canvas>
-          <button id="ver-credencial" style="display:none;">Ver Credencial</button>
-        </div>
-      </div>
+<div class="servicio-card">
+  <h3>🪪 Credenciales</h3>
+  <form id="credencialForm">
+    <input type="text" id="nombre" placeholder="Nombre*" required />
+    <input type="email" id="email" placeholder="Correo*" required />
+    <input type="password" id="password" placeholder="Contraseña*" required />
+    <input type="file" id="foto-perfil" accept="image/*" required />
+    <button type="button" id="crear-credenciales">Generar Credencial</button>
+  </form>
+
+  <!-- Contenedor que se despliega -->
+  <div id="credenciales-contenido" style="display:none; margin-top:10px;">
+    <!-- Botones -->
+    <button id="ver-credencial" style="display:none;">🪪 Ver mi Credencial</button>
+    <button id="btn-ver-todas" style="margin-left:10px;">📂 Ver todas las credenciales</button>
+
+    <!-- QR -->
+    <div style="margin-top:10px;">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Lista de credenciales (cuando das click en "Ver todas") -->
+  <div id="lista-credenciales" style="margin-top:20px;"></div>
+</div>
+
+
 
       <!-- Calendario -->
       <div class="servicio-card">

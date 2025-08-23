@@ -79,7 +79,7 @@
         if (error || !data) throw error || new Error("Credencial no encontrada");
 
         // Mostrar datos en el carnet
-        document.getElementById("fotos-perfil").src = data.foto_url || "default-avatar.png";
+        document.getElementById("fotoPerfil").src = data.foto_url || "default-avatar.png";
         document.getElementById("email").textContent = data.email || "Sin correo";
         document.getElementById("uid").textContent = data.uid;
         document.getElementById("codigo").textContent = data.codigo || "N/A";
