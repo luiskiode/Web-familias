@@ -162,3 +162,50 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => msg.remove(), 3000);
   }
 });
+
+const verTodasBtn = document.getElementById("btn-ver-todas");
+const listaCredenciales = document.getElementById("lista-credenciales");
+
+if (verTodasBtn) {
+  verTodasBtn.addEventListener("click", async () => {
+    try {
+      const { data, error } = await supabase
+        .from("credenciales")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      listaCredenciales.innerHTML = ""; // limpiar antes
+
+      data.forEach(cred => {
+        const div = document.createElement("div");
+        div.classList.add("carnet");
+        div.innerHTML = `
+          <div class="foto">
+            <img src="${cred.foto_url}" alt="Foto perfil">
+          </div>
+          <div class="info">
+            <h3>Cáritas CNC</h3>
+            <p><b>Email:</b> ${cred.email}</p>
+            <p><b>Código:</b> ${cred.codigo_verificacion}</p>
+            <p><b>Fecha:</b> ${new Date(cred.created_at).toLocaleDateString()}</p>
+          </div>
+          <div class="qr">
+            <canvas id="qr-${cred.user_id}" width="60" height="60"></canvas>
+          </div>
+        `;
+        listaCredenciales.appendChild(div);
+
+        // Generar QR dinámico
+        const canvas = div.querySelector(`#qr-${cred.user_id}`);
+        const url = `${window.location.origin}/credencial.html?id=${cred.user_id}`;
+        QRCode.toCanvas(canvas, url, { width: 60 });
+      });
+
+    } catch (err) {
+      console.error("❌ Error al cargar credenciales:", err);
+      alert("No se pudieron cargar las credenciales");
+    }
+  });
+}
