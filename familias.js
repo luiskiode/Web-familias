@@ -4,6 +4,7 @@ console.log("📌 familias.js cargado correctamente");
 const tabla = document.getElementById("familiasTable");
 const formFamilia = document.getElementById("familiaForm");
 const direccionInput = formFamilia?.querySelector("input[name='direccion']");
+const mapaContainer = document.getElementById("mapa");
 let map;
 
 // ================== Utilidades ==================
@@ -22,6 +23,10 @@ async function geocodeDireccion(direccion) {
 
 // ================== Mapa ==================
 function initMapa() {
+  if (!mapaContainer) {
+    console.warn("⚠ No se encontró el contenedor del mapa (#mapa)");
+    return;
+  }
   map = L.map("mapa").setView([-12.0464, -77.0428], 13); // Lima como ejemplo
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
@@ -29,6 +34,7 @@ function initMapa() {
 }
 
 async function mostrarEnMapa(familias) {
+  if (!map) return;
   for (const fam of familias) {
     let lat = fam.lat, lng = fam.lng;
     if ((!lat || !lng) && fam.direccion) {
@@ -38,7 +44,7 @@ async function mostrarEnMapa(familias) {
     if (lat && lng) {
       L.marker([lat, lng])
         .addTo(map)
-        .bindPopup(`<b>${fam.nombre}</b><br>${fam.direccion}`);
+        .bindPopup(`<b>${fam.nombres_apellidos || fam.nombre}</b><br>${fam.direccion || ""}`);
     }
   }
 }
@@ -62,7 +68,7 @@ async function cargarFamilias() {
 
     data.forEach(fam => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${fam.id ?? ""}</td><td>${fam.nombre ?? ""}</td><td>${fam.direccion ?? ""}</td><td>${fam.telefono ?? ""}</td>`;
+      tr.innerHTML = `<td>${fam.id ?? ""}</td><td>${fam.nombres_apellidos ?? fam.nombre ?? ""}</td><td>${fam.direccion ?? ""}</td><td>${fam.telefono ?? ""}</td>`;
       tbody.appendChild(tr);
     });
 
@@ -104,7 +110,7 @@ if (formFamilia) {
 
       alert("✅ Familia registrada correctamente");
       formFamilia.reset();
-      cargarFamilias();
+      await cargarFamilias();
 
       if (typeof enviarNotificacion === "function") {
         enviarNotificacion("Nueva familia registrada", `👨‍👩‍👧‍👦 ${nombres_apellidos} fue añadida al sistema`);

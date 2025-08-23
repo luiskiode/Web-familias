@@ -17,20 +17,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  let ultimoUsuario = null; // guardará los datos del último usuario
+  let ultimoUsuario = null;
 
   // --- Crear credencial ---
   crearBtn.addEventListener("click", async () => {
     try {
       console.log("📌 Generando credencial...");
-
       const user = firebase.auth().currentUser;
       if (!user) {
         alert("Debes iniciar sesión primero.");
         return;
       }
 
-      if (!fotoInput.files.length) {
+      if (!fotoInput || !fotoInput.files.length) {
         alert("Por favor seleccione una foto de perfil");
         return;
       }
@@ -46,46 +45,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const fileExt = file.name.split(".").pop();
       const filePath = `${userId}.${fileExt}`;
 
-      console.log("📌 Subiendo foto:", filePath);
-
       // Subir foto a Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("fotos-perfil")
         .upload(filePath, file, { upsert: true });
-
       if (uploadError) throw uploadError;
-      console.log("✅ Foto subida correctamente");
 
-      // Obtener URL pública
-      const { data: publicUrlData } = supabase.storage
-        .from("fotos-perfil")
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData || !publicUrlData.publicUrl) {
-        throw new Error("No se pudo obtener la URL pública de la foto.");
-      }
+      const { data: publicUrlData } = supabase.storage.from("fotos-perfil").getPublicUrl(filePath);
+      if (!publicUrlData || !publicUrlData.publicUrl) throw new Error("No se pudo obtener la URL pública de la foto.");
       const fotoUrl = publicUrlData.publicUrl;
 
       // Guardar en tabla foto_perfil
-      const { error: insertFotoError } = await supabase
-        .from("foto_perfil")
+      const { error: insertFotoError } = await supabase.from("foto_perfil")
         .upsert([{ user_id: userId, filename: filePath, url: fotoUrl }]);
-
       if (insertFotoError) throw insertFotoError;
-      console.log("✅ Registro en tabla foto_perfil correcto");
 
       // Generar código único
       const codigo = `CCNC-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       // Guardar en tabla credenciales
-      const { error: insertCredError } = await supabase
-        .from("credenciales")
+      const { error: insertCredError } = await supabase.from("credenciales")
         .upsert([{ uid: userId, email, codigo, foto_url: fotoUrl, fecha: new Date().toISOString() }]);
-
       if (insertCredError) throw insertCredError;
-      console.log("✅ Registro en tabla credenciales correcto");
 
-      // Guardar en memoria para el modal
       ultimoUsuario = { id: userId, email, ext: fileExt, foto: fotoUrl, codigo };
 
       // Generar QR
@@ -95,16 +77,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // Mostrar botón de ver credencial
       verCredencialBtn.style.display = "block";
 
-      mostrarMensaje("✅ Credencial generada con éxito");
+      mostrarMensaje("✅ Credencial generada con éxito", true);
 
-      // Notificación opcional
       if (typeof enviarNotificacion === "function") {
         enviarNotificacion("Credencial creada", `🆔 Usuario: ${email}`);
       }
 
     } catch (err) {
       console.error("❌ Error inesperado:", err);
-      mostrarMensaje("❌ Error al generar credencial");
+      mostrarMensaje("❌ Error al generar credencial", false);
     }
   });
 
@@ -115,15 +96,27 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    document.getElementById("foto-modal").src = ultimoUsuario.foto;
-    document.getElementById("correo-modal").innerText = ultimoUsuario.email;
-    document.getElementById("id-modal").innerText = ultimoUsuario.id;
-    document.getElementById("codigo-modal").innerText = ultimoUsuario.codigo;
+    const fotoModal = document.getElementById("foto-modal");
+    const correoModal = document.getElementById("correo-modal");
+    const idModal = document.getElementById("id-modal");
+    const codigoModal = document.getElementById("codigo-modal");
+    const qrModal = document.getElementById("qr-modal");
+    const modal = document.getElementById("modalCredencial");
+
+    if (!fotoModal || !correoModal || !idModal || !codigoModal || !qrModal || !modal) {
+      console.warn("❌ Algunos elementos del modal no se encontraron.");
+      return;
+    }
+
+    fotoModal.src = ultimoUsuario.foto;
+    correoModal.innerText = ultimoUsuario.email;
+    idModal.innerText = ultimoUsuario.id;
+    codigoModal.innerText = ultimoUsuario.codigo;
 
     const credencialUrl = `${window.location.origin}/credencial.html?id=${ultimoUsuario.id}`;
-    QRCode.toCanvas(document.getElementById("qr-modal"), credencialUrl);
+    QRCode.toCanvas(qrModal, credencialUrl);
 
-    document.getElementById("modalCredencial").style.display = "flex";
+    modal.style.display = "flex";
   });
 
   // --- Toggle desplegable ---
@@ -138,11 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Mensaje de confirmación ---
-  function mostrarMensaje(texto) {
+  function mostrarMensaje(texto, exito = true) {
     const msg = document.createElement("div");
     msg.textContent = texto;
     msg.style.cssText = `
-      background: #4caf50; 
+      background: ${exito ? "#4caf50" : "#f44336"};
       color: white; 
       padding: 10px; 
       border-radius: 8px; 
@@ -153,5 +146,4 @@ document.addEventListener("DOMContentLoaded", () => {
     contenidoCredenciales.prepend(msg);
     setTimeout(() => msg.remove(), 3000);
   }
-
 });

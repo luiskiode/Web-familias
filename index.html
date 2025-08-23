@@ -50,34 +50,67 @@
 </header>
 
 <!-- Sección Inicio -->
-  <section id="inicio" class="seccion active">
-     <div class="inicio-card">
-       <div class="inicio-contenido"> 
-        <h2 id="bienvenida">👋 bienvenida a Cáritas CNC ❤️</h2> 
-        <p id="mensajeInicio"> Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.
-          <br> Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo. </p> 
-          <div class="pendientes-bloque"> <h3>📌 Resumen de pendientes</h3>
-             <p id="pendientesTexto">Los pendientes son: (sin pendientes aún)</p> 
-             <button class="btn-peque" onclick="mostrarSeccion('servicios')">Ver más ➝</button> 
-            </div> <div class="quick-actions"> <button class="btn-peque" onclick="alert('👉 Sección de donaciones próximamente')">💖 Donaciones</button>
-             <button class="btn-peque" onclick="alert('👉 Sección de patrocinio próximamente')">🤝 Patrocinio</button> 
-            </div> <div class="mision-vision"> <div class="mision">
-               <h3>🌟 Nuestra Misión</h3> <ul> <li>💖 Servir con amor, respeto y empatía a las familias más necesitadas.</li> 
-                <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
-                 <li>🤝 Promover dignidad, justicia y solidaridad.</li>
-                  <li>🌱 Trabajar unidos para crear oportunidades de desarrollo y esperanza.</li>
-                   <li>🔥 Transformar vidas a través de la acción social y el amor al prójimo.</li> </ul>
-                   </div> <div class="vision"> <h3>🚀 Nuestra Visión</h3> <ul>
-                     <li>🏛 Ser un referente de servicio y apoyo a familias vulnerables.</li>
-                      <li>💡 Construir una comunidad justa, fraterna y solidaria.</li>
-                       <li>✝ Inspirarnos en el Evangelio para transformar realidades.</li> 
-                       <li>🌍 Promover justicia social y desarrollo integral de cada persona.</li>
-                        <li>🤗 Acompañar a cada familia para que encuentre un lugar de acogida y transformación.</li> </ul>
-                       </div> <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión!</p> 
-                       <p class="agradecimiento"><b>Gracias por usar Cáritas CNC</b>
-                      </p> </div> <!-- Galería lateral --> <div class="galeria">
-                         <h3>📷 Nuestra comunidad</h3> <div class="galeria-grid">
-                           <img src="img/imagen de grupo 1.jpeg" alt="Imagen 1" class="miniatura"> <img src="img/imagen de grupo 2.jpeg" alt="Imagen 2" class="miniatura"> <img src="img/imagen de grupo 3.jpeg" alt="Imagen 3" class="miniatura"> <img src="img/imagen de grupo 4.jpeg" alt="Imagen 4" class="miniatura"> <img src="img/imagen de grupo 5.jpeg" alt="Imagen 5" class="miniatura"> </div> </div> </div> </div> </section> <!-- Modal galería --> <div id="modal" class="modal"> <span class="cerrar">&times;</span> <img class="modal-contenido" id="img-ampliada"> <div id="caption"></div> </div>
+<section id="inicio" class="seccion active">
+  <div class="inicio-card">
+    <div class="inicio-contenido"> 
+      <h2 id="bienvenida">👋 bienvenida a Cáritas CNC ❤️</h2> 
+      <p id="mensajeInicio">
+        Esta es la plataforma de gestión para el voluntariado de Cáritas CNC.<br>
+        Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.
+      </p> 
+      <div class="pendientes-bloque">
+        <h3>📌 Resumen de pendientes</h3>
+        <p id="pendientesTexto">Los pendientes son: (sin pendientes aún)</p> 
+        <button class="btn-peque" onclick="mostrarSeccion('servicios')">Ver más ➝</button> 
+      </div>
+      <div class="quick-actions">
+        <button class="btn-peque" onclick="alert('👉 Sección de donaciones próximamente')">💖 Donaciones</button>
+        <button class="btn-peque" onclick="alert('👉 Sección de patrocinio próximamente')">🤝 Patrocinio</button> 
+      </div>
+      <div class="mision-vision">
+        <div class="mision">
+          <h3>🌟 Nuestra Misión</h3>
+          <ul>
+            <li>💖 Servir con amor, respeto y empatía a las familias más necesitadas.</li> 
+            <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
+            <li>🤝 Promover dignidad, justicia y solidaridad.</li>
+            <li>🌱 Trabajar unidos para crear oportunidades de desarrollo y esperanza.</li>
+            <li>🔥 Transformar vidas a través de la acción social y el amor al prójimo.</li>
+          </ul>
+        </div>
+        <div class="vision">
+          <h3>🚀 Nuestra Visión</h3>
+          <ul>
+            <li>🏛 Ser un referente de servicio y apoyo a familias vulnerables.</li>
+            <li>💡 Construir una comunidad justa, fraterna y solidaria.</li>
+            <li>✝ Inspirarnos en el Evangelio para transformar realidades.</li> 
+            <li>🌍 Promover justicia social y desarrollo integral de cada persona.</li>
+            <li>🤗 Acompañar a cada familia para que encuentre un lugar de acogida y transformación.</li>
+          </ul>
+        </div>
+        <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión!</p> 
+        <p class="agradecimiento"><b>Gracias por usar Cáritas CNC</b></p>
+      </div> 
+      <div class="galeria">
+        <h3>📷 Nuestra comunidad</h3> 
+        <div class="galeria-grid">
+          <img src="img/imagen de grupo 1.jpeg" alt="Imagen 1" class="miniatura">
+          <img src="img/imagen de grupo 2.jpeg" alt="Imagen 2" class="miniatura">
+          <img src="img/imagen de grupo 3.jpeg" alt="Imagen 3" class="miniatura">
+          <img src="img/imagen de grupo 4.jpeg" alt="Imagen 4" class="miniatura">
+          <img src="img/imagen de grupo 5.jpeg" alt="Imagen 5" class="miniatura">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal galería -->
+<div id="modal" class="modal">
+  <span class="cerrar">&times;</span>
+  <img class="modal-contenido" id="img-ampliada">
+  <div id="caption"></div>
+</div>
 
 <!-- Registro Familias -->
 <section id="registro-fam" class="seccion">
@@ -145,6 +178,7 @@
   </div>
 </section>
 
+<!-- Script principal -->
 <script defer>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -158,8 +192,11 @@ document.addEventListener("DOMContentLoaded", () => {
     appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
   };
   firebase.initializeApp(firebaseConfig);
+  window.firebase = firebase;
   const auth = firebase.auth();
+  window.auth = auth;
 
+  // Elementos del DOM
   const btnLogout = document.getElementById("btnLogout");
   const btnServicios = document.getElementById("btnServicios");
   const serviciosGrid = document.getElementById("serviciosGrid");
@@ -171,54 +208,62 @@ document.addEventListener("DOMContentLoaded", () => {
   // Observador de sesión
   auth.onAuthStateChanged(user => {
     if(user){
-      bienvenida.textContent = `👋 Bienvenid@, ${user.email}`;
-      mensajeInicio.textContent = "Desde aqui puedes ver todo el contenido exclusivo para ti.";
-      btnLogout.style.display = "inline-block";
-      btnServicios.style.display = "inline-block";
-      loginCard.style.display = "none";
-      serviciosGrid.style.display = "grid";
+      if(bienvenida) bienvenida.textContent = `👋 Bienvenid@, ${user.email}`;
+      if(mensajeInicio) mensajeInicio.textContent = "Desde aqui puedes ver todo el contenido exclusivo para ti.";
+      if(btnLogout) btnLogout.style.display = "inline-block";
+      if(btnServicios) btnServicios.style.display = "inline-block";
+      if(loginCard) loginCard.style.display = "none";
+      if(serviciosGrid) serviciosGrid.style.display = "grid";
     } else {
-      bienvenida.textContent = "👋 Bienvenid@ a Cáritas CNC";
-      mensajeInicio.textContent = "Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.";
-      btnLogout.style.display = "none";
-      btnServicios.style.display = "none";
-      loginCard.style.display = "block";
-      serviciosGrid.style.display = "none";
+      if(bienvenida) bienvenida.textContent = "👋 Bienvenid@ a Cáritas CNC";
+      if(mensajeInicio) mensajeInicio.textContent = "Desde aquí puedes registrar nuevas familias, gestionar tareas internas y acceder a la agenda del grupo.";
+      if(btnLogout) btnLogout.style.display = "none";
+      if(btnServicios) btnServicios.style.display = "none";
+      if(loginCard) loginCard.style.display = "block";
+      if(serviciosGrid) serviciosGrid.style.display = "none";
     }
   });
 
   // Login
-  document.getElementById("btn-login").addEventListener("click", async () => {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-    try{
-      await auth.signInWithEmailAndPassword(email,password);
-      alert("✅ Sesión iniciada con éxito");
-      loginCard.style.display="none";
-      serviciosGrid.style.display="grid";
-    }catch(err){
-      alert("❌ Error al iniciar sesión: "+err.message);
-    }
-  });
+  const btnLogin = document.getElementById("btn-login");
+  if(btnLogin){
+    btnLogin.addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+      try{
+        await auth.signInWithEmailAndPassword(email,password);
+        alert("✅ Sesión iniciada con éxito");
+        if(loginCard) loginCard.style.display="none";
+        if(serviciosGrid) serviciosGrid.style.display="grid";
+      }catch(err){
+        alert("❌ Error al iniciar sesión: "+err.message);
+      }
+    });
+  }
 
   // Logout
-  btnLogout.addEventListener("click", async ()=>{
-    try{
-      await auth.signOut();
-      alert("✅ Sesión cerrada");
-      mostrarSeccion("inicio");
-    }catch(err){console.error(err);}
-  });
+  if(btnLogout){
+    btnLogout.addEventListener("click", async ()=>{
+      try{
+        await auth.signOut();
+        alert("✅ Sesión cerrada");
+        mostrarSeccion("inicio");
+      }catch(err){console.error(err);}
+    });
+  }
 
   // Click en título abre login
-  appTitle.addEventListener("click", ()=>{
-    mostrarSeccion("servicios");
-    if(!auth.currentUser){
-      loginCard.style.display="block";
-      serviciosGrid.style.display="none";
-    }
-    document.getElementById("login-email").focus();
-  });
+  if(appTitle){
+    appTitle.addEventListener("click", ()=>{
+      mostrarSeccion("servicios");
+      if(!auth.currentUser && loginCard && serviciosGrid){
+        loginCard.style.display="block";
+        serviciosGrid.style.display="none";
+      }
+      const loginEmail = document.getElementById("login-email");
+      if(loginEmail) loginEmail.focus();
+    });
+  }
 
   // Mostrar sección
   window.mostrarSeccion = function(id){
@@ -230,7 +275,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Abrir mapa
   window.abrirMapa = function(){
-    const dir = document.getElementById("reg-direccion").value.trim();
+    const dirEl = document.getElementById("reg-direccion");
+    if(!dirEl) return console.error("Input de dirección no encontrado");
+    const dir = dirEl.value.trim();
     const url = dir ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}` : "https://www.google.com/maps/";
     window.open(url,"_blank");
   };
@@ -238,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- Scripts externos (deben usar defer) -->
+<!-- Scripts externos -->
 <script src="./login-supabase.js" defer></script>
 <script src="./credenciales.js" defer></script>
 <script src="./familias.js" defer></script>
