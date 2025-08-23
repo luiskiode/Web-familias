@@ -9,13 +9,14 @@
       font-family: Arial, sans-serif;
       background: #f0f2f5;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      padding: 20px;
       margin: 0;
     }
     .contenedor {
       position: relative;
+      margin-bottom: 30px;
     }
     .credencial {
       width: 400px;
@@ -75,9 +76,34 @@
       width: 60px;
       height: 60px;
     }
+
+    /* --- Estilos para la lista --- */
+    #btn-ver-todas {
+      padding: 10px 20px;
+      background: #004aad;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    #btn-ver-todas:hover {
+      background: #0066ff;
+    }
+    .credenciales-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+    }
   </style>
 </head>
 <body>
+  <h1>🪪 Credencial Cáritas CNC</h1>
+
+  <!-- Una credencial por ID -->
   <div class="contenedor">
     <div class="credencial">
       <div class="foto">
@@ -95,21 +121,24 @@
     </div>
   </div>
 
+  <!-- Botón y lista de todas -->
+  <button id="btn-ver-todas">📂 Ver todas las credenciales</button>
+  <div id="lista-credenciales" class="credenciales-grid"></div>
+
+  <!-- Dependencias -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // Reemplaza con tus credenciales de Supabase
+    // 🔹 Reemplaza con tus credenciales
     const supabase = createClient("https://YOUR_PROJECT.supabase.co", "YOUR_ANON_KEY");
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get("id");
 
+    // --- Cargar credencial única ---
     async function cargarCredencial() {
-      if (!userId) {
-        alert("❌ No se encontró el ID del usuario.");
-        return;
-      }
+      if (!userId) return;
 
       try {
         const { data, error } = await supabase
@@ -119,7 +148,6 @@
           .single();
 
         if (error || !data) {
-          alert("❌ No se encontró la credencial.");
           console.error(error);
           return;
         }
@@ -130,14 +158,58 @@
         document.getElementById("uid").innerText = data.uid;
         document.getElementById("codigo").innerText = data.codigo || "CCNC-XXXX";
 
-        // Generar QR con URL pública de la credencial
         const credencialUrl = `${window.location.origin}/credencial.html?id=${data.uid}`;
         QRCode.toCanvas(document.getElementById("qr"), credencialUrl, { width: 60 });
       } catch (err) {
         console.error("Error al cargar la credencial:", err);
-        alert("❌ Ocurrió un error al cargar la credencial.");
       }
     }
+
+    // --- Cargar todas las credenciales ---
+    async function cargarTodas() {
+      const lista = document.getElementById("lista-credenciales");
+      lista.innerHTML = "⌛ Cargando...";
+
+      try {
+        const { data, error } = await supabase
+          .from("credenciales")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        lista.innerHTML = "";
+        data.forEach(c => {
+          const div = document.createElement("div");
+          div.classList.add("contenedor");
+          div.innerHTML = `
+            <div class="credencial">
+              <div class="foto">
+                <img src="${c.foto_url || "placeholder.png"}" alt="Foto usuario">
+              </div>
+              <div class="datos">
+                <h2>${c.nombre || "Usuario"}</h2>
+                <p>${c.email}</p>
+                <p><strong>ID:</strong> ${c.uid}</p>
+              </div>
+            </div>
+            <div class="codigo">${c.codigo || "CCNC-XXXX"}</div>
+            <div class="qr"><canvas id="qr-${c.uid}"></canvas></div>
+          `;
+          lista.appendChild(div);
+
+          // QR dinámico
+          const canvas = div.querySelector(`#qr-${c.uid}`);
+          const url = `${window.location.origin}/credencial.html?id=${c.uid}`;
+          QRCode.toCanvas(canvas, url, { width: 60 });
+        });
+      } catch (err) {
+        console.error("❌ Error cargando todas las credenciales:", err);
+        lista.innerHTML = "❌ Error al cargar credenciales";
+      }
+    }
+
+    document.getElementById("btn-ver-todas").addEventListener("click", cargarTodas);
 
     cargarCredencial();
   </script>
