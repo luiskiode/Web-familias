@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carnet CCNC</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .carnet {
+      width: 320px;
+      border: 2px solid #444;
+      border-radius: 15px;
+      padding: 20px;
+      background: white;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .carnet img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
+    h2 {
+      margin: 5px;
+    }
+    p {
+      margin: 4px;
+    }
+    #qrCanvas {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="carnet">
+    <h2>📌 Cáritas CNC</h2>
+    <img id="fotoPerfil" src="default-avatar.png" alt="Foto de perfil">
+    <p><b>Email:</b> <span id="email"></span></p>
+    <p><b>ID:</b> <span id="uid"></span></p>
+    <p><b>Código:</b> <span id="codigo"></span></p>
+    <canvas id="qrCanvas"></canvas>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="supabase-config.js"></script>
+  <!-- QR -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get("id");
+
+      if (!userId) {
+        alert("❌ No se proporcionó ID de usuario");
+        return;
+      }
+
+      try {
+        // Buscar credencial en Supabase
+        const { data, error } = await supabase
+          .from("credenciales")
+          .select("*")
+          .eq("uid", userId)
+          .single();
+
+        if (error || !data) throw error || new Error("Credencial no encontrada");
+
+        // Mostrar datos en el carnet
+        document.getElementById("fotos-perfil").src = data.foto_url || "default-avatar.png";
+        document.getElementById("email").textContent = data.email || "Sin correo";
+        document.getElementById("uid").textContent = data.uid;
+        document.getElementById("codigo").textContent = data.codigo || "N/A";
+
+        // Generar QR con link directo al carnet
+        const canvas = document.getElementById("qrCanvas");
+        const credencialUrl = `${window.location.origin}/carnet.html?id=${data.uid}`;
+        QRCode.toCanvas(canvas, credencialUrl, function (err) {
+          if (err) console.error("Error generando QR:", err);
+        });
+
+      } catch (err) {
+        console.error("❌ Error cargando credencial:", err);
+        alert("Error cargando credencial: " + (err.message || err));
+      }
+    });
+  </script>
+</body>
+</html>
