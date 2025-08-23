@@ -1,16 +1,12 @@
 // ================== PENDIENTES (tareas) ==================
-// Este módulo usa window.supabase (inyectado por supabase-config.js)
-
 (function () {
-  // --------------- Utilidades ---------------
   const $ = (sel) => document.querySelector(sel);
-  const escapeHTML = (str) =>
-    String(str || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+  const escapeHTML = (str) => String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
   function showError(msg) {
     const box = $("#pendientesError");
@@ -39,10 +35,8 @@
     setTimeout(() => el.remove(), 2500);
   }
 
-  // --------------- Estado ---------------
   let isOpen = false;
 
-  // --------------- Render ---------------
   function renderPendientes(items = []) {
     const tbody = $("#pendientesBody");
     if (!tbody) return;
@@ -58,89 +52,44 @@
     for (const t of items) {
       const tr = document.createElement("tr");
       tr.dataset.id = t.id;
-
       tr.innerHTML = `
-        <td class="desc" style="padding-right: 8px;">
-          ${escapeHTML(t.descripcion)}
-        </td>
-        <td style="text-align:center; width:90px;">
-          <input class="chk-estado" type="checkbox" ${t.estado ? "checked" : ""} />
-        </td>
-        <td style="text-align:right; width:90px;">
-          <button class="btn-del" title="Eliminar" style="background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;cursor:pointer;">🗑️</button>
-        </td>
+        <td class="desc" style="padding-right: 8px;">${escapeHTML(t.descripcion)}</td>
+        <td style="text-align:center;"><input class="chk-estado" type="checkbox" ${t.estado ? "checked" : ""} /></td>
+        <td style="text-align:right;"><button class="btn-del" style="background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;cursor:pointer;">🗑️</button></td>
       `;
       tbody.appendChild(tr);
     }
   }
 
-  // --------------- CRUD con Supabase ---------------
   async function loadPendientes() {
-    if (!window.supabase) {
-      showError("Supabase no está inicializado.");
-      return;
-    }
-    const { data, error } = await window.supabase
-      .from("pendientes")
-      .select("id, descripcion, estado")
-      .order("id", { ascending: true });
-
-    if (error) {
-      console.error("❌ Error al cargar pendientes:", error);
-      showError("No se pudieron cargar los pendientes.");
-      return;
-    }
+    if (!window.supabase) return showError("Supabase no está inicializado.");
+    const { data, error } = await window.supabase.from("pendientes").select("id, descripcion, estado").order("id", { ascending: true });
+    if (error) { console.error(error); return showError("No se pudieron cargar los pendientes."); }
     renderPendientes(data || []);
   }
 
   async function addPendiente(descripcion) {
     const desc = (descripcion || "").trim();
     if (!desc) return showError("Escribe una descripción.");
-
-    const { error } = await window.supabase
-      .from("pendientes")
-      .insert([{ descripcion: desc, estado: false }]);
-
-    if (error) {
-      console.error("❌ Error al agregar:", error);
-      showToast("Error al agregar pendiente", false);
-      return;
-    }
+    const { error } = await window.supabase.from("pendientes").insert([{ descripcion: desc, estado: false }]);
+    if (error) { console.error(error); return showToast("Error al agregar pendiente", false); }
     showToast("✅ Pendiente agregado");
     await loadPendientes();
   }
 
   async function updateEstado(id, estado) {
-    const { error } = await window.supabase
-      .from("pendientes")
-      .update({ estado })
-      .eq("id", id);
-
-    if (error) {
-      console.error("❌ Error al actualizar estado:", error);
-      showToast("No se pudo actualizar", false);
-      return;
-    }
+    const { error } = await window.supabase.from("pendientes").update({ estado }).eq("id", id);
+    if (error) { console.error(error); showToast("No se pudo actualizar", false); }
   }
 
   async function deletePendiente(id) {
-    const { error } = await window.supabase
-      .from("pendientes")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("❌ Error al eliminar:", error);
-      showToast("No se pudo eliminar", false);
-      return;
-    }
+    const { error } = await window.supabase.from("pendientes").delete().eq("id", id);
+    if (error) { console.error(error); showToast("No se pudo eliminar", false); return; }
     showToast("🗑️ Eliminado");
     await loadPendientes();
   }
 
-  // --------------- Eventos UI ---------------
   function wireUI() {
-    // Toggle plegable
     const header = $("#toggle-pendientes");
     const content = $("#pendientes-contenido");
     const arrow = $("#arrow-pendientes");
@@ -154,7 +103,6 @@
       });
     }
 
-    // Submit nuevo pendiente
     const form = $("#nuevoPendienteForm");
     const input = $("#nuevo-pendiente");
     if (form && input) {
@@ -166,10 +114,8 @@
       });
     }
 
-    // Delegación de eventos en la tabla
     const tbody = $("#pendientesBody");
     if (tbody) {
-      // Cambiar estado
       tbody.addEventListener("change", async (e) => {
         const chk = e.target.closest(".chk-estado");
         if (!chk) return;
@@ -179,20 +125,16 @@
         await updateEstado(id, chk.checked);
       });
 
-      // Eliminar pendiente
       tbody.addEventListener("click", async (e) => {
         const btn = e.target.closest(".btn-del");
         if (!btn) return;
         const tr = e.target.closest("tr");
         if (!tr) return;
         const id = tr.dataset.id;
-        if (confirm("¿Seguro que quieres eliminar este pendiente?")) {
-          await deletePendiente(id);
-        }
+        if (confirm("¿Seguro que quieres eliminar este pendiente?")) await deletePendiente(id);
       });
     }
   }
 
-  // --------------- Init ---------------
   document.addEventListener("DOMContentLoaded", wireUI);
 })();
