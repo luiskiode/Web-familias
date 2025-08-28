@@ -3,6 +3,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   const calendarioContainer = document.getElementById("calendario-container");
   const calendarEl = document.getElementById("calendar");
 
+  // 🔔 Notificación rápida
+  function notify(msg) {
+    console.log("🔔 " + msg);
+    // 👉 Aquí luego se puede cambiar por un toast bonito
+  }
+
   // 🔽 Validar existencia de elementos
   if (toggleBtn && calendarioContainer) {
     toggleBtn.addEventListener("click", () => {
@@ -26,7 +32,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   // ================== Cargar eventos desde Supabase ==================
   async function fetchEventos() {
     try {
-      const { data, error } = await supabase.from("eventos").select("*");
+      const { data, error } = await supabase
+        .from("eventos")
+        .select("id, titulo, fecha_inicio, fecha_fin, all_day");
+
       if (error) throw error;
 
       return data.map(evt => {
@@ -41,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
     } catch (err) {
       console.error("❌ Error al cargar eventos:", err.message);
+      notify("Error al cargar eventos");
       return [];
     }
   }
@@ -60,15 +70,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     editable: true,
     selectable: true,
 
+    // Crear evento
     dateClick: async function (info) {
-      const titulo = prompt("Ingrese título del evento:");
+      const titulo = prompt("Ingrese título del evento:")?.trim();
       if (!titulo) return;
 
       try {
-        const { data, error } = await supabase.from("eventos")
+        const { data, error } = await supabase
+          .from("eventos")
           .insert([{
             titulo: titulo,
-            fecha_inicio: info.dateStr,
+            fecha_inicio: new Date(info.dateStr).toISOString(),
             all_day: true
           }])
           .select()
@@ -82,40 +94,50 @@ document.addEventListener("DOMContentLoaded", async function () {
           start: data.fecha_inicio,
           allDay: data.all_day
         });
+
+        notify("✅ Evento agregado correctamente");
       } catch (err) {
-        alert("❌ Error al guardar en Supabase: " + err.message);
+        console.error("❌ Error al guardar en Supabase:", err.message);
+        notify("Error al guardar evento");
       }
     },
 
+    // Editar evento (mover o redimensionar)
     eventChange: async function (info) {
       try {
-        const { error } = await supabase.from("eventos")
+        const { error } = await supabase
+          .from("eventos")
           .update({
-            fecha_inicio: info.event.start,
-            fecha_fin: info.event.end || null,
+            fecha_inicio: info.event.start ? info.event.start.toISOString() : null,
+            fecha_fin: info.event.end ? info.event.end.toISOString() : null,
             all_day: info.event.allDay
           })
           .eq("id", info.event.id);
 
         if (error) throw error;
-        console.log("✅ Evento actualizado en Supabase:", info.event.title);
+        notify("✅ Evento actualizado");
       } catch (err) {
-        alert("❌ Error al actualizar evento: " + err.message);
+        console.error("❌ Error al actualizar evento:", err.message);
+        notify("Error al actualizar evento");
       }
     },
 
+    // Eliminar evento
     eventClick: async function (info) {
       if (!confirm(`¿Eliminar evento "${info.event.title}"?`)) return;
+
       try {
-        const { error } = await supabase.from("eventos")
+        const { error } = await supabase
+          .from("eventos")
           .delete()
           .eq("id", info.event.id);
 
         if (error) throw error;
         info.event.remove();
-        alert("🗑️ Evento eliminado");
+        notify("🗑️ Evento eliminado");
       } catch (err) {
-        alert("❌ Error al eliminar evento: " + err.message);
+        console.error("❌ Error al eliminar evento:", err.message);
+        notify("Error al eliminar evento");
       }
     }
   });

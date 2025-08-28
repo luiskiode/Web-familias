@@ -1,5 +1,9 @@
-// ================== PENDIENTES (tareas) ==================
+// pendientes.js (corregido) — expone API global y usa Supabase + Firebase Auth
+console.log("📌 pendientes.js cargado");
+
 (function () {
+  'use strict';
+
   const $ = (sel) => document.querySelector(sel);
   const escapeHTML = (str) => String(str || "")
     .replaceAll("&", "&amp;")
@@ -36,6 +40,7 @@
   }
 
   let isOpen = false;
+  let currentUser = null;
 
   function renderPendientes(items = []) {
     const tbody = $("#pendientesBody");
@@ -61,32 +66,55 @@
     }
   }
 
-  async function loadPendientes() {
-    if (!window.supabase) return showError("Supabase no está inicializado.");
-    const { data, error } = await window.supabase.from("pendientes").select("id, descripcion, estado").order("id", { ascending: true });
+  async function load() {
+    if (!window.supabase) return showError("Supabase no inicializado.");
+    if (!currentUser) return showError("Debes iniciar sesión.");
+    const { data, error } = await window.supabase
+      .from("pendientes")
+      .select("id, descripcion, estado")
+      .eq("user_id", currentUser.uid)
+      .order("id", { ascending: true });
+
     if (error) { console.error(error); return showError("No se pudieron cargar los pendientes."); }
     renderPendientes(data || []);
   }
 
-  async function addPendiente(descripcion) {
-    const desc = (descripcion || "").trim();
+  async function add(desc) {
+    if (!currentUser) return showError("Debes iniciar sesión.");
+    desc = (desc || "").trim();
     if (!desc) return showError("Escribe una descripción.");
-    const { error } = await window.supabase.from("pendientes").insert([{ descripcion: desc, estado: false }]);
+
+    const { error } = await window.supabase.from("pendientes").insert([{
+      descripcion: desc,
+      estado: false,
+      user_id: currentUser.uid
+    }]);
+
     if (error) { console.error(error); return showToast("Error al agregar pendiente", false); }
     showToast("✅ Pendiente agregado");
-    await loadPendientes();
+    await load();
   }
 
-  async function updateEstado(id, estado) {
-    const { error } = await window.supabase.from("pendientes").update({ estado }).eq("id", id);
+  async function upd(id, estado) {
+    if (!currentUser) return;
+    const { error } = await window.supabase
+      .from("pendientes")
+      .update({ estado })
+      .eq("id", id)
+      .eq("user_id", currentUser.uid);
     if (error) { console.error(error); showToast("No se pudo actualizar", false); }
   }
 
-  async function deletePendiente(id) {
-    const { error } = await window.supabase.from("pendientes").delete().eq("id", id);
+  async function del(id) {
+    if (!currentUser) return;
+    const { error } = await window.supabase
+      .from("pendientes")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", currentUser.uid);
     if (error) { console.error(error); showToast("No se pudo eliminar", false); return; }
     showToast("🗑️ Eliminado");
-    await loadPendientes();
+    await load();
   }
 
   function wireUI() {
@@ -99,7 +127,7 @@
         isOpen = !isOpen;
         content.style.display = isOpen ? "block" : "none";
         if (arrow) arrow.textContent = isOpen ? "▲" : "▼";
-        if (isOpen) setTimeout(loadPendientes, 60);
+        if (isOpen) setTimeout(load, 60);
       });
     }
 
@@ -108,7 +136,7 @@
     if (form && input) {
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        await addPendiente(input.value);
+        await add(input.value);
         input.value = "";
         input.focus();
       });
@@ -122,7 +150,7 @@
         const tr = e.target.closest("tr");
         if (!tr) return;
         const id = tr.dataset.id;
-        await updateEstado(id, chk.checked);
+        await upd(id, chk.checked);
       });
 
       tbody.addEventListener("click", async (e) => {
@@ -131,10 +159,33 @@
         const tr = e.target.closest("tr");
         if (!tr) return;
         const id = tr.dataset.id;
-        if (confirm("¿Seguro que quieres eliminar este pendiente?")) await deletePendiente(id);
+        if (confirm("¿Seguro que quieres eliminar este pendiente?")) await del(id);
       });
     }
   }
 
-  document.addEventListener("DOMContentLoaded", wireUI);
+  function bindAuth() {
+    // Soporta Firebase compat y modular expuesto en window.auth
+    if (window.firebase?.auth) {
+      firebase.auth().onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user && isOpen) load();
+      });
+    } else if (window.auth?.onAuthStateChanged) {
+      window.auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user && isOpen) load();
+      });
+    } else {
+      console.warn("⚠ No hay proveedor de Auth disponible.");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    wireUI();
+    bindAuth();
+  });
+
+  // API global
+  window._pendientes = { load, add, upd, del };
 })();

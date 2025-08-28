@@ -1,116 +1,162 @@
-console.log("📌 credenciales.js cargado correctamente");
-
-// Encapsulamos todo para evitar redefiniciones
 (() => {
-  // === Obtener elementos del DOM ===
-  const form = document.getElementById("credencialForm");
-  const btnCrear = document.getElementById("crear-credenciales");
-  const contenedorAcciones = document.getElementById("credenciales-contenido");
-  const btnToggle = document.getElementById("toggle-credenciales");
-  const btnVer = document.getElementById("ver-credencial");
-  const btnVerTodas = document.getElementById("btn-ver-todas");
-  const listaCredenciales = document.getElementById("lista-credenciales");
-  const qrCanvas = document.getElementById("qr-canvas");
+  console.log("📌 credenciales.js cargado correctamente");
 
-  // Verificación de elementos
-  if (!form || !btnCrear || !contenedorAcciones || !btnToggle || !btnVer || !btnVerTodas || !listaCredenciales || !qrCanvas) {
-    console.warn("⚠️ Algunos elementos de credenciales no están en este documento (esto es normal en páginas como carnet.html).");
-    return;
-  }
+  // ================== REFERENCIAS DOM ==================
+  const emailInput = document.getElementById("email");
+  const passInput = document.getElementById("password");
+  const fotoInput = document.getElementById("foto");
+  const btnCrear = document.getElementById("btnCrearCredencial");
+  const btnVerTodas = document.getElementById("btnVerTodas");
+  const credPreview = document.getElementById("credPreview");
+  const credStatus = document.getElementById("credStatus");
 
-  // === Crear credencial ===
-  btnCrear.addEventListener("click", async () => {
-    const nombre = document.getElementById("nombre").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const fotoInput = document.getElementById("foto-perfil");
-
-    if (!nombre || !email || !password || !fotoInput.files.length) {
-      alert("⚠️ Completa todos los campos");
+  // ================== FUNCIONES AUXILIARES ==================
+  function showStatus(msg, type = "info") {
+    if (!credStatus) {
+      alert(msg);
       return;
     }
+    credStatus.textContent = msg;
+    credStatus.style.color =
+      type === "error" ? "red" : type === "success" ? "green" : "black";
+  }
 
-    try {
-      // 1. Crear usuario en Firebase
-      const userCred = await auth.createUserWithEmailAndPassword(email, password);
-      const uid = userCred.user.uid;
-
-      // 2. Subir foto a Supabase Storage
-      const file = fotoInput.files[0];
-      const filePath = `credenciales/${uid}-${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("fotos")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("fotos").getPublicUrl(filePath);
-      const foto_url = urlData.publicUrl;
-
-      // 3. Guardar credencial en Supabase
-      const { error: dbError } = await supabase.from("credenciales").insert([
-        { uid, nombre, email, foto_url, codigo: Math.random().toString(36).substring(2, 8).toUpperCase() }
-      ]);
-
-      if (dbError) throw dbError;
-
-      alert("✅ Credencial generada con éxito");
-
-      // Mostrar botones y QR
-      contenedorAcciones.style.display = "block";
-      btnVer.style.display = "inline-block";
-
-      const credencialUrl = `${window.location.origin}/carnet.html?id=${uid}`;
-      QRCode.toCanvas(qrCanvas, credencialUrl, err => {
-        if (err) console.error("Error generando QR:", err);
-      });
-
-    } catch (err) {
-      console.error("❌ Error al generar credencial:", err);
-      alert("❌ Error: " + (err.message || err));
+  function validateEnv() {
+    if (!supabase || !auth || !QRCode) {
+      showStatus("❌ Supabase, Firebase o QRCode no inicializado", "error");
+      return false;
     }
-  });
+    return true;
+  }
 
-  // === Toggle mostrar/ocultar credenciales ===
-  btnToggle.addEventListener("click", () => {
-    if (listaCredenciales.style.display === "none" || listaCredenciales.style.display === "") {
-      listaCredenciales.style.display = "block";
-      btnToggle.textContent = "▲ Ocultar Credenciales";
-    } else {
-      listaCredenciales.style.display = "none";
-      btnToggle.textContent = "▼ Mostrar Credenciales";
-    }
-  });
+  // ================== CREAR CREDENCIAL ==================
+  if (btnCrear) {
+    btnCrear.addEventListener("click", async () => {
+      if (!validateEnv()) return;
+      if (!auth.currentUser) {
+        return showStatus("⚠️ Debes iniciar sesión para crear credenciales", "error");
+      }
 
-  // === Ver mi credencial ===
-  btnVer.addEventListener("click", () => {
-    if (!auth.currentUser) return alert("⚠️ Debes iniciar sesión");
-    const uid = auth.currentUser.uid;
-    window.open(`carnet.html?id=${uid}`, "_blank");
-  });
+      const email = emailInput.value.trim();
+      const password = passInput.value.trim();
+      const foto = fotoInput.files[0];
 
-  // === Ver todas las credenciales ===
-  btnVerTodas.addEventListener("click", async () => {
-    try {
-      const { data, error } = await supabase.from("credenciales").select("*");
-      if (error) throw error;
+      if (!email || !password || !foto) {
+        return showStatus("⚠️ Completa todos los campos", "error");
+      }
 
-      listaCredenciales.innerHTML = "";
-      data.forEach(c => {
-        const card = document.createElement("div");
-        card.className = "credencial-card";
-        card.innerHTML = `
-          <img src="${c.foto_url}" alt="foto" width="60" height="60" style="border-radius:50%;" />
-          <p><b>${c.nombre}</b></p>
-          <p>${c.email}</p>
-          <button onclick="window.open('carnet.html?id=${c.uid}','_blank')">Ver</button>
+      btnCrear.disabled = true;
+      showStatus("⏳ Creando credencial...");
+
+      try {
+        // 📌 Evitar duplicados en Supabase
+        const { data: existing } = await supabase
+          .from("credenciales")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (existing) {
+          btnCrear.disabled = false;
+          return showStatus("⚠️ Ya existe una credencial con este email", "error");
+        }
+
+        // 📌 Crear usuario en Firebase
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // 📌 Subir foto a Supabase Storage
+        const ext = foto.name.split(".").pop();
+        const remotePath = `credenciales/${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2)}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("fotos")
+          .upload(remotePath, foto);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("fotos")
+          .getPublicUrl(remotePath);
+
+        // 📌 Guardar credencial en Supabase
+        const { data, error: insertError } = await supabase
+          .from("credenciales")
+          .insert([
+            { email, user_id: user.uid, foto_url: publicUrl }
+          ])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        // 📌 Mostrar en UI
+        credPreview.innerHTML = `
+          <p><b>Email:</b> ${data.email}</p>
+          <img src="${data.foto_url}" width="150" />
+          <div id="qrcode"></div>
         `;
-        listaCredenciales.appendChild(card);
-      });
 
-    } catch (err) {
-      console.error("❌ Error cargando lista de credenciales:", err);
-      alert("❌ No se pudieron cargar las credenciales");
-    }
-  });
+        // 📌 Generar QR con datos de credencial
+        new QRCode(document.getElementById("qrcode"), {
+          text: JSON.stringify(data),
+          width: 128,
+          height: 128,
+        });
+
+        showStatus("✅ Credencial generada con éxito", "success");
+      } catch (err) {
+        console.error("❌ Error creando credencial:", err);
+        showStatus("❌ Error: " + err.message, "error");
+      } finally {
+        btnCrear.disabled = false;
+      }
+    });
+  }
+
+  // ================== VER TODAS LAS CREDENCIALES ==================
+  if (btnVerTodas) {
+    btnVerTodas.addEventListener("click", async () => {
+      if (!validateEnv()) return;
+      if (!auth.currentUser) {
+        return showStatus("⚠️ Debes iniciar sesión para ver credenciales", "error");
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("credenciales")
+          .select("*");
+
+        if (error) throw error;
+
+        // 📌 Mostrar en modal
+        const modal = document.createElement("div");
+        modal.className = "modal";
+        modal.innerHTML = `
+          <div class="modal-content">
+            <h2>Credenciales registradas</h2>
+            <ul>
+              ${data
+                .map(
+                  (c) =>
+                    `<li>${c.email} <br><img src="${c.foto_url}" width="80"></li>`
+                )
+                .join("")}
+            </ul>
+            <button id="closeModal">Cerrar</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        document
+          .getElementById("closeModal")
+          .addEventListener("click", () => modal.remove());
+      } catch (err) {
+        console.error("❌ Error mostrando credenciales:", err);
+        showStatus("❌ Error: " + err.message, "error");
+      }
+    });
+  }
 })();

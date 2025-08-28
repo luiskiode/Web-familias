@@ -27,7 +27,7 @@ function initMapa() {
     console.warn("⚠ No se encontró el contenedor del mapa (#mapa)");
     return;
   }
-  map = L.map("mapa").setView([-12.0464, -77.0428], 13); // Lima como ejemplo
+  map = L.map("mapa").setView([-12.0464, -77.0428], 13); // Lima por defecto
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
@@ -68,7 +68,11 @@ async function cargarFamilias() {
 
     data.forEach(fam => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${fam.id ?? ""}</td><td>${fam.nombres_apellidos ?? fam.nombre ?? ""}</td><td>${fam.direccion ?? ""}</td><td>${fam.telefono ?? ""}</td>`;
+      tr.innerHTML = `
+        <td>${fam.id ?? ""}</td>
+        <td>${fam.nombres_apellidos ?? fam.nombre ?? ""}</td>
+        <td>${fam.direccion ?? ""}</td>
+        <td>${fam.telefono_contacto ?? fam.telefono ?? ""}</td>`;
       tbody.appendChild(tr);
     });
 
@@ -138,8 +142,14 @@ if (direccionInput) {
   });
 }
 
-// ================== Inicializar al cargar DOM ==================
-document.addEventListener("DOMContentLoaded", async () => {
-  initMapa();
-  await cargarFamilias();
+// ================== Inicializar ==================
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    console.log("👤 Usuario autenticado:", user.email);
+    initMapa();
+    await cargarFamilias();
+  } else {
+    console.warn("⚠ Usuario no autenticado, redirigiendo a login...");
+    window.location.href = "login.html";
+  }
 });

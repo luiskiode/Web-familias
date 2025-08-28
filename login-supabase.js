@@ -1,37 +1,37 @@
-console.log("✅ login-supabase.js cargado");
+// login-supabase.js (corregido) — Ahora usa Firebase Auth para mantener consistencia del proyecto
+console.log("✅ login-supabase.js cargado (modo Firebase Auth)");
 
-// Ejemplo: login con Supabase
-const form = document.getElementById("loginForm");
-if (form) {
+(function () {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+  const form = $("loginForm");
+  if (!form) {
+    console.warn("ℹ️ loginForm no encontrado en este documento");
+    return;
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const email = $("email")?.value?.trim();
+    const password = $("password")?.value || "";
+    const msg = $("loginMessage");
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const msg = document.getElementById("loginMessage");
+    if (msg) { msg.textContent = ""; msg.style.color = ""; }
 
-    msg.textContent = "";
     if (!email || !password) {
-      msg.textContent = "⚠️ Completa correo y contraseña";
-      msg.style.color = "red";
+      if (msg) { msg.textContent = "⚠️ Completa correo y contraseña"; msg.style.color = "red"; }
       return;
     }
 
     try {
-      const { data, error } = await window.supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      msg.textContent = "✅ Acceso concedido, redirigiendo...";
-      msg.style.color = "green";
-      setTimeout(() => (window.location.href = "index.html"), 1000);
+      if (!window.firebase?.auth) throw new Error("Firebase Auth no inicializado");
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+      if (msg) { msg.textContent = "✅ Acceso concedido, redirigiendo…"; msg.style.color = "green"; }
+      setTimeout(() => (window.location.href = "index.html"), 800);
     } catch (err) {
-      console.error("❌ Error de login:", err.message);
-      msg.textContent = "❌ " + err.message;
-      msg.style.color = "red";
+      console.error("❌ Error de login:", err?.message || err);
+      if (msg) { msg.textContent = "❌ " + (err?.message || err); msg.style.color = "red"; }
     }
   });
-}
+})();

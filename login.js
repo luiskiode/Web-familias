@@ -1,55 +1,38 @@
-console.log("✅ login.js cargado");
+// login.js (nuevo) — Controlador genérico para pantallas de login con Firebase compat
+console.log("📌 login.js cargado");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("loginForm");
-  const msg = document.getElementById("loginMessage");
+(function () {
+  'use strict';
 
-  if (!form) return;
+  function $(id) { return document.getElementById(id); }
+  const form = $("loginForm");
+  const msg = $("loginMessage");
+
+  if (!form) {
+    console.warn("ℹ️ loginForm no existe en esta página");
+    return;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    msg.textContent = "";
-    msg.classList.remove("error", "success");
+    const email = $("email")?.value?.trim();
+    const password = $("password")?.value || "";
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    if (msg) { msg.textContent = ""; msg.className = ""; }
 
     if (!email || !password) {
-      msg.textContent = "Por favor completa email y contraseña.";
-      msg.classList.add("error");
+      if (msg) { msg.textContent = "Completa email y contraseña"; msg.className = "error"; }
       return;
     }
 
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      const user = userCredential.user;
-      console.log("🔑 Usuario autenticado:", user.email);
-
-      // Validar admin
-      if (user.email !== "admin@caritas.com") {
-        await auth.signOut();
-        msg.textContent = "⛔ No tienes permisos para acceder a esta página.";
-        msg.classList.add("error");
-        return;
-      }
-
-      // Login exitoso
-      msg.textContent = "✔ Inicio de sesión exitoso. Redirigiendo...";
-      msg.classList.add("success");
-
-      // Guardar sesión en localStorage
-      localStorage.setItem("caritasUser", JSON.stringify({ email: user.email, uid: user.uid }));
-
-      setTimeout(() => window.location.href = "index.html", 1000);
-
+      if (!window.firebase?.auth) throw new Error("Firebase Auth no inicializado");
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+      if (msg) { msg.textContent = "Acceso concedido, redirigiendo…"; msg.className = "success"; }
+      setTimeout(() => (location.href = "index.html"), 800);
     } catch (err) {
-      console.error("❌ Error al iniciar sesión:", err);
-      let errorMessage = "Usuario o contraseña incorrectos.";
-      if (err.code === "auth/network-request-failed") {
-        errorMessage = "Error de red. Verifica tu conexión.";
-      }
-      msg.textContent = errorMessage;
-      msg.classList.add("error");
+      console.error(err);
+      if (msg) { msg.textContent = err?.message || "Error de autenticación"; msg.className = "error"; }
     }
   });
-});
+})();

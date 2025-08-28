@@ -1,7 +1,5 @@
-// =============================
-// CONFIG
-// =============================
-const CACHE_NAME = "caritasCNC-v4";
+// service-worker.js (corregido)
+const CACHE_NAME = "caritasCNC-v5";
 
 const urlsToCache = [
   "./",
@@ -18,60 +16,58 @@ const urlsToCache = [
   "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"
 ];
 
-// =============================
-// INSTALACIÓN DEL SERVICE WORKER
-// =============================
 self.addEventListener("install", (event) => {
   console.log("📦 Instalando Service Worker...");
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
       .catch((err) => console.error("❌ Falló el cacheo inicial:", err))
   );
 });
 
-// =============================
-// ACTIVACIÓN Y LIMPIEZA DE CACHÉ ANTIGUO
-// =============================
 self.addEventListener("activate", (event) => {
   console.log("🚀 Activando Service Worker...");
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => {
-        if (k !== CACHE_NAME) {
-          console.log("🧹 Borrando caché antiguo:", k);
-          return caches.delete(k);
-        }
-      }))
-    )
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log("🧹 Borrando caché antiguo:", key);
+            return caches.delete(key);
+          }
+        })
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// =============================
-// INTERCEPTAR PETICIONES (OFFLINE SUPPORT)
-// =============================
 self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") {
+    // Evitar cachear POST/PUT/etc
+    event.respondWith(fetch(req));
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((res) => {
-      if (res) {
-        return res;
-      }
-      return fetch(event.request).catch(() => {
-        return caches.match("./index.html");
-      });
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req)
+        .then((response) => {
+          // Guardar nuevas respuestas en caché (solo http/https)
+          if (req.url.startsWith("http")) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, response.clone()));
+          }
+          return response;
+        })
+        .catch(() => caches.match("./index.html"));
     })
   );
 });
 
-// =============================
-// NOTIFICACIONES PUSH
-// =============================
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() || {
-    title: "Nueva alerta Cáritas CNC",
-    body: "Tienes una nueva notificación."
-  };
-
+  const data = event.data?.json() || { title: "📢 Cáritas CNC", body: "Tienes una nueva notificación." };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
@@ -81,26 +77,28 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// =============================
-// CLICK EN NOTIFICACIÓN
-// =============================
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow("./index.html")
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes("index.html") && "focus" in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow("./index.html");
+    })
   );
 });
 
-// =============================
-// MENSAJES DESDE LA PÁGINA
-// =============================
 self.addEventListener("message", (event) => {
-  if (event.data?.action === "ping") {
+  const { action, texto, delay } = event.data || {};
+
+  if (action === "ping") {
     event.source.postMessage({ reply: "pong" });
   }
 
-  if (event.data?.action === "programarRecordatorio") {
-    const { texto, delay } = event.data;
+  if (action === "programarRecordatorio" && texto && delay) {
     setTimeout(() => {
       self.registration.showNotification("⏰ Recordatorio Cáritas CNC", {
         body: texto,
@@ -110,12 +108,3 @@ self.addEventListener("message", (event) => {
     }, delay);
   }
 });
-
-// =============================
-// FUNCIÓN ASÍNCRONA DE EJEMPLO
-// =============================
-function doAsyncTask() {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve("✅ Tarea completada"), 1000);
-  });
-}
