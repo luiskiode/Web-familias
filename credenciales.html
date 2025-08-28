@@ -3,215 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Credencial Cáritas CNC</title>
+  <title>Credenciales — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="./supabase-config.js" defer></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-    .contenedor {
-      position: relative;
-      margin-bottom: 30px;
-    }
-    .credencial {
-      width: 400px;
-      height: 220px;
-      background: white;
-      border: 2px solid #004aad;
-      border-radius: 12px;
-      display: flex;
-      padding: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
-    .foto {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .foto img {
-      width: 100px;
-      height: 120px;
-      border-radius: 8px;
-      object-fit: cover;
-      border: 2px solid #004aad;
-    }
-    .datos {
-      flex: 2;
-      margin-left: 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .datos h2 {
-      margin: 0;
-      font-size: 18px;
-      color: #004aad;
-    }
-    .datos p {
-      margin: 5px 0;
-      font-size: 14px;
-      color: #333;
-    }
-    .codigo {
-      position: absolute;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      font-weight: bold;
-      color: #004aad;
-    }
-    .qr {
-      position: absolute;
-      bottom: 15px;
-      right: 15px;
-    }
-    .qr canvas {
-      width: 60px;
-      height: 60px;
-    }
-
-    /* --- Estilos para la lista --- */
-    #btn-ver-todas {
-      padding: 10px 20px;
-      background: #004aad;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-    #btn-ver-todas:hover {
-      background: #0066ff;
-    }
-    .credenciales-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 1000px;
-    }
+    body { font-family: system-ui, Arial, sans-serif; background:#f6f7fb; margin:0; padding:20px; }
+    .top { display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+    .search { padding:8px 10px; border:1px solid #ddd; border-radius:8px; width:320px; max-width:100%; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 12px; margin-top: 14px; }
+    .card { background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+    .foto { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid #b91c1c; }
+    .row { display:flex; align-items:center; gap:10px; }
+    .muted { color:#6b7280; }
+    .btn { padding:6px 10px; border:1px solid #ddd; background:#fafafa; border-radius:8px; cursor:pointer; }
+    .btn:hover { background:#f0f0f0; }
   </style>
 </head>
 <body>
-  <h1>🪪 Credencial Cáritas CNC</h1>
-
-  <!-- Una credencial por ID -->
-  <div class="contenedor">
-    <div class="credencial">
-      <div class="foto">
-        <img id="foto" src="" alt="Foto usuario">
-      </div>
-      <div class="datos">
-        <h2 id="nombre">Usuario</h2>
-        <p id="correo">correo@ejemplo.com</p>
-        <p><strong>ID:</strong> <span id="uid"></span></p>
-      </div>
-    </div>
-    <div class="codigo" id="codigo">CCNC-XXXX</div>
-    <div class="qr">
-      <canvas id="qr"></canvas>
-    </div>
+  <div class="top">
+    <h1>🪪 Listado de credenciales</h1>
+    <input class="search" id="q" placeholder="Buscar por nombre o email..." />
   </div>
 
-  <!-- Botón y lista de todas -->
-  <button id="btn-ver-todas">📂 Ver todas las credenciales</button>
-  <div id="lista-credenciales" class="credenciales-grid"></div>
+  <div class="grid" id="grid"></div>
 
-  <!-- Dependencias -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+  <script>
+  (function(){
+    'use strict';
 
-    // 🔹 Reemplaza con tus credenciales
-    const supabase = createClient("https://qivjlsvcjyqymommfdke.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw");
+    function avatar(nombre){ return `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`; }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get("id");
+    async function getAll(){
+      const { data, error } = await window.supabase.from('credenciales').select('*').order('creado_en', { ascending:false });
+      if (error) throw error;
+      return data || [];
+    }
 
-    // --- Cargar credencial única ---
-    async function cargarCredencial() {
-      if (!userId) return;
+    function card(c){
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = \`
+        <div class="row">
+          <img class="foto" src="\${c.foto_url || avatar(c.nombre)}" alt="Foto">
+          <div>
+            <div><strong>\${c.nombre||'—'}</strong></div>
+            <div class="muted">\${c.email||'—'}</div>
+            <div class="muted">Código: \${c.codigo||'N/A'}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <a class="btn" href="credencial.html?id=\${encodeURIComponent(c.uid)}" target="_blank">Ver</a>
+          \${c.foto_url ? '<a class="btn" href="'+c.foto_url+'" target="_blank">Foto</a>' : ''}
+        </div>\`;
+      return el;
+    }
 
+    function filterList(){
+      const q = document.getElementById('q').value.toLowerCase();
+      document.querySelectorAll('#grid .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    async function main(){
       try {
-        const { data, error } = await supabase
-          .from("credenciales")
-          .select("*")
-          .eq("uid", userId)
-          .single();
-
-        if (error || !data) {
-          console.error(error);
-          return;
-        }
-
-        document.getElementById("foto").src = data.foto_url || "placeholder.png";
-        document.getElementById("nombre").innerText = data.nombre || "Sin nombre";
-        document.getElementById("correo").innerText = data.email || "Sin correo";
-        document.getElementById("uid").innerText = data.uid;
-        document.getElementById("codigo").innerText = data.codigo || "CCNC-XXXX";
-
-        const credencialUrl = `${window.location.origin}/credencial.html?id=${data.uid}`;
-        QRCode.toCanvas(document.getElementById("qr"), credencialUrl, { width: 60 });
-      } catch (err) {
-        console.error("Error al cargar la credencial:", err);
+        const lista = await getAll();
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        lista.forEach(c => grid.appendChild(card(c)));
+        document.getElementById('q').addEventListener('input', filterList);
+      } catch(e){
+        document.getElementById('grid').innerHTML = '<p style="color:#b91c1c">❌ No se pudo cargar el listado.</p>';
+        console.error(e);
       }
     }
 
-    // --- Cargar todas las credenciales ---
-    async function cargarTodas() {
-      const lista = document.getElementById("lista-credenciales");
-      lista.innerHTML = "⌛ Cargando...";
-
-      try {
-        const { data, error } = await supabase
-          .from("credenciales")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        lista.innerHTML = "";
-        data.forEach(c => {
-          const div = document.createElement("div");
-          div.classList.add("contenedor");
-          div.innerHTML = `
-            <div class="credencial">
-              <div class="foto">
-                <img src="${c.foto_url || "placeholder.png"}" alt="Foto usuario">
-              </div>
-              <div class="datos">
-                <h2>${c.nombre || "Usuario"}</h2>
-                <p>${c.email}</p>
-                <p><strong>ID:</strong> ${c.uid}</p>
-              </div>
-            </div>
-            <div class="codigo">${c.codigo || "CCNC-XXXX"}</div>
-            <div class="qr"><canvas id="qr-${c.uid}"></canvas></div>
-          `;
-          lista.appendChild(div);
-
-          // QR dinámico
-          const canvas = div.querySelector(`#qr-${c.uid}`);
-          const url = `${window.location.origin}/credencial.html?id=${c.uid}`;
-          QRCode.toCanvas(canvas, url, { width: 60 });
-        });
-      } catch (err) {
-        console.error("❌ Error cargando todas las credenciales:", err);
-        lista.innerHTML = "❌ Error al cargar credenciales";
-      }
-    }
-
-    document.getElementById("btn-ver-todas").addEventListener("click", cargarTodas);
-
-    cargarCredencial();
+    document.addEventListener('DOMContentLoaded', main);
+  })();
   </script>
 </body>
 </html>

@@ -5,106 +5,150 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Validar Credencial - Cáritas CNC</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    h1 {
-      background: #b71c1c;
-      color: white;
-      padding: 15px;
-    }
-    #video {
-      width: 100%;
-      max-width: 400px;
-      border: 3px solid #b71c1c;
-      border-radius: 10px;
-    }
-    #output {
-      margin-top: 20px;
-      font-size: 1.2em;
-      font-weight: bold;
-    }
-    #success { color: green; }
-    #error { color: red; }
+    body { font-family: system-ui, Arial, sans-serif; background:#f6f7fb; margin:0; text-align:center; }
+    header { background:#b71c1c; color:#fff; padding:16px; font-weight:700; }
+    #video { width: 100%; max-width: 420px; border: 3px solid #b71c1c; border-radius: 10px; margin-top: 14px; background:#000; }
+    #output { margin: 16px auto; font-size: 1rem; max-width: 480px; }
+    #card { background:#fff; border:1px solid #eee; border-radius: 12px; padding: 12px; display:none; width: 340px; margin: 10px auto; box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+    .foto { width: 88px; height: 88px; border-radius:50%; border:2px solid #b91c1c; object-fit:cover; }
+    .muted { color:#6b7280; }
+    .btn { padding: 8px 12px; border:1px solid #ddd; background:#fafafa; border-radius:8px; cursor:pointer; }
+    .btn:hover { background:#f0f0f0; }
   </style>
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./supabase-config.js"></script>
 </head>
 <body>
+  <header>Validar Credencial</header>
 
-<h1>Validar Credencial</h1>
-<video id="video" autoplay playsinline></video>
-<div id="output">Escanea el código QR...</div>
+  <video id="video" autoplay playsinline></video>
+  <div class="row" style="margin-top:10px;">
+    <button class="btn" id="btnIniciar">🎥 Iniciar</button>
+    <button class="btn" id="btnDetener">🛑 Detener</button>
+    <input type="file" id="fileQR" accept="image/*" class="btn" />
+  </div>
 
-<!-- Firebase 8 -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<!-- Config de Firebase -->
-<script src="firebase-config.js"></script>
-
-<!-- jsQR -->
-<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  <div id="output" class="muted">Apunta la cámara a un QR con el enlace o JSON de credencial.</div>
+  <div id="card">
+    <img id="foto" class="foto" alt="Foto">
+    <div style="margin-top:6px;">
+      <div><strong id="nombre">—</strong></div>
+      <div class="muted" id="email">—</div>
+      <div class="muted">Código: <span id="codigo">—</span></div>
+    </div>
+  </div>
 
 <script>
-const db = firebase.firestore();
-const video = document.getElementById("video");
-const output = document.getElementById("output");
+(function(){
+  'use strict';
+  const video = document.getElementById('video');
+  const output = document.getElementById('output');
+  const card = document.getElementById('card');
+  const foto = document.getElementById('foto');
+  const nombre = document.getElementById('nombre');
+  const email = document.getElementById('email');
+  const codigo = document.getElementById('codigo');
 
-// Canvas único para análisis
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  let stream=null, raf=null;
 
-// Acceso a la cámara
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-  .then(stream => {
-    video.srcObject = stream;
-    video.addEventListener("loadedmetadata", () => {
+  function avatar(n){ return `https://ui-avatars.com/api/?name=${encodeURIComponent(n||'Usuario')}&background=004aad&color=fff`; }
+
+  function setMsg(html){ output.innerHTML = html; }
+
+  function parseQR(data){
+    // Soporta URL del tipo .../credencial.html?id=UID o JSON {"t":"credencial","uid":"..."}
+    try {
+      const url = new URL(data);
+      const uid = url.searchParams.get('id');
+      if (uid) return { uid };
+    } catch {}
+    try {
+      const json = JSON.parse(data);
+      if (json && json.uid) return { uid: json.uid };
+    } catch {}
+    return null;
+  }
+
+  async function cargar(uid){
+    try {
+      const { data, error } = await window.supabase.from('credenciales').select('*').eq('uid', uid).single();
+      if (error || !data) throw error || new Error('No encontrada');
+      foto.src = data.foto_url || avatar(data.nombre);
+      nombre.textContent = data.nombre || '—';
+      email.textContent = data.email || '—';
+      codigo.textContent = data.codigo || 'N/A';
+      card.style.display = 'block';
+      setMsg('<span style="color:#16a34a;font-weight:700">✅ Credencial válida</span>');
+    } catch(e){
+      console.error(e);
+      card.style.display = 'none';
+      setMsg('<span style="color:#b91c1c;font-weight:700">❌ Credencial no válida</span>');
+    }
+  }
+
+  function scanLoop(){
+    if (!video || !canvas || !ctx) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA){
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      requestAnimationFrame(tick);
-    });
-  })
-  .catch(err => {
-    console.error("Error accediendo a la cámara:", err);
-    output.innerHTML = `<span id="error">❌ No se pudo acceder a la cámara</span>`;
-  });
-
-// Analizar video frame a frame
-function tick() {
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-    if (code) validarCodigo(code.data);
-  }
-  requestAnimationFrame(tick);
-}
-
-// Validar código en Firestore
-let ultimoCodigo = null;
-async function validarCodigo(codigo) {
-  if (codigo === ultimoCodigo) return; // evitar repetir
-  ultimoCodigo = codigo;
-
-  try {
-    const doc = await db.collection("credenciales").doc(codigo).get();
-    if (doc.exists) {
-      const data = doc.data();
-      output.innerHTML = `<span id="success">✅ Credencial válida</span><br>
-        Nombre: ${data.nombre}<br>
-        Rol: ${data.rol}`;
-    } else {
-      output.innerHTML = `<span id="error">❌ Credencial inválida</span>`;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0,0,canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code){
+        const parsed = parseQR(code.data);
+        if (parsed && parsed.uid){ detener(); cargar(parsed.uid); return; }
+      }
     }
-  } catch (err) {
-    console.error("Error validando credencial:", err);
-    output.innerHTML = `<span id="error">❌ Error al validar</span>`;
+    raf = requestAnimationFrame(scanLoop);
   }
-}
+
+  async function iniciar(){
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream;
+      video.setAttribute('playsinline', true);
+      await video.play();
+      setMsg('Escaneando...');
+      raf = requestAnimationFrame(scanLoop);
+    } catch(err){
+      console.error(err);
+      setMsg('<span style="color:#b91c1c">❌ No se pudo acceder a la cámara.</span>');
+    }
+  }
+  function detener(){
+    if (raf) cancelAnimationFrame(raf);
+    raf=null;
+    if (video) video.pause();
+    if (video && video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
+    setMsg('Escaneo detenido.');
+  }
+
+  document.getElementById('btnIniciar').addEventListener('click', iniciar);
+  document.getElementById('btnDetener').addEventListener('click', detener);
+
+  // Cargar QR desde imagen
+  document.getElementById('fileQR').addEventListener('change', (e)=>{
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width; canvas.height = img.height; ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(data.data, data.width, data.height, { inversionAttempts: 'dontInvert' });
+      if (code){
+        const parsed = parseQR(code.data);
+        if (parsed && parsed.uid){ cargar(parsed.uid); }
+        else setMsg('<span style="color:#b91c1c">QR sin UID válido.</span>');
+      } else setMsg('<span style="color:#b91c1c">No se detectó QR.</span>');
+    };
+    img.src = URL.createObjectURL(file);
+  });
+})();
 </script>
 
 </body>
