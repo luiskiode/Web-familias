@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👨‍👩‍👧 Lista de Familias - Cáritas CNC</title>
+
+<link rel="stylesheet" href="estilos-familias.css" />
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="./supabase-config.js" defer></script>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>👨‍👩‍👧 Lista de Familias</h1>
+  <button onclick="window.close()">Cerrar</button>
+</header>
+
+<main>
+  <table id="familiasTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombres</th>
+        <th>DNI</th>
+        <th>Apellido Familia</th>
+        <th>Dirección</th>
+        <th>Teléfono</th>
+        <th>Observaciones</th>
+        <th>Fecha Registro</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script defer>
+document.addEventListener("DOMContentLoaded", async () => {
+  const tabla = document.getElementById("familiasTable");
+  const tbody = tabla.querySelector("tbody");
+
+  if (!tabla || !tbody) return console.error("❌ Tabla o tbody no encontrados");
+
+  try {
+    const { data, error } = await supabase.from("familias").select("*");
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Sin registros</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    data.forEach(fam => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${fam.id ?? ""}</td>
+        <td>${fam.nombres_apellidos ?? ""}</td>
+        <td>${fam.dni_solicitante ?? ""}</td>
+        <td>${fam.apellido_familia ?? ""}</td>
+        <td>${fam.direccion ?? ""}</td>
+        <td>${fam.telefono_contacto ?? ""}</td>
+        <td>${fam.observaciones ?? ""}</td>
+        <td>${fam.fecha_registro ?? ""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    console.log("✅ Lista de familias cargada correctamente");
+
+  } catch (err) {
+    console.error("❌ Error al cargar familias:", err);
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Error al cargar datos</td></tr>`;
+  }
+});
+</script>
+
+</body>
+</html>

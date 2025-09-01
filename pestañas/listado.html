@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Listado de Familias - Cáritas CNC</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; padding: 1rem; background:#f6f7fb; }
+    header { font-size: 1.5rem; margin-bottom: 1rem; text-align: center; }
+    #search { width: 100%; max-width: 480px; margin: 0 auto 1rem; padding: 0.6rem 0.8rem; border:1px solid #ddd; border-radius:10px; display:block; }
+    table { width: 100%; border-collapse: collapse; background:#fff; box-shadow: 0 6px 16px rgba(0,0,0,.06); border-radius:12px; overflow:hidden; }
+    th, td { border-bottom: 1px solid #eee; padding: 0.6rem; text-align: left; }
+    th { background-color: #b71c1c; color: white; }
+    a { text-decoration: none; }
+    .muted { color:#6b7280; }
+  </style>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="supabase-config.js" defer></script>
+</head>
+<body>
+
+<header>Listado de Familias Registradas</header>
+
+<input type="text" id="search" placeholder="Buscar por apellido, dirección, etc...">
+
+<table id="familiasTable" aria-label="Tabla de familias">
+  <thead>
+    <tr>
+      <th>Nombres</th>
+      <th>DNI</th>
+      <th>Apellido</th>
+      <th>Dirección</th>
+      <th>Fecha</th>
+      <th>Teléfono</th>
+      <th>Observaciones</th>
+      <th>Documento</th>
+      <th>Mapa</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  async function cargarFamilias() {
+    try {
+      const { data, error } = await window.supabase
+        .from("familias")
+        .select("*")
+        .order("id", { ascending: false });
+
+      const tbody = document.querySelector("#familiasTable tbody");
+      tbody.innerHTML = "";
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No hay familias registradas</td></tr>";
+        return;
+      }
+
+      data.forEach(f => {
+        const fila = document.createElement("tr");
+        const mapaURL = f.direccion ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.direccion)}` : "";
+        fila.innerHTML = `
+          <td>${f.nombres_apellidos || ""}</td>
+          <td>${f.dni_solicitante || ""}</td>
+          <td>${f.apellido_familia || ""}</td>
+          <td>${f.direccion || ""}</td>
+          <td>${f.fecha_registro || ""}</td>
+          <td>${f.telefono_contacto || ""}</td>
+          <td class="muted">${f.observaciones || ""}</td>
+          <td>${f.archivo_url ? `<a href="${f.archivo_url}" target="_blank" rel="noopener">📎 Ver</a>` : ""}</td>
+          <td>${mapaURL ? `<a href="${mapaURL}" target="_blank" rel="noopener">🗺️ Mapa</a>` : ""}</td>
+        `;
+        tbody.appendChild(fila);
+      });
+    } catch (err) {
+      console.error("Error al cargar familias:", err);
+      const tbody = document.querySelector("#familiasTable tbody");
+      tbody.innerHTML = "<tr><td colspan='9' style='color:red; text-align:center;'>Error al cargar datos</td></tr>";
+    }
+  }
+
+  // Filtrado dinámico
+  document.getElementById("search").addEventListener("input", (e) => {
+    const filtro = e.target.value.toLowerCase();
+    document.querySelectorAll("#familiasTable tbody tr").forEach(row => {
+      row.style.display = [...row.children].some(td =>
+        td.textContent.toLowerCase().includes(filtro)
+      ) ? "" : "none";
+    });
+  });
+
+  window.addEventListener("DOMContentLoaded", cargarFamilias);
+</script>
+
+</body>
+</html>

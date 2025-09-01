@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Credenciales — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="./supabase-config.js" defer></script>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; background:#f6f7fb; margin:0; padding:20px; }
+    .top { display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+    .search { padding:8px 10px; border:1px solid #ddd; border-radius:8px; width:320px; max-width:100%; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 12px; margin-top: 14px; }
+    .card { background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+    .foto { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid #b91c1c; }
+    .row { display:flex; align-items:center; gap:10px; }
+    .muted { color:#6b7280; }
+    .btn { padding:6px 10px; border:1px solid #ddd; background:#fafafa; border-radius:8px; cursor:pointer; }
+    .btn:hover { background:#f0f0f0; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>🪪 Listado de credenciales</h1>
+    <input class="search" id="q" placeholder="Buscar por nombre o email..." />
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    function avatar(nombre){ return `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`; }
+
+    async function getAll(){
+      const { data, error } = await window.supabase.from('credenciales').select('*').order('creado_en', { ascending:false });
+      if (error) throw error;
+      return data || [];
+    }
+
+    function card(c){
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = \`
+        <div class="row">
+          <img class="foto" src="\${c.foto_url || avatar(c.nombre)}" alt="Foto">
+          <div>
+            <div><strong>\${c.nombre||'—'}</strong></div>
+            <div class="muted">\${c.email||'—'}</div>
+            <div class="muted">Código: \${c.codigo||'N/A'}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <a class="btn" href="credencial.html?id=\${encodeURIComponent(c.uid)}" target="_blank">Ver</a>
+          \${c.foto_url ? '<a class="btn" href="'+c.foto_url+'" target="_blank">Foto</a>' : ''}
+        </div>\`;
+      return el;
+    }
+
+    function filterList(){
+      const q = document.getElementById('q').value.toLowerCase();
+      document.querySelectorAll('#grid .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    async function main(){
+      try {
+        const lista = await getAll();
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        lista.forEach(c => grid.appendChild(card(c)));
+        document.getElementById('q').addEventListener('input', filterList);
+      } catch(e){
+        document.getElementById('grid').innerHTML = '<p style="color:#b91c1c">❌ No se pudo cargar el listado.</p>';
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', main);
+  })();
+  </script>
+</body>
+</html>
