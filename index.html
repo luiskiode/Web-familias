@@ -22,10 +22,10 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 
-  <!-- Firebase (Cáritas) -->
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script defer src="api.js/firebase-config-caritas.js"></script>
+ <!-- Firebase (Cáritas) -->
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="api.js/firebase-config-caritas.js"></script>
 
   <!-- Supabase (Cáritas) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -230,25 +230,34 @@
     document.addEventListener('DOMContentLoaded', setupNotifications);
     document.addEventListener('firebase:ready:caritas', setupNotifications);
 
-    // ===== Bienvenida dinámica robusta =====
-    (function bienvenidaBlock(){
-      const bienvenida = document.getElementById('bienvenida');
-      const bienvenidaText = document.getElementById('bienvenida-text');
+  // === Bienvenida dinámica robusta (usa storage o auth actual) ===
+(function bienvenidaBlock(){
+  const bienvenida = document.getElementById('bienvenida');
+  const bienvenidaText = document.getElementById('bienvenida-text');
 
-      function getStoredUser() { try { return JSON.parse(localStorage.getItem('caritasUser')||'null'); } catch { return null; } }
-      function getFirebaseUser(){ return window.CARITAS?.auth?.currentUser || null; }
-      function computeNombre(uS, uF){ const email = uS?.email || uF?.email; const nom = (uS?.nombre||'').trim() || (email? email.split('@')[0] : ''); return nom; }
-      function refresh(label=''){
-        if (!bienvenida || !bienvenidaText) return;
-        const uS = getStoredUser(); const uF = getFirebaseUser(); const nombre = computeNombre(uS,uF);
-        if (nombre) { bienvenidaText.textContent = `👋 ¡Bienvenid@, ${nombre}!`; bienvenida.style.display=''; }
-        else { bienvenida.style.display='none'; }
-      }
-      document.addEventListener('DOMContentLoaded', () => refresh('dom'));
-      document.addEventListener('firebase:ready:caritas', () => { try { window.CARITAS?.auth?.onAuthStateChanged(()=>refresh('auth')); } catch{}; refresh('ready'); });
-      window.addEventListener('storage', (e)=>{ if (e.key==='caritasUser') refresh('storage'); });
-      setTimeout(()=>refresh('t500'), 500);
-    })();
+  function getStoredUser() { try { return JSON.parse(localStorage.getItem('caritasUser')||'null'); } catch { return null; } }
+  function getFirebaseUser(){ return window.CARITAS?.auth?.currentUser || null; }
+  function computeNombre(uS, uF){
+    const email = uS?.email || uF?.email;
+    const nom = (uS?.nombre||'').trim() || (email ? email.split('@')[0] : '');
+    return nom;
+  }
+  function refresh(){
+    if (!bienvenida || !bienvenidaText) return;
+    const uS = getStoredUser(); const uF = getFirebaseUser(); const nombre = computeNombre(uS,uF);
+    if (nombre) { bienvenidaText.textContent = `👋 ¡Bienvenid@, ${nombre}!`; bienvenida.style.display=''; }
+    else { bienvenida.style.display='none'; }
+  }
+  
+  // Arranques y eventos relevantes
+  document.addEventListener('DOMContentLoaded', refresh);
+  document.addEventListener('firebase:ready:caritas', () => {
+    try { window.CARITAS?.auth?.onAuthStateChanged(() => refresh()); } catch {}
+    refresh();
+  });
+  window.addEventListener('storage', (e)=>{ if (e.key==='caritasUser') refresh(); });
+  setTimeout(refresh, 500);
+})();
 
     // ===== Navegación: abrir pestañas en nueva ventana (todas excepto inicio)
     nav.addEventListener('click', (e) => {
