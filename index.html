@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css" />
+
+  <!-- Librerías comunes -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+
+  <!-- Firebase + config Cáritas -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script defer src=".js/firebase-config-caritas.js"></script>
+
+  <!-- Supabase + config Cáritas -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script defer src=".js/supabase-config-caritas.js"></script>
+
+  <!-- Router -->
+  <script defer src=".js/app-router-caritas.js"></script>
+</head>
+<body>
+  <!-- 🎥 Video de fondo -->
+  <video id="video-fondo" autoplay muted loop>
+    <source src="videos/fondo.mp4" type="video/mp4" />
+  </video>
+
+  <!-- 🔝 Header -->
+  <header class="app-header">
+    <h1>📌 Cáritas CNC</h1>
+    <nav id="main-nav">
+      <button data-view="inicio">🏠 Inicio</button>
+      <button data-view="registro-fam">👨‍👩‍👧 Registro</button>
+      <button data-view="perfil" id="btnPerfil" style="display:none">👤 Perfil</button>
+      <button data-view="servicios" id="btnServicios" style="display:none">⚙️ Servicios</button>
+      <button id="btnLogout" style="display:none">🔒 Salir</button>
+    </nav>
+  </header>
+
+  <!-- 📌 Contenedor dinámico -->
+  <main id="app" class="seccion active" aria-live="polite"></main>
+
+  <script>
+    // Mostrar botones según sesión de Cáritas
+    document.addEventListener('firebase:ready:caritas', () => {
+      const btnPerfil = document.getElementById('btnPerfil');
+      const btnServicios = document.getElementById('btnServicios');
+      const btnLogout = document.getElementById('btnLogout');
+
+      if (window.CARITAS?.auth?.currentUser) {
+        btnPerfil.style.display = '';
+        btnServicios.style.display = '';
+        btnLogout.style.display = '';
+      }
+    });
+
+    // Cerrar sesión
+    document.getElementById('btnLogout')?.addEventListener('click', async () => {
+      try { await window.CARITAS?.auth?.signOut(); } catch(e) {}
+      location.reload();
+    });
+  </script>
+</body>
+</html>
