@@ -1,159 +1,206 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>👨‍👩‍👧 Familias - Cáritas CNC</title>
+<section class="registro-familias" aria-labelledby="regfam-title">
+  <h2 id="regfam-title">👨‍👩‍👧 Registro de Familias</h2>
 
-<link rel="stylesheet" href="estilos-familias.css" />
+  <div id="regfam-guard" class="card" style="display:none">
+    <h3>🔒 Acceso restringido</h3>
+    <p>Para registrar o ver familias debes iniciar sesión.</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn" id="goLoginFromFam">🔑 Ir a login</button>
+      <a class="btn" href="#inicio">🏠 Ir a inicio</a>
+    </div>
+  </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="api.js/firebase-config-caritas.js"></script>
+  <div id="regfam-wrap" style="display:none">
+    <div class="card">
+      <form id="familiaForm" autocomplete="on">
+        <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label>🧑‍🦱 Nombres y Apellidos*</label>
+            <input type="text" name="nombres_apellidos" required />
+          </div>
+          <div>
+            <label>🆔 DNI*</label>
+            <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
+          </div>
+          <div>
+            <label>👪 Apellido de la Familia</label>
+            <input type="text" name="apellido_familia" />
+          </div>
+          <div>
+            <label>📞 Teléfono*</label>
+            <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+          </div>
+          <div style="grid-column:1/-1">
+            <label>🏠 Dirección*</label>
+            <input type="text" name="direccion" required />
+          </div>
+          <div>
+            <label>📅 Fecha Registro</label>
+            <input type="date" name="fecha_registro" />
+          </div>
+          <div>
+            <label>📎 Documento (opcional)</label>
+            <input type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label>📝 Observaciones</label>
+            <textarea name="observaciones" rows="3"></textarea>
+          </div>
+        </div>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="api.js/supabase-config-caritas.js" defer></script>
-</head>
-<body>
+        <div class="terms" style="margin-top:.6rem">
+          <label style="display:flex;gap:.5rem;align-items:flex-start">
+            <input type="checkbox" id="chkTyC" />
+            <span>Acepto los <a href="#" id="verTyC">Términos y Condiciones</a> y autorizo el tratamiento de datos para fines de asistencia social.</span>
+          </label>
+        </div>
 
-<header class="app-header">
-  <h1>👨‍👩‍👧 Familias - Cáritas CNC</h1>
-  <button onclick="window.close()">Cerrar</button>
-</header>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">
+          <button type="submit" class="submit-btn" id="btnGuardar" disabled>💾 Guardar</button>
+          <button type="reset" class="btn">↩️ Limpiar</button>
+          <a class="btn" href="familias-listado.html" target="_blank" rel="noopener">🌐 Ver listado completo</a>
+        </div>
+      </form>
+    </div>
 
-<main>
-  <!-- 📋 Tabla de familias -->
-  <section class="card">
-    <h2>📋 Lista de Familias</h2>
-    <table id="familiasTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombres</th>
-          <th>DNI</th>
-          <th>Apellido Familia</th>
-          <th>Dirección</th>
-          <th>Teléfono</th>
-          <th>Observaciones</th>
-          <th>Fecha Registro</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+    <div class="card" style="margin-top:1rem">
+      <h3>🗂️ Últimos registros</h3>
+      <table aria-label="Últimos registros de familias" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:.5rem;border-bottom:1px solid var(--border,#eee)">Nombres</th>
+            <th style="text-align:left;padding:.5rem;border-bottom:1px solid var(--border,#eee)">Dirección</th>
+            <th style="text-align:left;padding:.5rem;border-bottom:1px solid var(--border,#eee)">Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="familias-tbody"></tbody>
+      </table>
+      <div id="fam-empty" class="muted" hidden>Sin registros.</div>
+    </div>
+  </div>
 
-  <!-- 📝 Formulario de registro -->
-  <section class="card" style="margin-top:2rem;">
-    <h2>📝 Registro de Familia</h2>
-    <form id="familiaForm">
-      <label>🧑‍🦱 Nombres y Apellidos*</label>
-      <input type="text" name="nombres_apellidos" required />
-
-      <label>🆔 DNI*</label>
-      <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
-
-      <label>🏠 Dirección*</label>
-      <input type="text" name="direccion" required />
-
-      <label>📞 Teléfono*</label>
-      <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
-
-      <label>📝 Observaciones</label>
-      <textarea name="observaciones"></textarea>
-
-      <button type="submit" class="submit-btn">💾 Guardar Familia</button>
-    </form>
-  </section>
-</main>
+  <!-- Modal T&C -->
+  <div id="tycModal" class="modal" aria-hidden="true" role="dialog" aria-label="Términos y Condiciones">
+    <button class="cerrar" id="tycClose" aria-label="Cerrar">✖️</button>
+    <div class="card" style="max-width:720px">
+      <h3>📜 Términos y Condiciones</h3>
+      <p>Autorizo a Cáritas CNC a tratar mis datos personales para fines de identificación, contacto y asistencia social conforme a la normativa vigente. Los datos no serán cedidos a terceros sin consentimiento, salvo obligación legal.</p>
+      <p>Puedo solicitar la rectificación o eliminación de mis datos a través de los canales oficiales de la organización.</p>
+      <div style="text-align:right"><button class="btn" id="aceptarTyC">Aceptar</button></div>
+    </div>
+  </div>
+</section>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const tbody = document.querySelector("#familiasTable tbody");
-  const form = document.getElementById("familiaForm");
+(() => {
+  'use strict';
 
   const supabase = window.CARITAS?.supabase;
-  const auth = window.CARITAS?.auth;
+  const auth     = window.CARITAS?.auth;
 
-  // =======================
-  // 🔑 Requiere sesión activa
-  // =======================
-  auth?.onAuthStateChanged(user => {
-    if (!user) {
-      alert("⚠️ Debes iniciar sesión para ver y registrar familias.");
-      window.close();
-      return;
-    }
-    loadFamilias();
-  });
+  const guard    = document.getElementById('regfam-guard');
+  const wrap     = document.getElementById('regfam-wrap');
+  const goLogin  = document.getElementById('goLoginFromFam');
 
-  // =======================
-  // 📋 Cargar familias
-  // =======================
-  async function loadFamilias() {
-    try {
-      const { data, error } = await supabase.from("familias").select("*").order("id", { ascending: true });
+  const form     = document.getElementById('familiaForm');
+  const chkTyC   = document.getElementById('chkTyC');
+  const btnSave  = document.getElementById('btnGuardar');
+
+  const famTbody = document.getElementById('familias-tbody');
+  const famEmpty = document.getElementById('fam-empty');
+
+  const tycModal = document.getElementById('tycModal');
+  const tycClose = document.getElementById('tycClose');
+  const verTyC   = document.getElementById('verTyC');
+  const aceptarTyC = document.getElementById('aceptarTyC');
+
+  // Guard acceso
+  function showGuard(){ guard.style.display='block'; wrap.style.display='none'; }
+  function showForm(){ guard.style.display='none'; wrap.style.display='block'; }
+
+  goLogin?.addEventListener('click', () => { sessionStorage.setItem('caritas:next', '#registro-fam'); location.href='login.html'; });
+
+  function checkAuthAndRender(){
+    const logged = !!(auth?.currentUser) || (()=>{try{ return !!JSON.parse(localStorage.getItem('caritasUser'))?.uid }catch{return false}})();
+    if (!logged) showGuard(); else showForm();
+  }
+
+  // TyC
+  verTyC?.addEventListener('click', (e)=>{ e.preventDefault(); tycModal.style.display='flex'; tycModal.setAttribute('aria-hidden','false'); });
+  tycClose?.addEventListener('click', ()=>{ tycModal.style.display='none'; tycModal.setAttribute('aria-hidden','true'); });
+  aceptarTyC?.addEventListener('click', ()=>{ chkTyC.checked = true; btnSave.disabled = false; tycClose.click(); });
+  window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && tycModal?.style.display==='flex') tycClose.click(); });
+
+  chkTyC?.addEventListener('change', ()=>{ btnSave.disabled = !chkTyC.checked; });
+
+  async function cargarUltimos(){
+    famTbody.innerHTML = ''; famEmpty.hidden=true;
+    try{
+      const { data, error } = await supabase
+        .from('familias')
+        .select('nombres_apellidos,direccion,fecha_registro')
+        .order('id', { ascending:false })
+        .limit(10);
       if (error) throw error;
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Sin registros</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = "";
-      data.forEach(fam => {
-        const tr = document.createElement("tr");
+      if (!data || data.length===0){ famEmpty.hidden=false; return; }
+      data.forEach(f=>{
+        const tr=document.createElement('tr');
         tr.innerHTML = `
-          <td>${fam.id ?? ""}</td>
-          <td>${fam.nombres_apellidos ?? ""}</td>
-          <td>${fam.dni_solicitante ?? ""}</td>
-          <td>${fam.apellido_familia ?? ""}</td>
-          <td>${fam.direccion ?? ""}</td>
-          <td>${fam.telefono_contacto ?? ""}</td>
-          <td>${fam.observaciones ?? ""}</td>
-          <td>${fam.fecha_registro ?? ""}</td>
-        `;
-        tbody.appendChild(tr);
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${(f.nombres_apellidos||'').replace(/</g,'&lt;')}</td>
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${(f.direccion||'').replace(/</g,'&lt;')}</td>
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${(f.fecha_registro||'')}</td>`;
+        famTbody.appendChild(tr);
       });
-
-    } catch (err) {
-      console.error("❌ Error al cargar familias:", err.message);
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Error al cargar datos</td></tr>`;
+    }catch(err){
+      console.error('Familias error:', err);
+      famEmpty.hidden=false; famEmpty.textContent='Error al cargar familias.';
     }
   }
 
-  // =======================
-  // 💾 Registrar nueva familia
-  // =======================
-  form?.addEventListener("submit", async e => {
+  // Subida + insert
+  async function uploadArchivoIfAny(file){
+    if (!file) return null;
+    const safe = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,80)}`;
+    const { data, error } = await supabase.storage.from('documentosfamilias').upload(safe, file, { cacheControl:'3600', upsert:false });
+    if (error) throw error;
+    const pub = supabase.storage.from('documentosfamilias').getPublicUrl(data.path);
+    return pub?.data?.publicUrl || null;
+  }
+
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!chkTyC.checked){ alert('Debes aceptar los Términos y Condiciones.'); return; }
+
     const fd = new FormData(form);
-
     const payload = {
-      nombres_apellidos: fd.get("nombres_apellidos"),
-      dni_solicitante: fd.get("dni_solicitante"),
-      apellido_familia: fd.get("apellido_familia") || "",
-      direccion: fd.get("direccion"),
-      telefono_contacto: fd.get("telefono_contacto"),
-      observaciones: fd.get("observaciones") || "",
-      fecha_registro: new Date().toISOString().split("T")[0]
+      nombres_apellidos: fd.get('nombres_apellidos'),
+      dni_solicitante: fd.get('dni_solicitante'),
+      apellido_familia: fd.get('apellido_familia'),
+      direccion: fd.get('direccion'),
+      fecha_registro: fd.get('fecha_registro') || new Date().toISOString().slice(0,10),
+      telefono_contacto: fd.get('telefono_contacto'),
+      observaciones: fd.get('observaciones')
     };
+    try{
+      const archivo = fd.get('archivo');
+      const archivo_url = archivo && archivo.size ? await uploadArchivoIfAny(archivo) : null;
 
-    try {
-      const { error } = await supabase.from("familias").insert([payload]);
+      const { error } = await supabase.from('familias').insert([{ ...payload, archivo_url }]);
       if (error) throw error;
 
-      alert("✅ Familia registrada con éxito");
-      form.reset();
-      loadFamilias();
-    } catch (err) {
-      console.error("❌ Error al registrar familia:", err.message);
-      alert("Error al registrar familia");
+      window.enviarNotificacion?.('Cáritas CNC', `✅ Familia registrada: ${payload.nombres_apellidos}`);
+      alert('✅ Familia registrada correctamente');
+      form.reset(); btnSave.disabled = true;
+      cargarUltimos();
+    }catch(err){
+      console.error(err);
+      alert('❌ No se pudo registrar la familia');
     }
   });
-});
-</script>
 
-</body>
-</html>
+  // Init
+  checkAuthAndRender();
+  cargarUltimos();
+  document.addEventListener('firebase:ready:caritas', checkAuthAndRender);
+})();
+</script>

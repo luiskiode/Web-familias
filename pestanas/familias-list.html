@@ -36,6 +36,19 @@
   </table>
 </main>
 
+<script>
+(function(){
+  'use strict';
+  const auth = window.CARITAS?.auth;
+  function guard(){
+    const u = auth?.currentUser || (()=>{try{return JSON.parse(localStorage.getItem('caritasUser')||'null')}catch{return null}})();
+    if (!u || !u.uid) { alert('🔒 Debes iniciar sesión'); location.href='login.html'; }
+  }
+  document.addEventListener('DOMContentLoaded', guard);
+  document.addEventListener('firebase:ready:caritas', guard);
+})();
+</script>
+
 <script defer>
 document.addEventListener("DOMContentLoaded", async () => {
   const tabla = document.getElementById("familiasTable");
