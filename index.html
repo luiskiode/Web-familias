@@ -41,7 +41,6 @@
     .header-right{display:flex;gap:.4rem;align-items:center}
     .user-pill{display:none;align-items:center;gap:.4rem;background:#111;color:#fff;border-radius:999px;padding:.25rem .55rem}
     .user-pill img{width:22px;height:22px;border-radius:50%;object-fit:cover;border:2px solid #b71c1c}
-    #toggleVideo{display:inline-flex;align-items:center;gap:.25rem}
     .skeleton{animation:pulse 1.2s ease-in-out infinite;background:linear-gradient(90deg,#0000,#0002 40%,#0000 60%),var(--surface,#111);min-height:180px;border-radius:12px}
     @keyframes pulse{0%{background-position:-200% 0}100%{background-position:200% 0}}
     @media (prefers-reduced-motion: reduce){
@@ -53,9 +52,9 @@
   <!-- Conectividad -->
   <div id="status-bar" aria-live="polite"></div>
 
-  <!-- 🎥 Video de fondo (respetando prefers-reduced-motion) -->
-  <video id="video-fondo" autoplay muted loop playsinline poster="img/cover-fondo.jpg">
-    <source src="videos/fondo.mp4" type="video/mp4" />
+  <!-- 🎥 Video de fondo (el resto del layout es translúcido en styles-caritas.css) -->
+  <video id="video-fondo" autoplay muted loop>
+    <source src="videos/fondo.mp4" type="video/mp4">
   </video>
 
   <!-- 🔝 Header -->
@@ -69,7 +68,6 @@
       <button data-view="servicios" id="btnServicios" style="display:none">⚙️ Servicios</button>
       <button id="btnLogin" class="alt" style="display:none" onclick="location.href='login.html'">🔑 Ingresar</button>
       <button id="btnLogout" style="display:none">🔒 Salir</button>
-      <button id="toggleVideo" class="ghost" title="Pausar/activar video de fondo">⏯️ Fondo</button>
     </nav>
 
     <div class="header-right">
@@ -80,6 +78,11 @@
       </div>
     </div>
   </header>
+
+  <!-- 🔔 Bienvenida dinámica -->
+  <section id="bienvenida" class="card center" style="margin:1rem auto;max-width:800px;display:none">
+    <h2 id="bienvenida-text">👋 Bienvenid@ a tu plataforma de servicio</h2>
+  </section>
 
   <!-- 📌 Contenedor dinámico -->
   <main id="app" class="seccion active" aria-live="polite">
@@ -98,15 +101,13 @@
     'use strict';
 
     const nav = document.getElementById('main-nav');
-    const app = document.getElementById('app');
     const statusBar = document.getElementById('status-bar');
+    const video = document.getElementById('video-fondo');
 
     const btnPerfil = document.getElementById('btnPerfil');
     const btnServicios = document.getElementById('btnServicios');
     const btnLogin = document.getElementById('btnLogin');
     const btnLogout = document.getElementById('btnLogout');
-    const toggleVideoBtn = document.getElementById('toggleVideo');
-    const video = document.getElementById('video-fondo');
 
     const userPill = document.getElementById('userPill');
     const userAvatar = document.getElementById('userAvatar');
@@ -136,35 +137,26 @@
       });
     }
 
-    // ===== Preferencias de movimiento (pause fondo) =====
+    // ===== Preferencias de movimiento =====
     function applyReducedMotionPreference(){
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced && video) video.pause();
     }
     applyReducedMotionPreference();
 
-    // Toggle del video de fondo
-    toggleVideoBtn?.addEventListener('click', () => {
-      if (!video) return;
-      if (video.paused) { video.play().catch(()=>{}); }
-      else video.pause();
-    });
-
-    // ===== Sesión / Rol =====
+    // ===== Sesión / Rol desde storage =====
     function hydrateHeaderFromStorage(){
       try {
         const u = JSON.parse(localStorage.getItem('caritasUser') || '{}');
         const rol = u.rol || 'invitado';
         const name = (u.email || '—').split('@')[0];
-
-        // Visibilidad de items
         const logged = !!u.uid;
+
         btnPerfil.style.display = logged ? '' : 'none';
         btnServicios.style.display = logged ? '' : 'none';
         btnLogout.style.display = logged ? '' : 'none';
         btnLogin.style.display = logged ? 'none' : '';
 
-        // Pill usuario
         if (logged) {
           userPill.style.display = 'inline-flex';
           userName.textContent = name;
@@ -185,8 +177,6 @@
         btnServicios.style.display = '';
         btnLogout.style.display = '';
         btnLogin.style.display = 'none';
-
-        // Si aún no hay storage (acceso directo)
         const stored = JSON.parse(localStorage.getItem('caritasUser') || '{}');
         if (!stored?.uid) {
           localStorage.setItem('caritasUser', JSON.stringify({
@@ -202,21 +192,56 @@
       hydrateHeaderFromStorage();
     });
 
-    // Logout
+    // ===== Logout =====
     btnLogout?.addEventListener('click', async () => {
       try { await window.CARITAS?.auth?.signOut(); } catch(e) {}
       localStorage.removeItem('caritasUser');
       location.href = 'login.html';
     });
 
-    // ===== Navegación SPA (el router hace el fetch) =====
+    // ===== Bienvenida dinámica =====
+    function updateBienvenida(user){
+      const bienvenida = document.getElementById('bienvenida');
+      const bienvenidaText = document.getElementById('bienvenida-text');
+      if (!bienvenida || !bienvenidaText) return;
+
+      if (user) {
+        let nombre = null;
+        try {
+          const data = JSON.parse(localStorage.getItem('caritasUser'));
+          nombre = data?.nombre || data?.email?.split('@')[0] || user.email;
+        } catch {
+          nombre = user.email;
+        }
+        bienvenidaText.textContent = `👋 ¡Bienvenid@, ${nombre}!`;
+        bienvenida.style.display = 'block';
+      } else {
+        bienvenida.style.display = 'none';
+      }
+    }
+
+    // 1) Escucha cambios de sesión si Firebase ya está listo
+    if (window.CARITAS?.auth) {
+      window.CARITAS.auth.onAuthStateChanged(u => {
+        updateBienvenida(u);
+        hydrateHeaderFromStorage();
+      });
+    }
+    // 2) Fallback desde storage al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const u = JSON.parse(localStorage.getItem('caritasUser') || '{}');
+        if (u?.uid) updateBienvenida(u);
+      } catch {}
+    });
+
+    // ===== Navegación SPA (solo marcar activo; el router hace el fetch) =====
     nav.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-view]');
       if (!btn) return;
       markActive(btn.dataset.view);
     });
 
-    // Marcar la vista al cargar por hash o default
     function initActiveFromHash(){
       const v = (location.hash || '#inicio').replace('#','');
       markActive(v);
@@ -224,14 +249,12 @@
     window.addEventListener('hashchange', initActiveFromHash);
     document.addEventListener('DOMContentLoaded', initActiveFromHash);
 
-    // Opcional: guardar última vista
     document.addEventListener('view:loaded:caritas', (ev) => {
       if (ev.detail?.view) {
         sessionStorage.setItem('caritas:lastView', ev.detail.view);
         markActive(ev.detail.view);
       }
     });
-    // Primer arranque: si hay última vista, ir ahí
     const last = sessionStorage.getItem('caritas:lastView');
     if (last && (!location.hash || location.hash === '#')) {
       history.replaceState(null, '', '#' + last);
@@ -244,5 +267,63 @@
     });
   })();
   </script>
+
+  <script>
+/* 🔔 Bienvenida dinámica robusta (Cáritas) */
+(() => {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  const bienvenida = $('bienvenida');
+  const bienvenidaText = $('bienvenida-text');
+
+  function getStoredUser() {
+    try { return JSON.parse(localStorage.getItem('caritasUser') || 'null'); }
+    catch { return null; }
+  }
+  function getFirebaseUser() {
+    return window.CARITAS?.auth?.currentUser || null;
+  }
+  function computeNombre(uStored, uFb) {
+    const email = uStored?.email || uFb?.email;
+    const nom   = (uStored?.nombre && String(uStored.nombre).trim()) || (email ? email.split('@')[0] : '');
+    return (nom || '').trim();
+  }
+  function refreshBienvenida(logLabel='') {
+    if (!bienvenida || !bienvenidaText) return;
+    const uStored = getStoredUser();
+    const uFb     = getFirebaseUser();
+    const nombre  = computeNombre(uStored, uFb);
+
+    if (nombre) {
+      // Limpia el display inline para dejar que el CSS decida o muéstralo
+      bienvenidaText.textContent = `👋 ¡Bienvenid@, ${nombre}!`;
+      bienvenida.style.display = ''; // usar vacío evita forzar 'block' si cambias estilos
+      // console.log('[Bienvenida] visible via', logLabel, { nombre, uStored, uFb });
+    } else {
+      bienvenida.style.display = 'none';
+      // console.log('[Bienvenida] oculta via', logLabel);
+    }
+  }
+
+  // 1) Al construir el DOM
+  document.addEventListener('DOMContentLoaded', () => refreshBienvenida('DOMContentLoaded'));
+
+  // 2) Cuando tu firebase-config emite el evento (asegúrate de que lo emite)
+  document.addEventListener('firebase:ready:caritas', () => {
+    // Escucha auth changes (idempotente: si ya estaba suscrito no pasa nada malo)
+    try { window.CARITAS?.auth?.onAuthStateChanged(() => refreshBienvenida('authStateChanged')); } catch {}
+    refreshBienvenida('firebase:ready:caritas');
+  });
+
+  // 3) Si el storage cambia (por ejemplo, vuelves del login y se guardó caritasUser)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'caritasUser') refreshBienvenida('storage');
+  });
+
+  // 4) Fallback: intenta una pasada tardía por si Firebase llegó después sin emitir evento
+  setTimeout(() => refreshBienvenida('timeout-500ms'), 500);
+})();
+</script>
 </body>
 </html>
