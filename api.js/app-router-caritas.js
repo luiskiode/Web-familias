@@ -6,7 +6,7 @@
   const nav = document.getElementById('main-nav');
 
   async function loadView(view){
-    const url = `pestañas/${view}.html`;
+    const url = `pestanas/${view}.html`;
     try {
       const res = await fetch(url, { cache: 'no-cache' });
       if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
