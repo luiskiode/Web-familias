@@ -1,5 +1,5 @@
-// service-worker.js (corregido)
-const CACHE_NAME = "caritasCNC-v5";
+// service-worker.js (optimizado)
+const CACHE_NAME = "caritasCNC-v6"; // 🔄 cambia al actualizar assets
 
 const urlsToCache = [
   "./",
@@ -16,6 +16,7 @@ const urlsToCache = [
   "https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"
 ];
 
+// === Install ===
 self.addEventListener("install", (event) => {
   console.log("📦 Instalando Service Worker...");
   event.waitUntil(
@@ -26,6 +27,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// === Activate ===
 self.addEventListener("activate", (event) => {
   console.log("🚀 Activando Service Worker...");
   event.waitUntil(
@@ -42,32 +44,54 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// === Fetch (estrategia network-first para HTML, cache-first para assets) ===
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+
   if (req.method !== "GET") {
-    // Evitar cachear POST/PUT/etc
-    event.respondWith(fetch(req));
-    return;
+    return; // no cacheamos POST/PUT/etc
   }
 
+  const isHTML = req.headers.get("accept")?.includes("text/html");
+
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
-        .then((response) => {
-          // Guardar nuevas respuestas en caché (solo http/https)
+    (async () => {
+      if (isHTML) {
+        // network-first para documentos HTML
+        try {
+          const fresh = await fetch(req);
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(req, fresh.clone());
+          return fresh;
+        } catch {
+          return caches.match(req).then((res) => res || caches.match("./index.html"));
+        }
+      } else {
+        // cache-first para assets estáticos
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        try {
+          const fresh = await fetch(req);
           if (req.url.startsWith("http")) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, response.clone()));
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(req, fresh.clone());
           }
-          return response;
-        })
-        .catch(() => caches.match("./index.html"));
-    })
+          return fresh;
+        } catch {
+          return caches.match("./index.html");
+        }
+      }
+    })()
   );
 });
 
+// === Push notifications ===
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() || { title: "📢 Cáritas CNC", body: "Tienes una nueva notificación." };
+  const data = event.data?.json() || {
+    title: "📢 Cáritas CNC",
+    body: "Tienes una nueva notificación."
+  };
+
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
@@ -77,6 +101,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
+// === Notification click ===
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
@@ -91,11 +116,12 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+// === Mensajes entre app y SW ===
 self.addEventListener("message", (event) => {
   const { action, texto, delay } = event.data || {};
 
   if (action === "ping") {
-    event.source.postMessage({ reply: "pong" });
+    event.source?.postMessage({ reply: "pong" });
   }
 
   if (action === "programarRecordatorio" && texto && delay) {

@@ -1,19 +1,149 @@
-<section>
-  <h2>👤 Mi Perfil / Credencial</h2>
-  <div class="card credencial-card">
-    <header>
-      <img src="img/avatar-placeholder.png" alt="Foto de perfil" width="80" height="80" />
+<section class="perfil" id="tab-perfil" aria-labelledby="perfil-title">
+  <h2 id="perfil-title">👤 Mi Perfil / Credencial</h2>
+
+  <article class="card credencial-card" role="region" aria-label="Credencial personal">
+    <header class="credencial-header" style="display:flex;gap:12px;align-items:center;">
+      <img id="perfilFoto" src="img/avatar-placeholder.png" alt="Foto de perfil" width="80" height="80" style="border-radius:50%;border:3px solid var(--primary,#b91c1c);object-fit:cover;" />
       <div>
-        <strong>Nombre Apellido</strong><br />
-        <small class="muted">correo@ejemplo.com</small><br />
-        <small class="pill">❤️ Voluntario Cáritas CNC</small>
+        <strong id="perfilNombre">Nombre Apellido</strong><br />
+        <small id="perfilEmail" class="muted">correo@ejemplo.com</small><br />
+        <small id="perfilRol" class="pill">❤️ Voluntario Cáritas CNC</small>
       </div>
     </header>
-    <div class="credencial-body">
-      <div class="qr-wrap">
-        <canvas id="qr-credencial" width="180" height="180"></canvas>
+
+    <div class="credencial-body" style="display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:center;margin-top:.75rem;">
+      <div class="qr-wrap" style="justify-self:center;">
+        <canvas id="qrCredencial" width="180" height="180" aria-label="Código QR de mi credencial"></canvas>
       </div>
-      <small class="muted">🪪 Aquí aparecerá tu credencial con QR.</small>
+
+      <div>
+        <p style="margin:.25rem 0;">
+          <b>Código:</b> <span id="perfilCodigo">—</span>
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.5rem;">
+          <button class="btn" id="btnCopiarLink">🔗 Copiar enlace</button>
+          <button class="btn" id="btnDescargarQR">⬇️ Descargar QR</button>
+          <button class="btn" id="btnSalir">🔒 Cerrar sesión</button>
+        </div>
+        <small class="muted" style="display:block;margin-top:.5rem;">🪪 Este QR abre tu credencial pública.</small>
+      </div>
     </div>
-  </div>
+  </article>
 </section>
+
+<script>
+(() => {
+  'use strict';
+
+  // ===== Helpers =====
+  const supabase = window.CARITAS?.supabase;
+  const auth     = window.CARITAS?.auth;
+  const db       = window.CARITAS?.db; // opcional (Firestore para rol)
+
+  const $ = (id) => document.getElementById(id);
+  const elFoto   = $('perfilFoto');
+  const elNombre = $('perfilNombre');
+  const elEmail  = $('perfilEmail');
+  const elRol    = $('perfilRol');
+  const elCodigo = $('perfilCodigo');
+  const canvasQR = $('qrCredencial');
+  const btnCopiar= $('btnCopiarLink');
+  const btnQR    = $('btnDescargarQR');
+  const btnSalir = $('btnSalir');
+
+  const avatar = (nombre) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=111&color=fff`;
+
+  async function cargarCredencial(uid){
+    const { data, error } = await supabase
+      .from('credenciales')
+      .select('uid,nombre,email,codigo,foto_url')
+      .eq('uid', uid)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function cargarRol(uid){
+    // Si usas Firestore para roles
+    if (!db) return 'voluntario';
+    try {
+      const snap = await db.collection('usuarios').doc(uid).get();
+      return snap.exists ? (snap.data().rol || 'voluntario') : 'voluntario';
+    } catch {
+      return 'voluntario';
+    }
+  }
+
+  function pintar(user, cred, rol){
+    const nombre = cred?.nombre || user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario');
+    const email  = cred?.email  || user.email || '—';
+    const codigo = cred?.codigo || 'N/A';
+    const foto   = cred?.foto_url || avatar(nombre);
+
+    elNombre.textContent = nombre;
+    elEmail.textContent  = email;
+    elCodigo.textContent = codigo;
+    elFoto.src = foto;
+    elFoto.alt = `Foto de ${nombre}`;
+    elRol.textContent = (rol || 'voluntario')
+      .replace(/^./, c => c.toUpperCase()); // capitaliza rol
+
+    // Generar QR hacia credencial pública
+    const url = `${location.origin}/credencial.html?id=${encodeURIComponent(cred?.uid || user.uid)}`;
+    if (window.QRCode && canvasQR) {
+      QRCode.toCanvas(canvasQR, url, (err)=>{ if(err) console.error('QR error:', err); });
+    }
+    // Copiar enlace
+    btnCopiar?.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); alert('🔗 Enlace copiado'); }
+      catch { prompt('Copia el enlace:', url); }
+    });
+    // Descargar QR como PNG
+    btnQR?.addEventListener('click', () => {
+      try {
+        const png = canvasQR.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = png; a.download = `qr-credencial-${codigo || user.uid}.png`;
+        document.body.appendChild(a); a.click(); a.remove();
+      } catch(e){ console.error(e); alert('No se pudo descargar el QR.'); }
+    });
+  }
+
+  async function init(){
+    if (!auth || !supabase) {
+      console.error('⚠️ Falta inicializar Firebase/Supabase');
+      return;
+    }
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        alert('Debes iniciar sesión.');
+        location.href = 'login.html';
+        return;
+      }
+      try {
+        const [cred, rol] = await Promise.all([cargarCredencial(user.uid), cargarRol(user.uid)]);
+        pintar(user, cred, rol);
+      } catch (e) {
+        console.error('❌ No se pudo cargar credencial:', e);
+        // Pintar al menos info básica del user
+        pintar(user, null, await cargarRol(user.uid));
+        alert('No se encontró tu credencial en la base de datos.');
+      }
+    });
+
+    btnSalir?.addEventListener('click', async () => {
+      try { await auth.signOut(); } catch {}
+      location.href = 'login.html';
+    });
+  }
+
+  // Integra con el router (si tu SPA usa evento view:loaded:caritas)
+  document.addEventListener('view:loaded:caritas', (ev) => {
+    if (ev.detail?.view === 'perfil') init();
+  });
+  // Y si se carga como página suelta:
+  if (document.readyState !== 'loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

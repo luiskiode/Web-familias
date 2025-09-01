@@ -1,35 +1,47 @@
-document.addEventListener("DOMContentLoaded", async function () {
+// api.js/calendario.js
+document.addEventListener("DOMContentLoaded", () => {
+  const supabase = window.CARITAS?.supabase || window.supabase;
+  const calendarEl = document.getElementById("calendar");
   const toggleBtn = document.getElementById("toggle-calendario");
   const calendarioContainer = document.getElementById("calendario-container");
-  const calendarEl = document.getElementById("calendar");
 
-  // 🔔 Notificación rápida
-  function notify(msg) {
-    console.log("🔔 " + msg);
-    // 👉 Aquí luego se puede cambiar por un toast bonito
+  // === Obtener rol del usuario ===
+  function getRol() {
+    try {
+      return JSON.parse(localStorage.getItem("caritasUser"))?.rol || "invitado";
+    } catch {
+      return "invitado";
+    }
+  }
+  const rol = getRol();
+  const canEdit = ["admin", "editor"].includes(rol);
+
+  // === Notificación simple ===
+  function notify(msg, type = "info") {
+    const prefix =
+      type === "error" ? "❌" : type === "success" ? "✅" : "🔔";
+    console.log(prefix, msg);
+    // ⚠️ Puedes reemplazar por un toast en pantalla
+    if (type === "error") alert(prefix + " " + msg);
   }
 
-  // 🔽 Validar existencia de elementos
+  // === Toggle del contenedor calendario ===
   if (toggleBtn && calendarioContainer) {
     toggleBtn.addEventListener("click", () => {
-      if (calendarioContainer.style.display === "none" || calendarioContainer.style.display === "") {
-        calendarioContainer.style.display = "block";
-        toggleBtn.textContent = "📅 Ocultar Calendario de Actividades";
-      } else {
-        calendarioContainer.style.display = "none";
-        toggleBtn.textContent = "📅 Ver Calendario de Actividades";
-      }
+      const visible = calendarioContainer.style.display !== "none";
+      calendarioContainer.style.display = visible ? "none" : "block";
+      toggleBtn.textContent = visible
+        ? "📅 Ver Calendario de Actividades"
+        : "📅 Ocultar Calendario de Actividades";
     });
-  } else {
-    console.warn("⚠️ toggle-calendario o calendario-container no encontrado");
   }
 
-  if (!calendarEl) {
-    console.error("❌ No se encontró el contenedor del calendario (#calendar)");
+  if (!calendarEl || !window.FullCalendar || !supabase) {
+    console.warn("⚠️ No se encontró #calendar, o faltan FullCalendar/Supabase");
     return;
   }
 
-  // ================== Cargar eventos desde Supabase ==================
+  // === Cargar eventos desde Supabase ===
   async function fetchEventos() {
     try {
       const { data, error } = await supabase
@@ -38,109 +50,123 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       if (error) throw error;
 
-      return data.map(evt => {
-        const eventObj = {
-          id: evt.id,
-          title: evt.titulo,
-          start: evt.fecha_inicio,
-          allDay: evt.all_day
-        };
-        if (evt.fecha_fin) eventObj.end = evt.fecha_fin;
-        return eventObj;
-      });
+      return (data || []).map((evt) => ({
+        id: evt.id,
+        title: evt.titulo,
+        start: evt.fecha_inicio,
+        end: evt.fecha_fin || null,
+        allDay: !!evt.all_day,
+      }));
     } catch (err) {
-      console.error("❌ Error al cargar eventos:", err.message);
-      notify("Error al cargar eventos");
+      console.error("❌ Error al cargar eventos:", err);
+      notify("Error al cargar eventos", "error");
       return [];
     }
   }
 
-  const eventos = await fetchEventos();
+  // === Inicializar FullCalendar ===
+  async function initCalendar() {
+    const eventos = await fetchEventos();
 
-  // ================== Inicializar FullCalendar ==================
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "dayGridMonth",
-    locale: "es",
-    headerToolbar: {
-      left: "prev,next today",
-      center: "title",
-      right: "dayGridMonth,timeGridWeek,timeGridDay",
-    },
-    events: eventos,
-    editable: true,
-    selectable: true,
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "es",
+      height: "auto",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay",
+      },
+      events: eventos,
+      editable: canEdit,
+      selectable: canEdit,
 
-    // Crear evento
-    dateClick: async function (info) {
-      const titulo = prompt("Ingrese título del evento:")?.trim();
-      if (!titulo) return;
+      // Crear evento
+      dateClick: async (info) => {
+        if (!canEdit) return;
+        const titulo = prompt("Ingrese título del evento:")?.trim();
+        if (!titulo) return;
 
-      try {
-        const { data, error } = await supabase
-          .from("eventos")
-          .insert([{
-            titulo: titulo,
-            fecha_inicio: new Date(info.dateStr).toISOString(),
-            all_day: true
-          }])
-          .select()
-          .single();
+        try {
+          const { data, error } = await supabase
+            .from("eventos")
+            .insert([
+              {
+                titulo,
+                fecha_inicio: info.dateStr, // YYYY-MM-DD
+                all_day: true,
+              },
+            ])
+            .select()
+            .single();
 
-        if (error) throw error;
+          if (error) throw error;
 
-        calendar.addEvent({
-          id: data.id,
-          title: data.titulo,
-          start: data.fecha_inicio,
-          allDay: data.all_day
-        });
+          calendar.addEvent({
+            id: data.id,
+            title: data.titulo,
+            start: data.fecha_inicio,
+            allDay: data.all_day,
+          });
 
-        notify("✅ Evento agregado correctamente");
-      } catch (err) {
-        console.error("❌ Error al guardar en Supabase:", err.message);
-        notify("Error al guardar evento");
-      }
-    },
+          notify("Evento agregado correctamente", "success");
+        } catch (err) {
+          console.error("❌ Error al guardar:", err);
+          notify("Error al guardar evento", "error");
+        }
+      },
 
-    // Editar evento (mover o redimensionar)
-    eventChange: async function (info) {
-      try {
-        const { error } = await supabase
-          .from("eventos")
-          .update({
-            fecha_inicio: info.event.start ? info.event.start.toISOString() : null,
-            fecha_fin: info.event.end ? info.event.end.toISOString() : null,
-            all_day: info.event.allDay
-          })
-          .eq("id", info.event.id);
+      // Editar evento (mover/redimensionar)
+      eventChange: async (info) => {
+        if (!canEdit) return;
+        try {
+          const { error } = await supabase
+            .from("eventos")
+            .update({
+              fecha_inicio: info.event.start
+                ? info.event.start.toISOString()
+                : null,
+              fecha_fin: info.event.end
+                ? info.event.end.toISOString()
+                : null,
+              all_day: info.event.allDay,
+            })
+            .eq("id", info.event.id);
 
-        if (error) throw error;
-        notify("✅ Evento actualizado");
-      } catch (err) {
-        console.error("❌ Error al actualizar evento:", err.message);
-        notify("Error al actualizar evento");
-      }
-    },
+          if (error) throw error;
+          notify("Evento actualizado", "success");
+        } catch (err) {
+          console.error("❌ Error al actualizar:", err);
+          notify("Error al actualizar evento", "error");
+        }
+      },
 
-    // Eliminar evento
-    eventClick: async function (info) {
-      if (!confirm(`¿Eliminar evento "${info.event.title}"?`)) return;
+      // Eliminar evento
+      eventClick: async (info) => {
+        if (!canEdit) {
+          alert(`📌 Evento: ${info.event.title}`);
+          return;
+        }
+        if (!confirm(`¿Eliminar evento "${info.event.title}"?`)) return;
 
-      try {
-        const { error } = await supabase
-          .from("eventos")
-          .delete()
-          .eq("id", info.event.id);
+        try {
+          const { error } = await supabase
+            .from("eventos")
+            .delete()
+            .eq("id", info.event.id);
 
-        if (error) throw error;
-        info.event.remove();
-        notify("🗑️ Evento eliminado");
-      } catch (err) {
-        console.error("❌ Error al eliminar evento:", err.message);
-        notify("Error al eliminar evento");
-      }
-    }
-  });
+          if (error) throw error;
+          info.event.remove();
+          notify("Evento eliminado", "success");
+        } catch (err) {
+          console.error("❌ Error al eliminar:", err);
+          notify("Error al eliminar evento", "error");
+        }
+      },
+    });
 
-  calendar.render();
+    calendar.render();
+  }
+
+  initCalendar();
 });

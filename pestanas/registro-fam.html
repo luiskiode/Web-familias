@@ -1,21 +1,159 @@
-<section class="card">
-  <h2>👨‍👩‍👧 Registro de Familias</h2>
-  <form id="familiaForm">
-    <label>🧑‍🦱 Nombres y Apellidos*</label>
-    <input type="text" name="nombres_apellidos" required />
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👨‍👩‍👧 Familias - Cáritas CNC</title>
 
-    <label>🆔 DNI*</label>
-    <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
+<link rel="stylesheet" href="estilos-familias.css" />
 
-    <label>🏠 Dirección*</label>
-    <input type="text" name="direccion" required />
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="api.js/firebase-config-caritas.js"></script>
 
-    <label>📞 Teléfono*</label>
-    <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="api.js/supabase-config-caritas.js" defer></script>
+</head>
+<body>
 
-    <label>📝 Observaciones</label>
-    <textarea name="observaciones"></textarea>
+<header class="app-header">
+  <h1>👨‍👩‍👧 Familias - Cáritas CNC</h1>
+  <button onclick="window.close()">Cerrar</button>
+</header>
 
-    <button type="submit" class="submit-btn">💾 Guardar Familia</button>
-  </form>
-</section>
+<main>
+  <!-- 📋 Tabla de familias -->
+  <section class="card">
+    <h2>📋 Lista de Familias</h2>
+    <table id="familiasTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombres</th>
+          <th>DNI</th>
+          <th>Apellido Familia</th>
+          <th>Dirección</th>
+          <th>Teléfono</th>
+          <th>Observaciones</th>
+          <th>Fecha Registro</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- 📝 Formulario de registro -->
+  <section class="card" style="margin-top:2rem;">
+    <h2>📝 Registro de Familia</h2>
+    <form id="familiaForm">
+      <label>🧑‍🦱 Nombres y Apellidos*</label>
+      <input type="text" name="nombres_apellidos" required />
+
+      <label>🆔 DNI*</label>
+      <input type="text" name="dni_solicitante" maxlength="8" pattern="[0-9]{8}" required />
+
+      <label>🏠 Dirección*</label>
+      <input type="text" name="direccion" required />
+
+      <label>📞 Teléfono*</label>
+      <input type="text" name="telefono_contacto" pattern="[0-9]+" required />
+
+      <label>📝 Observaciones</label>
+      <textarea name="observaciones"></textarea>
+
+      <button type="submit" class="submit-btn">💾 Guardar Familia</button>
+    </form>
+  </section>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tbody = document.querySelector("#familiasTable tbody");
+  const form = document.getElementById("familiaForm");
+
+  const supabase = window.CARITAS?.supabase;
+  const auth = window.CARITAS?.auth;
+
+  // =======================
+  // 🔑 Requiere sesión activa
+  // =======================
+  auth?.onAuthStateChanged(user => {
+    if (!user) {
+      alert("⚠️ Debes iniciar sesión para ver y registrar familias.");
+      window.close();
+      return;
+    }
+    loadFamilias();
+  });
+
+  // =======================
+  // 📋 Cargar familias
+  // =======================
+  async function loadFamilias() {
+    try {
+      const { data, error } = await supabase.from("familias").select("*").order("id", { ascending: true });
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Sin registros</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      data.forEach(fam => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fam.id ?? ""}</td>
+          <td>${fam.nombres_apellidos ?? ""}</td>
+          <td>${fam.dni_solicitante ?? ""}</td>
+          <td>${fam.apellido_familia ?? ""}</td>
+          <td>${fam.direccion ?? ""}</td>
+          <td>${fam.telefono_contacto ?? ""}</td>
+          <td>${fam.observaciones ?? ""}</td>
+          <td>${fam.fecha_registro ?? ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error("❌ Error al cargar familias:", err.message);
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Error al cargar datos</td></tr>`;
+    }
+  }
+
+  // =======================
+  // 💾 Registrar nueva familia
+  // =======================
+  form?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+
+    const payload = {
+      nombres_apellidos: fd.get("nombres_apellidos"),
+      dni_solicitante: fd.get("dni_solicitante"),
+      apellido_familia: fd.get("apellido_familia") || "",
+      direccion: fd.get("direccion"),
+      telefono_contacto: fd.get("telefono_contacto"),
+      observaciones: fd.get("observaciones") || "",
+      fecha_registro: new Date().toISOString().split("T")[0]
+    };
+
+    try {
+      const { error } = await supabase.from("familias").insert([payload]);
+      if (error) throw error;
+
+      alert("✅ Familia registrada con éxito");
+      form.reset();
+      loadFamilias();
+    } catch (err) {
+      console.error("❌ Error al registrar familia:", err.message);
+      alert("Error al registrar familia");
+    }
+  });
+});
+</script>
+
+</body>
+</html>

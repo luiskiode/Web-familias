@@ -7,15 +7,19 @@ import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import helmet from "helmet";
 import compression from "compression";
+import morgan from "morgan";
 
 dotenv.config();
 
 const app = express();
+
+// === Middlewares globales ===
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(compression());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+app.use(morgan("dev"));
 
 // === CORS dinámico ===
 const allowedOrigins = [
@@ -26,7 +30,10 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.warn(`❌ Bloqueado por CORS: ${origin}`);
       return callback(new Error(`CORS no permitido para: ${origin}`), false);
     },
   })
@@ -38,7 +45,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 // === Supabase config ===
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
-
 if (!supabaseUrl || !supabaseKey) {
   console.error("❌ SUPABASE_URL y SUPABASE_KEY deben estar definidas en .env");
   process.exit(1);
@@ -56,6 +62,8 @@ app.get("/", (_, res) =>
   res.json({ status: "ok", message: "✅ Backend Cáritas CNC activo" })
 );
 
+// === Familias ===
+
 // 1) Obtener familias
 app.get("/familias", async (_, res) => {
   try {
@@ -67,7 +75,7 @@ app.get("/familias", async (_, res) => {
     res.json(data);
   } catch (err) {
     console.error("❌ Error al obtener familias:", err);
-    res.status(500).json({ error: err.message || String(err) });
+    res.status(500).json({ error: err.message || "Error interno" });
   }
 });
 
@@ -89,7 +97,7 @@ app.post("/familias", upload.single("archivo"), async (req, res) => {
         .json({ error: `Faltan campos: ${faltantes.join(", ")}` });
     }
 
-    // Subida de archivo
+    // === Subida de archivo opcional ===
     let archivoURL = null;
     if (req.file) {
       const safeName = `${Date.now()}_${req.file.originalname
@@ -104,8 +112,7 @@ app.post("/familias", upload.single("archivo"), async (req, res) => {
         });
       if (uploadError) throw uploadError;
 
-      const { data: publicData } = supabase
-        .storage
+      const { data: publicData } = supabase.storage
         .from("documentosfamilias")
         .getPublicUrl(safeName);
       archivoURL = publicData?.publicUrl || null;
@@ -123,19 +130,22 @@ app.post("/familias", upload.single("archivo"), async (req, res) => {
     res.json({ message: "✅ Familia registrada", archivo: archivoURL });
   } catch (err) {
     console.error("🔥 Error al registrar familia:", err);
-    res.status(500).json({ error: err.message || String(err) });
+    res.status(500).json({ error: err.message || "Error interno" });
   }
 });
 
-// 404
+// === Middleware 404 ===
 app.use((_, res) => res.status(404).json({ error: "No encontrado" }));
 
-// Error handler
+// === Error handler global ===
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  console.error("Unhandled error:", err);
+  console.error("🔥 Unhandled error:", err);
   res.status(500).json({ error: err.message || "Error interno" });
 });
 
+// === Start ===
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ API escuchando en http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ API escuchando en http://localhost:${PORT}`)
+);

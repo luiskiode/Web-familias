@@ -4,39 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Credencial — Cáritas CNC</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles-caritas.css" />
+
+  <!-- QR + Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
-  <script src="./supabase-config.js" defer></script>
+  <script src="api.js/supabase-config-caritas.js" defer></script>
+
   <style>
-    body { font-family: system-ui, Arial, sans-serif; background:#f6f7fb; margin:0; padding:20px; }
-    .wrap { max-width: 920px; margin: 0 auto; }
-    .carnet { width: 340px; border-radius: 16px; background: white; padding: 20px; box-shadow: 0 6px 16px rgba(0,0,0,.10); border:1px solid #eee; text-align:center; margin: 10px auto; }
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      background: var(--bg, #f6f7fb);
+      margin:0; padding:20px;
+      color: var(--text, #111);
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { margin-bottom: 1rem; }
+    .carnet {
+      width: 340px; border-radius: 16px; background: var(--surface,#fff);
+      padding: 20px; box-shadow: 0 6px 16px rgba(0,0,0,.1);
+      border:1px solid var(--border,#eee);
+      text-align:center; margin: 10px auto;
+    }
     .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(340px,1fr)); gap: 16px; }
-    .foto { width:104px; height:104px; border-radius:50%; border:3px solid #b91c1c; object-fit: cover; }
-    .codigo { color:#1d4ed8; font-weight:700; }
+    .foto { width:104px; height:104px; border-radius:50%; border:3px solid var(--primary,#b91c1c); object-fit: cover; }
+    .codigo { color: var(--accent,#1d4ed8); font-weight:700; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>🪪 Credencial</h1>
+  <main class="wrap">
+    <h1>🪪 Credencial Cáritas CNC</h1>
     <div id="contenedor"></div>
     <div id="grid" class="grid"></div>
-  </div>
+  </main>
 
   <script>
-  (function(){
+  (() => {
     'use strict';
 
-    function avatar(nombre){ return `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`; }
+    const supabase = window.CARITAS?.supabase;
+
+    const avatar = (nombre) =>
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`;
 
     async function getByUid(uid){
-      const { data, error } = await window.supabase.from('credenciales').select('*').eq('uid', uid).single();
+      const { data, error } = await supabase
+        .from('credenciales')
+        .select('*')
+        .eq('uid', uid)
+        .single();
       if (error) throw error;
       return data;
     }
+
     async function getAll(){
-      const { data, error } = await window.supabase.from('credenciales').select('*').order('creado_en', { ascending:false });
+      const { data, error } = await supabase
+        .from('credenciales')
+        .select('*')
+        .order('creado_en', { ascending:false });
       if (error) throw error;
       return data || [];
     }
@@ -44,16 +69,18 @@
     function renderSingle(c){
       const cont = document.getElementById('contenedor');
       cont.innerHTML = `
-        <div class="carnet">
+        <article class="carnet" role="region" aria-label="Credencial de ${c.nombre||'usuario'}">
           <h2>📌 Cáritas CNC</h2>
-          <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto">
+          <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto de ${c.nombre||'usuario'}">
           <div class="datos">
-            <p>${c.nombre||'—'}</p>
+            <p><b>${c.nombre||'—'}</b></p>
             <p>${c.email||'—'}</p>
             <p class="codigo">Código: ${c.codigo||'N/A'}</p>
           </div>
-          <div style="margin-top:10px;"><canvas id="qr"></canvas></div>
-        </div>`;
+          <div style="margin-top:10px;">
+            <canvas id="qr" aria-label="Código QR de credencial"></canvas>
+          </div>
+        </article>`;
       const link = `${location.origin}/credencial.html?id=${encodeURIComponent(c.uid)}`;
       QRCode.toCanvas(document.getElementById('qr'), link, (err)=>{ if(err) console.error(err); });
     }
@@ -62,13 +89,15 @@
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
       lista.forEach(c => {
-        const el = document.createElement('div');
+        const el = document.createElement('article');
         el.className = 'carnet';
+        el.setAttribute('role','region');
+        el.setAttribute('aria-label',`Credencial de ${c.nombre||'usuario'}`);
         el.innerHTML = `
           <h2>📌 Cáritas CNC</h2>
-          <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto">
+          <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto de ${c.nombre||'usuario'}">
           <div class="datos">
-            <p>${c.nombre||'—'}</p>
+            <p><b>${c.nombre||'—'}</b></p>
             <p>${c.email||'—'}</p>
             <p class="codigo">Código: ${c.codigo||'N/A'}</p>
           </div>
@@ -92,10 +121,12 @@
           renderList(todos);
         }
       } catch (e) {
-        document.getElementById('contenedor').innerHTML = '<p style="color:#b91c1c">❌ No se pudo cargar la credencial.</p>';
+        document.getElementById('contenedor').innerHTML =
+          '<p style="color:#b91c1c">❌ No se pudo cargar la credencial.</p>';
         console.error(e);
       }
     }
+
     document.addEventListener('DOMContentLoaded', main);
   })();
   </script>

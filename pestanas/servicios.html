@@ -1,17 +1,260 @@
-<section>
-  <h2>⚙️ Servicios</h2>
-  <div class="card servicio-card">
-    <h3>📅 Calendario</h3>
-    <div id="calendario-container">Aquí irá el calendario FullCalendar 📌</div>
-  </div>
+<script>
+(() => {
+  'use strict';
 
-  <div class="card servicio-card" style="margin-top:1rem">
-    <h3>📋 Pendientes</h3>
-    <div id="pendientes-contenido">Aquí se cargarán los pendientes ⏳</div>
-  </div>
+  // ======== Helpers y refs ========
+  const supabase = window.CARITAS?.supabase;
+  if (!supabase) {
+    console.warn("⚠️ Supabase no inicializado en servicios.");
+    return;
+  }
 
-  <div class="card servicio-card" style="margin-top:1rem">
-    <h3>👨‍👩‍👧 Familias Registradas</h3>
-    <div id="familias-contenido">Aquí verás la lista de familias 📝</div>
-  </div>
-</section>
+  const $ = (id) => document.getElementById(id);
+
+  const calendarEl = $('calendar');
+  const btnCalHoy  = $('btnCalHoy');
+  const btnCalNew  = $('btnCalNuevo');
+
+  const penList  = $('pendientes-list');
+  const penEmpty = $('pend-empty');
+  const btnPendNew = $('btnPendNuevo');
+
+  const famTbody = $('familias-tbody');
+  const famEmpty = $('fam-empty');
+
+  const getRol = () => {
+    try { return JSON.parse(localStorage.getItem('caritasUser'))?.rol || 'invitado'; }
+    catch { return 'invitado'; }
+  };
+  const canEdit = () => ['admin','editor'].includes(getRol());
+
+  const esc = (s='') => String(s).replace(/[&<>"']/g,
+    m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])
+  );
+
+  function notify(msg, type="info") {
+    const prefix = type==="error" ? "❌" : type==="success" ? "✅" : "ℹ️";
+    console.log(prefix, msg);
+    if (type==="error") alert(prefix + " " + msg);
+  }
+
+  // ======== 📅 Calendario (FullCalendar) ========
+  let calendar;
+  function initCalendar(){
+    if (!window.FullCalendar || !calendarEl) return console.warn('⚠️ FullCalendar no disponible.');
+    const { Calendar } = window.FullCalendar;
+
+    calendar = new Calendar(calendarEl, {
+      locale: 'es',
+      initialView: 'dayGridMonth',
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,listWeek'
+      },
+      events: fetchCalendarEvents,
+      eventClick: onEventClick,
+      dateClick: onDateClickAllowed
+    });
+    calendar.render();
+
+    btnCalHoy?.addEventListener('click', () => calendar?.today());
+    btnCalNew?.addEventListener('click', async () => {
+      if (!canEdit()) return alert('Solo admin/editor pueden crear eventos.');
+      const titulo = prompt('Título del evento:');
+      if (!titulo) return;
+      const fecha  = prompt('Fecha (YYYY-MM-DD):', new Date().toISOString().slice(0,10));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return alert('Fecha inválida.');
+      await crearEvento({ title: titulo.trim(), start: fecha, allDay: true });
+      calendar?.refetchEvents();
+    });
+  }
+
+  async function fetchCalendarEvents(info, success, failure){
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('id,title,start,end,allDay')
+        .gte('start', info.startStr)
+        .lte('start', info.endStr);
+      if (error) throw error;
+      success((data||[]).map(e => ({
+        id: e.id, title: e.title, start: e.start, end: e.end || null, allDay: !!e.allDay
+      })));
+    } catch (err) {
+      console.error('Error cargando eventos:', err);
+      failure(err);
+    }
+  }
+
+  async function crearEvento(evt){
+    const { error } = await supabase.from('eventos').insert([evt]);
+    if (error) { console.error(error); notify('No se pudo crear el evento','error'); }
+    else notify('Evento creado','success');
+  }
+
+  async function borrarEvento(id){
+    const { error } = await supabase.from('eventos').delete().eq('id', id);
+    if (error) { console.error(error); notify('No se pudo eliminar','error'); }
+    else notify('Evento eliminado','success');
+  }
+
+  async function renombrarEvento(id, nuevoTitulo){
+    const { error } = await supabase.from('eventos').update({ title: nuevoTitulo }).eq('id', id);
+    if (error) { console.error(error); notify('No se pudo actualizar','error'); }
+    else notify('Evento actualizado','success');
+  }
+
+  function onEventClick(info){
+    const ev = info.event;
+    if (!canEdit()) {
+      alert(`📌 Evento: ${ev.title}`);
+      return;
+    }
+    const r = prompt(`Evento: ${ev.title}\n\nEditar título (E) / Eliminar (D) / Cancelar (C)`, 'E');
+    if (!r) return;
+
+    if (r.toUpperCase() === 'D') {
+      if (confirm('¿Eliminar evento?')) borrarEvento(ev.id).then(()=>calendar.refetchEvents());
+    } else if (r.toUpperCase() === 'E') {
+      const nuevo = prompt('Nuevo título:', ev.title);
+      if (nuevo && nuevo.trim() && nuevo !== ev.title) {
+        renombrarEvento(ev.id, nuevo.trim()).then(()=>calendar.refetchEvents());
+      }
+    }
+  }
+
+  function onDateClickAllowed(arg){
+    if (!canEdit()) return;
+    const ok = confirm(`Crear evento el ${arg.dateStr}?`);
+    if (!ok) return;
+    crearEvento({ title: 'Nuevo evento', start: arg.dateStr, allDay: true })
+      .then(()=>calendar?.refetchEvents());
+  }
+
+  // ======== 📋 Pendientes ========
+  async function cargarPendientes(){
+    penList.innerHTML = '';
+    penEmpty.hidden = true;
+
+    try {
+      const { data, error } = await supabase
+        .from('pendientes')
+        .select('id,descripcion,estado')
+        .order('id', { ascending: true });
+      if (error) throw error;
+
+      if (!data || data.length === 0) { penEmpty.hidden = false; return; }
+
+      data.forEach(p => {
+        const li = document.createElement('li');
+        li.style.margin = '.25rem 0';
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = !!p.estado;
+        chk.disabled = !canEdit();
+
+        const span = document.createElement('span');
+        span.innerHTML = esc(p.descripcion || '') + ' ❤️';
+        span.style.marginLeft = '.5rem';
+        if (p.estado) span.classList.add('muted');
+
+        chk.addEventListener('change', async () => {
+          const { error } = await supabase.from('pendientes').update({ estado: chk.checked }).eq('id', p.id);
+          if (error) { console.error(error); notify('No se pudo actualizar pendiente','error'); chk.checked = !chk.checked; }
+          else {
+            if (chk.checked) span.classList.add('muted'); else span.classList.remove('muted');
+            notify('Pendiente actualizado','success');
+          }
+        });
+
+        li.appendChild(chk);
+        li.appendChild(span);
+
+        if (canEdit()) {
+          const btnDel = document.createElement('button');
+          btnDel.className = 'btn';
+          btnDel.textContent = '🗑️';
+          btnDel.style.marginLeft = '.5rem';
+          btnDel.addEventListener('click', async ()=>{
+            if (!confirm('¿Eliminar pendiente?')) return;
+            const { error } = await supabase.from('pendientes').delete().eq('id', p.id);
+            if (error) { console.error(error); notify('No se pudo eliminar pendiente','error'); }
+            else { cargarPendientes(); notify('Pendiente eliminado','success'); }
+          });
+          li.appendChild(btnDel);
+        }
+
+        penList.appendChild(li);
+      });
+
+    } catch (err) {
+      console.error('Pendientes error:', err);
+      penEmpty.hidden = false;
+      penEmpty.textContent = 'Error al cargar pendientes.';
+    }
+  }
+
+  btnPendNew?.addEventListener('click', async ()=>{
+    if (!canEdit()) return alert('Solo admin/editor pueden agregar.');
+    const descripcion = prompt('Descripción del pendiente:');
+    if (!descripcion || !descripcion.trim()) return;
+    const { error } = await supabase.from('pendientes').insert([{ descripcion: descripcion.trim(), estado: false }]);
+    if (error) { console.error(error); notify('No se pudo agregar pendiente','error'); }
+    else cargarPendientes();
+  });
+
+  // ======== 👨‍👩‍👧 Familias (últimos 10) ========
+  async function cargarFamilias(){
+    famTbody.innerHTML = '';
+    famEmpty.hidden = true;
+
+    try {
+      const { data, error } = await supabase
+        .from('familias')
+        .select('nombres_apellidos,direccion,fecha_registro')
+        .order('id', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+
+      if (!data || data.length === 0) { famEmpty.hidden = false; return; }
+
+      data.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${esc(f.nombres_apellidos||'')}</td>
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${esc(f.direccion||'')}</td>
+          <td style="padding:.5rem;border-bottom:1px solid var(--border,#eee)">${esc(f.fecha_registro||'')}</td>`;
+        famTbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error('Familias error:', err);
+      famEmpty.hidden = false;
+      famEmpty.textContent = 'Error al cargar familias.';
+    }
+  }
+
+  // ======== Init ========
+  async function initServicios(){
+    if (!canEdit()) {
+      btnCalNew?.setAttribute('hidden','true');
+      btnPendNew?.setAttribute('hidden','true');
+    }
+
+    initCalendar();
+    await Promise.all([cargarPendientes(), cargarFamilias()]);
+  }
+
+  // Integración SPA
+  document.addEventListener('view:loaded:caritas', ({detail})=>{
+    if (detail?.view === 'servicios') initServicios();
+  });
+
+  // Fallback si se carga como página independiente
+  if (document.readyState !== 'loading') initServicios();
+  else document.addEventListener('DOMContentLoaded', initServicios);
+})();
+</script>

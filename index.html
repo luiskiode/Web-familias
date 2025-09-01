@@ -2,71 +2,247 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#b71c1c" />
   <title>Cáritas CNC</title>
-  <link rel="stylesheet" href="styles-caritas.css" />
-  <link rel="icon" href="img/favicon.ico" />
 
-  <!-- Librerías comunes -->
+  <link rel="icon" href="img/favicon.ico" />
+  <link rel="stylesheet" href="styles-caritas.css" />
+
+  <!-- FullCalendar (CSS + JS global) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js" defer></script>
+
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <!-- Utilidades -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 
-  <!-- Firebase + config Cáritas -->
+  <!-- Firebase (Cáritas) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script defer src="api.js/firebase-config-caritas.js"></script>
 
-  <!-- Supabase + config Cáritas -->
+  <!-- Supabase (Cáritas) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script defer src="api.js/supabase-config-caritas.js"></script>
 
-  <!-- Router -->
+  <!-- Router SPA -->
   <script defer src="api.js/app-router-caritas.js"></script>
+
+  <style>
+    /* Trazos mínimos para lo nuevo del index (lo demás viene de styles-caritas.css) */
+    #status-bar{position:fixed;left:0;right:0;top:0;z-index:50;text-align:center;font-size:.9rem;padding:.35rem .6rem;display:none}
+    #status-bar.offline{display:block;background:#111;color:#fff}
+    .header-right{display:flex;gap:.4rem;align-items:center}
+    .user-pill{display:none;align-items:center;gap:.4rem;background:#111;color:#fff;border-radius:999px;padding:.25rem .55rem}
+    .user-pill img{width:22px;height:22px;border-radius:50%;object-fit:cover;border:2px solid #b71c1c}
+    #toggleVideo{display:inline-flex;align-items:center;gap:.25rem}
+    .skeleton{animation:pulse 1.2s ease-in-out infinite;background:linear-gradient(90deg,#0000,#0002 40%,#0000 60%),var(--surface,#111);min-height:180px;border-radius:12px}
+    @keyframes pulse{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @media (prefers-reduced-motion: reduce){
+      #video-fondo{display:none !important}
+    }
+  </style>
 </head>
 <body>
-  <!-- 🎥 Video de fondo -->
-  <video id="video-fondo" autoplay muted loop>
+  <!-- Conectividad -->
+  <div id="status-bar" aria-live="polite"></div>
+
+  <!-- 🎥 Video de fondo (respetando prefers-reduced-motion) -->
+  <video id="video-fondo" autoplay muted loop playsinline poster="img/cover-fondo.jpg">
     <source src="videos/fondo.mp4" type="video/mp4" />
   </video>
 
   <!-- 🔝 Header -->
   <header class="app-header">
     <h1>📌 Cáritas CNC</h1>
-    <nav id="main-nav">
-      <button data-view="inicio">🏠 Inicio</button>
+
+    <nav id="main-nav" aria-label="Navegación principal">
+      <button data-view="inicio" aria-current="page">🏠 Inicio</button>
       <button data-view="registro-fam">👨‍👩‍👧 Registro</button>
       <button data-view="perfil" id="btnPerfil" style="display:none">👤 Perfil</button>
       <button data-view="servicios" id="btnServicios" style="display:none">⚙️ Servicios</button>
+      <button id="btnLogin" class="alt" style="display:none" onclick="location.href='login.html'">🔑 Ingresar</button>
       <button id="btnLogout" style="display:none">🔒 Salir</button>
+      <button id="toggleVideo" class="ghost" title="Pausar/activar video de fondo">⏯️ Fondo</button>
     </nav>
+
+    <div class="header-right">
+      <div id="userPill" class="user-pill" title="Sesión activa">
+        <img id="userAvatar" src="img/avatar-placeholder.png" alt="Avatar" />
+        <span id="userName">—</span>
+        <small id="userRole" class="pill" style="margin-left:.25rem">voluntario</small>
+      </div>
+    </div>
   </header>
 
   <!-- 📌 Contenedor dinámico -->
-  <main id="app" class="seccion active" aria-live="polite"></main>
+  <main id="app" class="seccion active" aria-live="polite">
+    <div class="card skeleton" style="margin:1rem auto;max-width:960px;"></div>
+  </main>
+
+  <noscript>
+    <div class="card" style="max-width:960px;margin:1rem auto">
+      <h2>⚠️ JavaScript deshabilitado</h2>
+      <p>Activa JavaScript para usar la aplicación.</p>
+    </div>
+  </noscript>
 
   <script>
-    // Mostrar botones según sesión de Cáritas
-    document.addEventListener('firebase:ready:caritas', () => {
-      const btnPerfil = document.getElementById('btnPerfil');
-      const btnServicios = document.getElementById('btnServicios');
-      const btnLogout = document.getElementById('btnLogout');
+  (() => {
+    'use strict';
 
-      if (window.CARITAS?.auth?.currentUser) {
+    const nav = document.getElementById('main-nav');
+    const app = document.getElementById('app');
+    const statusBar = document.getElementById('status-bar');
+
+    const btnPerfil = document.getElementById('btnPerfil');
+    const btnServicios = document.getElementById('btnServicios');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const toggleVideoBtn = document.getElementById('toggleVideo');
+    const video = document.getElementById('video-fondo');
+
+    const userPill = document.getElementById('userPill');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+
+    // ===== Conectividad =====
+    function updateOnlineStatus(){
+      if (navigator.onLine) {
+        statusBar.className = '';
+        statusBar.textContent = '';
+      } else {
+        statusBar.className = 'offline';
+        statusBar.textContent = '🔌 Sin conexión: algunas funciones no estarán disponibles.';
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ===== Accesibilidad: marcar botón activo =====
+    function markActive(view){
+      nav.querySelectorAll('button[data-view]').forEach(b => {
+        const active = b.dataset.view === view;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+    }
+
+    // ===== Preferencias de movimiento (pause fondo) =====
+    function applyReducedMotionPreference(){
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced && video) video.pause();
+    }
+    applyReducedMotionPreference();
+
+    // Toggle del video de fondo
+    toggleVideoBtn?.addEventListener('click', () => {
+      if (!video) return;
+      if (video.paused) { video.play().catch(()=>{}); }
+      else video.pause();
+    });
+
+    // ===== Sesión / Rol =====
+    function hydrateHeaderFromStorage(){
+      try {
+        const u = JSON.parse(localStorage.getItem('caritasUser') || '{}');
+        const rol = u.rol || 'invitado';
+        const name = (u.email || '—').split('@')[0];
+
+        // Visibilidad de items
+        const logged = !!u.uid;
+        btnPerfil.style.display = logged ? '' : 'none';
+        btnServicios.style.display = logged ? '' : 'none';
+        btnLogout.style.display = logged ? '' : 'none';
+        btnLogin.style.display = logged ? 'none' : '';
+
+        // Pill usuario
+        if (logged) {
+          userPill.style.display = 'inline-flex';
+          userName.textContent = name;
+          userRole.textContent = rol;
+          userAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=111&color=fff`;
+        } else {
+          userPill.style.display = 'none';
+        }
+      } catch {}
+    }
+    hydrateHeaderFromStorage();
+
+    // Cuando Firebase está listo (evento emitido por tu config)
+    document.addEventListener('firebase:ready:caritas', () => {
+      const user = window.CARITAS?.auth?.currentUser;
+      if (user) {
         btnPerfil.style.display = '';
         btnServicios.style.display = '';
         btnLogout.style.display = '';
+        btnLogin.style.display = 'none';
+
+        // Si aún no hay storage (acceso directo)
+        const stored = JSON.parse(localStorage.getItem('caritasUser') || '{}');
+        if (!stored?.uid) {
+          localStorage.setItem('caritasUser', JSON.stringify({
+            email: user.email, uid: user.uid, rol: stored.rol || 'voluntario'
+          }));
+        }
+      } else {
+        btnPerfil.style.display = 'none';
+        btnServicios.style.display = 'none';
+        btnLogout.style.display = 'none';
+        btnLogin.style.display = '';
       }
+      hydrateHeaderFromStorage();
     });
 
-    // Cerrar sesión
-    document.getElementById('btnLogout')?.addEventListener('click', async () => {
+    // Logout
+    btnLogout?.addEventListener('click', async () => {
       try { await window.CARITAS?.auth?.signOut(); } catch(e) {}
-      location.reload();
+      localStorage.removeItem('caritasUser');
+      location.href = 'login.html';
     });
+
+    // ===== Navegación SPA (el router hace el fetch) =====
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-view]');
+      if (!btn) return;
+      markActive(btn.dataset.view);
+    });
+
+    // Marcar la vista al cargar por hash o default
+    function initActiveFromHash(){
+      const v = (location.hash || '#inicio').replace('#','');
+      markActive(v);
+    }
+    window.addEventListener('hashchange', initActiveFromHash);
+    document.addEventListener('DOMContentLoaded', initActiveFromHash);
+
+    // Opcional: guardar última vista
+    document.addEventListener('view:loaded:caritas', (ev) => {
+      if (ev.detail?.view) {
+        sessionStorage.setItem('caritas:lastView', ev.detail.view);
+        markActive(ev.detail.view);
+      }
+    });
+    // Primer arranque: si hay última vista, ir ahí
+    const last = sessionStorage.getItem('caritas:lastView');
+    if (last && (!location.hash || location.hash === '#')) {
+      history.replaceState(null, '', '#' + last);
+      markActive(last);
+    }
+
+    // Fallback si falla el video
+    video?.addEventListener('error', () => {
+      document.body.classList.add('no-video');
+    });
+  })();
   </script>
 </body>
 </html>

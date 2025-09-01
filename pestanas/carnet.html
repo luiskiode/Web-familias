@@ -1,38 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Carnet — Cáritas CNC</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carnet — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css" />
 
   <!-- QR -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
 
-  <!-- Firebase (compat 10.x) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
-  <script src="./firebase-config.js" defer></script>
+  <script src="api.js/firebase-config-caritas.js" defer></script>
 
-  <!-- Supabase (v2 UMD) -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
-  <script src="./supabase-config.js" defer></script>
+  <script src="api.js/supabase-config-caritas.js" defer></script>
 
   <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f6f7fb; margin:0; font-family:system-ui, Arial, sans-serif; }
-    .carnet { width: 340px; border-radius: 16px; background:#fff; padding: 20px; box-shadow: 0 6px 18px rgba(0,0,0,.10); text-align:center; border:1px solid #eee; }
-    .carnet h2 { margin: 4px 0 12px; color: #b91c1c; }
-    .carnet img { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; border: 3px solid #b91c1c; }
+    body {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; margin:0;
+      background:var(--bg, #0a0a0a); font-family:system-ui, Arial, sans-serif;
+    }
+    .carnet {
+      width: 340px; border-radius: 16px;
+      background:var(--surface,#fff);
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.15);
+      text-align:center;
+      border:1px solid var(--border,#eee);
+    }
+    .carnet h2 { margin: 4px 0 12px; color: var(--primary,#b91c1c); }
+    .carnet img {
+      width: 104px; height: 104px; border-radius: 50%;
+      object-fit: cover; border: 3px solid var(--primary,#b91c1c);
+    }
     .datos p { margin: 6px 0; }
-    .codigo { font-weight: 700; color:#1d4ed8; }
+    .codigo { font-weight: 700; color: var(--accent,#1d4ed8); }
     #qrCanvas { margin-top: 12px; }
     .row { margin-top: 16px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-    .btn { padding: 8px 12px; border:1px solid #ddd; background:#fafafa; border-radius:8px; cursor:pointer; }
-    .btn:hover { background:#f0f0f0; }
+    .btn {
+      padding: 8px 12px; border:1px solid var(--border,#ddd);
+      background:var(--surface-2,#fafafa);
+      border-radius:8px; cursor:pointer;
+    }
+    .btn:hover { background:var(--surface-2-hover,#f0f0f0); }
   </style>
 </head>
 <body>
-  <div class="carnet" role="region" aria-label="Carnet personal">
+  <main class="carnet" role="region" aria-label="Carnet personal">
     <h2>📌 Cáritas CNC</h2>
     <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil" />
     <div class="datos">
@@ -45,30 +63,32 @@
       <button class="btn" id="btnLogout">🔒 Cerrar sesión</button>
       <button class="btn" id="btnCopiar">🔗 Copiar enlace</button>
     </div>
-  </div>
+  </main>
 
   <script>
-  (function(){
+  (() => {
     'use strict';
+
+    const supabase = window.CARITAS?.supabase;
+    const auth = window.CARITAS?.auth;
 
     function avatarFallback(nombre){
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`;
     }
 
-    function pintar(user, cred){
-      document.getElementById('email').textContent = cred.email || user.email || 'Sin correo';
-      document.getElementById('uid').textContent = cred.uid || user.uid;
-      document.getElementById('codigo').textContent = cred.codigo || 'N/A';
-      document.getElementById('fotoPerfil').src = cred.foto_url || avatarFallback(cred.nombre);
+    function renderCarnet(user, cred){
+      document.getElementById('email').textContent = cred?.email || user.email || '—';
+      document.getElementById('uid').textContent = cred?.uid || user.uid || '—';
+      document.getElementById('codigo').textContent = cred?.codigo || 'N/A';
+      document.getElementById('fotoPerfil').src = cred?.foto_url || avatarFallback(cred?.nombre || user.email);
 
-      // QR apunta al visor público
-      const url = `${location.origin}/credencial.html?id=${encodeURIComponent(cred.uid)}`;
-      const canvas = document.getElementById('qrCanvas');
-      QRCode.toCanvas(canvas, url, function(err){ if(err) console.error(err); });
+      // QR apunta a la vista pública de credencial
+      const url = `${location.origin}/credencial.html?id=${encodeURIComponent(cred?.uid || user.uid)}`;
+      QRCode.toCanvas(document.getElementById('qrCanvas'), url, (err)=>{ if(err) console.error(err); });
     }
 
     async function cargarCredencial(uid){
-      const { data, error } = await window.supabase
+      const { data, error } = await supabase
         .from('credenciales')
         .select('*')
         .eq('uid', uid)
@@ -77,41 +97,39 @@
       return data;
     }
 
-    async function main(){
-      // Espera a que firebase esté presente (por si carga lento)
-      const wait = () => new Promise(r => setTimeout(r, 40));
-      for (let i=0;i<75 && !(window.firebase && window.firebase.auth); i++) await wait();
-
-      const auth = window.firebase?.auth();
-      if (!auth) { alert('Firebase no inicializado.'); return; }
+    async function init(){
+      if (!auth) { alert('❌ Firebase no inicializado.'); return; }
 
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
-          alert('Debes iniciar sesión');
+          alert('⚠️ Debes iniciar sesión');
           location.href = 'login.html';
           return;
         }
         try {
           const cred = await cargarCredencial(user.uid);
-          pintar(user, cred);
-        } catch(e) {
-          console.error('No se pudo cargar credencial:', e);
+          renderCarnet(user, cred);
+        } catch (err) {
+          console.error('❌ No se pudo cargar credencial:', err);
           alert('❌ No se encontró tu credencial.');
         }
       });
     }
 
+    // === Botones ===
     document.getElementById('btnLogout').addEventListener('click', () => {
-      window.firebase?.auth()?.signOut().then(()=> location.href='login.html');
+      auth?.signOut().then(()=> location.href='login.html');
     });
 
     document.getElementById('btnCopiar').addEventListener('click', () => {
       const uid = document.getElementById('uid').textContent;
       const url = `${location.origin}/credencial.html?id=${encodeURIComponent(uid)}`;
-      navigator.clipboard.writeText(url).then(()=> alert('🔗 Enlace copiado')).catch(()=> prompt('Copia el enlace:', url));
+      navigator.clipboard.writeText(url)
+        .then(()=> alert('🔗 Enlace copiado'))
+        .catch(()=> prompt('Copia el enlace:', url));
     });
 
-    document.addEventListener('DOMContentLoaded', main);
+    document.addEventListener('DOMContentLoaded', init);
   })();
   </script>
 </body>

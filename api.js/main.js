@@ -1,32 +1,53 @@
-// main.js (corregido) — Orquestador sin imports de ES modules; usa objetos globales si existen
+// main.js — Orquestador global
 console.log("📌 main.js cargado");
 
-(function () {
-  'use strict';
+(() => {
+  "use strict";
 
-  const safeCall = async (fn, name) => {
+  /**
+   * Ejecuta una función de forma segura y loggea el resultado
+   * @param {Function} fn - Función a ejecutar
+   * @param {string} name - Nombre descriptivo de la tarea
+   */
+  async function safeCall(fn, name) {
     try {
-      const out = fn && typeof fn === "function" ? await fn() : undefined;
-      if (name) console.log(`✅ ${name}`);
-      return out;
+      if (typeof fn === "function") {
+        const out = await fn();
+        if (name) console.log(`✅ ${name}`);
+        return out;
+      } else if (name) {
+        console.warn(`⚠️ ${name} no está definida`);
+      }
     } catch (e) {
       console.error(`❌ Error en ${name || "tarea"}`, e);
     }
-  };
+  }
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    // Pendientes
+  /**
+   * Inicializa los módulos principales de la app
+   */
+  async function initApp() {
+    console.group("🚀 Inicialización Cáritas CNC");
+
     await safeCall(window._pendientes?.load, "Pendientes cargados");
-
-    // Calendario (si tu proyecto define window.initCalendario)
     await safeCall(window.initCalendario, "Calendario inicializado");
-
-    // Credenciales (si defines window.initCredenciales)
     await safeCall(window.initCredenciales, "Módulo de credenciales inicializado");
 
     // Notificación de bienvenida (opcional)
-    if (window.enviarNotificacion) {
-      window.enviarNotificacion("Cáritas CNC", "Aplicación cargada correctamente ✅");
+    if (typeof window.enviarNotificacion === "function") {
+      window.enviarNotificacion(
+        "Cáritas CNC",
+        "Aplicación cargada correctamente ✅"
+      );
     }
-  });
+
+    console.groupEnd();
+  }
+
+  // Iniciar al cargar el DOM
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+  } else {
+    initApp();
+  }
 })();
