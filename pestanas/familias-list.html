@@ -3,93 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>👨‍👩‍👧 Lista de Familias - Cáritas CNC</title>
+<title>👨‍👩‍👧 Familias — Cáritas CNC</title>
 
 <link rel="stylesheet" href="estilos-familias.css" />
 
 <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="api.js/supabase-config.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="api.js/supabase-config-caritas.js"></script>
 </head>
 <body>
+  <header class="app-header">
+    <h1>👨‍👩‍👧 Familias registradas</h1>
+    <button onclick="window.close()">Cerrar</button>
+  </header>
 
-<header class="app-header">
-  <h1>👨‍👩‍👧 Lista de Familias</h1>
-  <button onclick="window.close()">Cerrar</button>
-</header>
-
-<main>
-  <table id="familiasTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombres</th>
-        <th>DNI</th>
-        <th>Apellido Familia</th>
-        <th>Dirección</th>
-        <th>Teléfono</th>
-        <th>Observaciones</th>
-        <th>Fecha Registro</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</main>
+  <main class="container">
+    <div class="card" style="padding:20px;border-radius:12px;background:#2a2a2a;box-shadow:0 4px 12px rgba(0,0,0,.4)">
+      <!-- Tabla -->
+      <table id="familiasTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombres</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Visitada</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="guardarCambios">💾 Guardar cambios</button>
+    </div>
+  </main>
 
 <script>
-(function(){
-  'use strict';
-  const auth = window.CARITAS?.auth;
-  function guard(){
-    const u = auth?.currentUser || (()=>{try{return JSON.parse(localStorage.getItem('caritasUser')||'null')}catch{return null}})();
-    if (!u || !u.uid) { alert('🔒 Debes iniciar sesión'); location.href='login.html'; }
-  }
-  document.addEventListener('DOMContentLoaded', guard);
-  document.addEventListener('firebase:ready:caritas', guard);
-})();
-</script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const tabla = document.getElementById("familiasTable").querySelector("tbody");
+  const cambios = new Map();
 
-<script defer>
-document.addEventListener("DOMContentLoaded", async () => {
-  const tabla = document.getElementById("familiasTable");
-  const tbody = tabla.querySelector("tbody");
+  // Cargar familias desde Supabase
+  async function cargarFamilias(){
+    try {
+      const { data, error } = await window.CARITAS.supabase.from("familias").select("*").order("id",{ascending:true});
+      if(error) throw error;
 
-  if (!tabla || !tbody) return console.error("❌ Tabla o tbody no encontrados");
+      if(!data || data.length===0){
+        tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Sin registros</td></tr>`;
+        return;
+      }
 
-  try {
-    const { data, error } = await supabase.from("familias").select("*");
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Sin registros</td></tr>`;
-      return;
+      tabla.innerHTML = "";
+      data.forEach(fam=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fam.id ?? ""}</td>
+          <td>${fam.nombres_apellidos ?? fam.nombre ?? ""}</td>
+          <td>${fam.direccion ?? ""}</td>
+          <td>${fam.telefono_contacto ?? fam.telefono ?? ""}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada ? "checked":""}></td>
+          <td>
+            <button data-del="${fam.id}">🗑 Eliminar</button>
+          </td>
+        `;
+        tabla.appendChild(tr);
+      });
+    }catch(err){
+      console.error("❌ Error al cargar familias:",err);
+      tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error al cargar datos</td></tr>`;
     }
-
-    tbody.innerHTML = "";
-
-    data.forEach(fam => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${fam.id ?? ""}</td>
-        <td>${fam.nombres_apellidos ?? ""}</td>
-        <td>${fam.dni_solicitante ?? ""}</td>
-        <td>${fam.apellido_familia ?? ""}</td>
-        <td>${fam.direccion ?? ""}</td>
-        <td>${fam.telefono_contacto ?? ""}</td>
-        <td>${fam.observaciones ?? ""}</td>
-        <td>${fam.fecha_registro ?? ""}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    console.log("✅ Lista de familias cargada correctamente");
-
-  } catch (err) {
-    console.error("❌ Error al cargar familias:", err);
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Error al cargar datos</td></tr>`;
   }
+
+  // Guardar cambios visitada
+  document.getElementById("guardarCambios").addEventListener("click", async ()=>{
+    for(const [id,visitada] of cambios){
+      await window.CARITAS.supabase.from("familias").update({visitada}).eq("id",id);
+    }
+    alert("✅ Cambios guardados");
+    cambios.clear();
+    cargarFamilias();
+  });
+
+  // Detectar cambios en checkboxes
+  document.getElementById("familiasTable").addEventListener("change", e=>{
+    if(e.target.type==="checkbox"){
+      cambios.set(e.target.dataset.id, e.target.checked);
+    }
+  });
+
+  // Detectar eliminar
+  document.getElementById("familiasTable").addEventListener("click", async e=>{
+    if(e.target.dataset.del){
+      if(confirm("¿Eliminar familia?")){
+        await window.CARITAS.supabase.from("familias").delete().eq("id", e.target.dataset.del);
+        cargarFamilias();
+      }
+    }
+  });
+
+  // Inicial
+  cargarFamilias();
 });
 </script>
-
 </body>
 </html>

@@ -112,6 +112,21 @@
       return [];
     }
   }
+data.forEach((fam) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${fam.id ?? ""}</td>
+    <td>${fam.nombres_apellidos ?? fam.nombre ?? ""}</td>
+    <td>${fam.direccion ?? ""}</td>
+    <td>${fam.telefono_contacto ?? fam.telefono ?? ""}</td>
+    <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada ? "checked":""}></td>
+    <td>
+      <button data-map="${fam.direccion}">📍 Ver en mapa</button>
+      <button data-del="${fam.id}">🗑 Eliminar</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
 
   // ================== Registrar Familia ==================
   if (formFamilia) {
