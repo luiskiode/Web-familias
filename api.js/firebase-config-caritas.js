@@ -1,24 +1,13 @@
-// api.js/firebase-config-caritas.js
+// firebase-config-caritas.js — Inicialización Firebase Cáritas CNC
+
 (function () {
   'use strict';
 
-  // 1) Verifica que el SDK compat esté cargado
-  if (!window.firebase || !firebase.apps) {
-    console.error('❌ Firebase SDK (compat) no cargado. Revisa las <script> de gstatic en tu HTML.');
-    return;
-  }
-
-  // 2) Evita doble inicialización si ya existe una app
-  if (window.CARITAS?.app || firebase.apps.length > 0) {
-    // Exponer referencias si no existieran
-    window.CARITAS = window.CARITAS || {};
-    window.CARITAS.app  = firebase.app();
-    window.CARITAS.auth = firebase.auth ? firebase.auth() : null;
+  if (window.CARITAS?.app) {
     document.dispatchEvent(new Event('firebase:ready:caritas'));
     return;
   }
 
-  // 3) Configuración del proyecto
   const firebaseConfig = {
     apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
     authDomain: "web-familias.firebaseapp.com",
@@ -29,45 +18,42 @@
   };
 
   try {
-    // 4) Inicializa (compat)
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Idioma en correos (opcional)
-    try { auth.languageCode = 'es'; } catch {}
+    // Persistencia local
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-    // Persistencia local (mantener sesión entre recargas)
-    try {
-      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
-    } catch {}
+    // Normalización de roles
+    function normalizarRol(rol) {
+      if (!rol) return "Voluntario Cáritas CNC";
+      const r = rol.toLowerCase();
+      if (r.includes("admin")) return "Administrador";
+      if (r.includes("editor")) return "Editor";
+      return "Voluntario Cáritas CNC";
+    }
 
-    // 5) Expón en el namespace del proyecto
-    window.CARITAS = window.CARITAS || {};
-    window.CARITAS.app  = app;
-    window.CARITAS.auth = auth;
-
-    // 6) Sincroniza encabezado/bienvenida vía localStorage
-    auth.onAuthStateChanged((user) => {
+    // Estado de autenticación
+    auth.onAuthStateChanged(user => {
       if (user) {
-        // Rellena/actualiza un mínimo de datos
-        let stored = {};
-        try { stored = JSON.parse(localStorage.getItem('caritasUser') || '{}'); } catch {}
-        const base = {
+        const stored = JSON.parse(localStorage.getItem("caritasUser") || "{}");
+        const userData = {
           uid: user.uid,
-          email: user.email || stored.email || '',
-          nombre: stored.nombre || (user.email ? user.email.split('@')[0] : 'Voluntario'),
-          rol: stored.rol || 'voluntario'
+          email: user.email,
+          nombre: user.displayName || stored.nombre || user.email.split("@")[0],
+          rol: normalizarRol(stored.rol)
         };
-        localStorage.setItem('caritasUser', JSON.stringify(base));
+        localStorage.setItem("caritasUser", JSON.stringify(userData));
+      } else {
+        localStorage.removeItem("caritasUser");
       }
-      // Notifica a la UI para refrescar (bienvenida, botones, etc.)
-      document.dispatchEvent(new CustomEvent('firebase:auth:changed', { detail: { user } }));
+      document.dispatchEvent(new Event("firebase:ready:caritas"));
     });
 
-    // 7) Señal global de listo
-    document.dispatchEvent(new Event('firebase:ready:caritas'));
-    console.log('✅ Firebase listo (Cáritas).');
-  } catch (e) {
-    console.error('❌ Error inicializando Firebase:', e);
+    window.CARITAS = Object.assign({}, window.CARITAS, { app, auth });
+
+    console.log("✅ Firebase listo (Cáritas)");
+  } catch (err) {
+    console.error("❌ Error inicializando Firebase Cáritas:", err);
   }
 })();

@@ -3,99 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Credenciales — Admin</title>
+  <title>🪪 Credenciales — Admin</title>
   <link rel="stylesheet" href="styles-caritas.css" />
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
   <script src="api.js/supabase-config-caritas.js" defer></script>
-  <style>
-    body { font-family: system-ui, Arial, sans-serif; background:var(--bg,#f6f7fb); margin:0; padding:20px; color:var(--text,#111); }
-    .top { display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
-    .search { padding:8px 10px; border:1px solid var(--border,#ddd); border-radius:8px; width:320px; max-width:100%; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 12px; margin-top: 14px; }
-    .card { background:var(--surface,#fff); border:1px solid var(--border,#eee); border-radius:10px; padding:12px; box-shadow: 0 6px 16px rgba(0,0,0,.06); }
-    .foto { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--primary,#b91c1c); }
-    .row { display:flex; align-items:center; gap:10px; }
-    .muted { color:var(--muted,#6b7280); font-size:0.9rem; }
-    .btn { padding:6px 10px; border:1px solid var(--border,#ddd); background:var(--surface-2,#fafafa); border-radius:8px; cursor:pointer; text-decoration:none; color:inherit; font-size:0.9rem; }
-    .btn:hover { background:var(--surface-2-hover,#f0f0f0); }
-  </style>
 </head>
 <body>
-  <header class="top">
+  <header class="container" style="text-align:center;margin:1rem auto;">
     <h1>🪪 Listado de credenciales</h1>
-    <input class="search" id="q" type="search" placeholder="Buscar por nombre o email…" aria-label="Buscar credencial" />
+    <a href="index.html" class="btn-ghost">← Volver al inicio</a>
+    <input class="search" id="q" type="search" placeholder="Buscar por nombre o email…" />
   </header>
 
-  <main>
-    <div class="grid" id="grid" role="list"></div>
+  <main class="container">
+    <div id="msg" style="margin-bottom:1rem;"></div>
+    <div class="grid" id="grid"></div>
+    <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+      <button id="prevPage" class="btn-ghost">⏮ Anterior</button>
+      <button id="nextPage" class="btn-ghost">Siguiente ⏭</button>
+    </div>
   </main>
 
-  <script>
-  (() => {
-    'use strict';
+<script>
+(() => {
+  const supabase = window.CARITAS?.supabase;
+  const msg = document.getElementById("msg");
+  const grid = document.getElementById("grid");
+  const pageSize = 20;
+  let page = 0;
 
-    const supabase = window.CARITAS?.supabase;
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; }, 4000);
+  }
 
-    const avatar = (nombre) =>
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`;
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
-    async function getAll(){
-      const { data, error } = await supabase
-        .from('credenciales')
-        .select('*')
-        .order('creado_en', { ascending:false });
-      if (error) throw error;
-      return data || [];
-    }
+  const avatar = (nombre) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`;
 
-    function card(c){
-      const el = document.createElement('article');
-      el.className = 'card';
-      el.setAttribute('role','listitem');
-      el.innerHTML = `
-        <div class="row">
-          <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto de ${c.nombre||'usuario'}">
-          <div>
-            <div><strong>${c.nombre||'—'}</strong></div>
-            <div class="muted">${c.email||'—'}</div>
-            <div class="muted">Código: ${c.codigo||'N/A'}</div>
-          </div>
+  function card(c){
+    const el = document.createElement("article");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="row">
+        <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto de ${esc(c.nombre)||'usuario'}">
+        <div>
+          <div><strong>${esc(c.nombre)||'—'}</strong></div>
+          <div class="muted">${esc(c.email)||'—'}</div>
+          <div class="muted">Código: ${esc(c.codigo_verificacion)||'N/A'}</div>
         </div>
-        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-          <a class="btn" href="credencial.html?id=${encodeURIComponent(c.uid)}" target="_blank">Ver</a>
-          ${c.foto_url ? `<a class="btn" href="${c.foto_url}" target="_blank">Foto</a>` : ''}
-        </div>`;
-      return el;
-    }
+      </div>
+      <div style="margin-top:10px;">
+        <a class="btn" href="credencial.html?id=${encodeURIComponent(c.user_id)}" target="_blank">Ver</a>
+        ${c.foto_url ? `<a class="btn" href="${c.foto_url}" target="_blank">Foto</a>` : ''}
+      </div>`;
+    return el;
+  }
 
-    function filterList(){
-      const q = document.getElementById('q').value.toLowerCase();
-      document.querySelectorAll('#grid .card').forEach(card => {
-        const text = card.textContent.toLowerCase();
-        card.style.display = text.includes(q) ? '' : 'none';
-      });
-    }
+  async function getCredenciales(){
+    const start = page * pageSize;
+    const end = start + pageSize - 1;
+    const { data, error } = await supabase
+      .from("credenciales")
+      .select("*")
+      .order("creado_en",{ascending:false})
+      .range(start,end);
+    if(error) throw error;
+    return data || [];
+  }
 
-    async function main(){
-      try {
-        const lista = await getAll();
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        if (lista.length === 0) {
-          grid.innerHTML = '<p class="muted">No hay credenciales registradas.</p>';
-          return;
-        }
-        lista.forEach(c => grid.appendChild(card(c)));
-        document.getElementById('q').addEventListener('input', filterList);
-      } catch(e){
-        document.getElementById('grid').innerHTML =
-          '<p style="color:#b91c1c">❌ No se pudo cargar el listado.</p>';
-        console.error(e);
+  async function renderCredenciales(){
+    try {
+      const lista = await getCredenciales();
+      grid.innerHTML = "";
+      if(lista.length === 0){
+        grid.innerHTML = "<p>No hay credenciales registradas.</p>";
+        return;
       }
+      lista.forEach(c => grid.appendChild(card(c)));
+    } catch(err){
+      console.error(err);
+      showMsg("❌ Error cargando credenciales","error");
     }
+  }
 
-    document.addEventListener('DOMContentLoaded', main);
-  })();
-  </script>
+  // Paginación
+  document.getElementById("prevPage").addEventListener("click",()=>{
+    if(page>0){ page--; renderCredenciales(); }
+  });
+  document.getElementById("nextPage").addEventListener("click",()=>{
+    page++; renderCredenciales();
+  });
+
+  // Filtro búsqueda
+  document.getElementById("q").addEventListener("input", e=>{
+    const q = e.target.value.toLowerCase();
+    [...grid.children].forEach(card=>{
+      card.style.display = card.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  // Control de roles
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const user = JSON.parse(localStorage.getItem("caritasUser")||"{}");
+    if(!["Administrador","admin","editor"].includes(user.rol)){
+      showMsg("❌ No tienes permiso para ver esta página","error");
+      setTimeout(()=> location.href="index.html", 2000);
+      return;
+    }
+    renderCredenciales();
+  });
+})();
+</script>
 </body>
 </html>

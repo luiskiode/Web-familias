@@ -11,7 +11,6 @@
   <!-- Firebase compat (SDKs primero) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <!-- Configuración de Cáritas -->
   <script src="api.js/firebase-config-caritas.js"></script>
@@ -30,7 +29,7 @@
     }
     .login-wrap{ width: 100%; max-width: 420px; padding: 1rem; }
     .login-card{
-      background: color-mix(in oklab, var(--surface, #1a1a1a) 88%, transparent);
+      background: rgba(26,26,26,0.88); /* reemplazo de color-mix */
       backdrop-filter: blur(8px);
       border: 1px solid var(--border, #333);
       border-radius: 12px;

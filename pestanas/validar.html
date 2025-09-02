@@ -4,359 +4,119 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Validar Credencial — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css">
 
-  <style>
-    :root{
-      --primary:#b71c1c;
-      --surface:#fff;
-      --border:#eee;
-      --muted:#6b7280;
-      --bg:#f6f7fb;
-    }
-    body{
-      font-family:system-ui, Arial, sans-serif; background:var(--bg); margin:0; color:#111; text-align:center;
-    }
-    header{ background:var(--primary); color:#fff; padding:16px; font-weight:700; }
-    .wrap{ max-width:960px; margin:0 auto; padding:12px 16px; }
-    .controls{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:10px;}
-    .btn, select, input[type="file"]{
-      padding:8px 12px; border:1px solid var(--border); background:#fafafa; border-radius:8px; cursor:pointer;
-    }
-    .btn:hover{ background:#f0f0f0; }
-    #video{
-      width:100%; max-width:460px; aspect-ratio:3/4; background:#000; border:3px solid var(--primary); border-radius:10px; margin:14px auto 0; object-fit:cover;
-    }
-    /* overlay de escaneo */
-    .scan-frame{
-      position:relative; display:inline-block;
-    }
-    .scan-frame::after{
-      content:""; position:absolute; inset:8% 8%;
-      border:2px dashed rgba(255,255,255,.7); border-radius:12px; pointer-events:none;
-    }
-    #output{ margin:12px auto; font-size:1rem; max-width:520px; color:var(--muted); }
-    #output strong{ color:#111; }
-    #card{
-      background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px;
-      display:none; width:340px; margin:10px auto; box-shadow:0 6px 16px rgba(0,0,0,.06); text-align:center;
-    }
-    .foto{ width:88px; height:88px; border-radius:50%; border:2px solid var(--primary); object-fit:cover; }
-    .muted{ color:var(--muted); }
-    .ok{ color:#16a34a; font-weight:700; }
-    .err{ color:#b91c1c; font-weight:700; }
-    .row{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
-  </style>
-
-  <!-- jsQR -->
-  <script defer src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
-
-  <!-- Supabase (usa tu config global) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script defer src="api.js/supabase-config-caritas.js"></script>
+  <!-- QR scanner -->
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="api.js/supabase-config-caritas.js"></script>
 </head>
 <body>
-  <header>Validar Credencial</header>
+  <header class="container" style="text-align:center;margin:1rem auto;">
+    <h1>🪪 Validar Credencial</h1>
+    <a href="index.html" class="btn-ghost">← Volver al inicio</a>
+  </header>
 
-  <main class="wrap" role="main">
-    <p id="secureWarn" class="muted" style="margin:8px 0;"></p>
+  <main class="container card" style="max-width:500px;text-align:center;">
+    <video id="video" autoplay playsinline muted style="width:100%;max-width:460px;background:#000;border:3px solid var(--primary);border-radius:10px;"></video>
+    <p id="output" class="muted" style="margin-top:.5rem;">Apunta la cámara al QR de la credencial.</p>
 
-    <div class="controls" aria-label="Controles de cámara">
-      <button class="btn" id="btnIniciar">🎥 Iniciar</button>
-      <button class="btn" id="btnDetener" disabled>🛑 Detener</button>
-      <select id="camSelect" aria-label="Seleccionar cámara" title="Seleccionar cámara" hidden></select>
-      <button class="btn" id="btnTorch" hidden>🔦 Linterna</button>
-      <label class="btn" for="fileQR" style="cursor:pointer;">🖼️ Leer desde imagen</label>
-      <input type="file" id="fileQR" accept="image/*" style="display:none"/>
-    </div>
-
-    <div class="scan-frame" style="margin-top:8px;">
-      <video id="video" autoplay playsinline muted></video>
-    </div>
-
-    <div id="output" role="status" aria-live="polite">Apunta la cámara a un QR con enlace o JSON de credencial.</div>
-
-    <section id="card" aria-live="polite" aria-label="Resultado de validación">
-      <img id="foto" class="foto" alt="Foto de la credencial" />
-      <div style="margin-top:6px;">
-        <div><strong id="nombre">—</strong></div>
-        <div class="muted" id="email">—</div>
-        <div class="muted">Código: <span id="codigo">—</span></div>
-      </div>
-      <div class="row">
-        <a id="publicLink" class="btn" href="#" target="_blank" rel="noopener">🌐 Abrir credencial pública</a>
-      </div>
+    <section id="card" class="card" style="display:none;margin-top:1rem;">
+      <img id="foto" class="foto" alt="Foto de la credencial" style="width:88px;height:88px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;">
+      <div><strong id="nombre">—</strong></div>
+      <div id="email">—</div>
+      <div>Código: <span id="codigo">—</span></div>
     </section>
   </main>
 
 <script>
 (() => {
   'use strict';
+  const supabase = window.CARITAS?.supabase;
+  const video = document.getElementById('video');
+  const output = document.getElementById('output');
+  const card = document.getElementById('card');
+  const foto = document.getElementById('foto');
+  const nombre = document.getElementById('nombre');
+  const email = document.getElementById('email');
+  const codigo = document.getElementById('codigo');
 
-  // ====== Refs ======
-  const video   = document.getElementById('video');
-  const output  = document.getElementById('output');
-  const card    = document.getElementById('card');
-  const foto    = document.getElementById('foto');
-  const nombre  = document.getElementById('nombre');
-  const email   = document.getElementById('email');
-  const codigo  = document.getElementById('codigo');
-  const publicLink = document.getElementById('publicLink');
-
-  const btnIniciar = document.getElementById('btnIniciar');
-  const btnDetener = document.getElementById('btnDetener');
-  const camSelect  = document.getElementById('camSelect');
-  const btnTorch   = document.getElementById('btnTorch');
-  const fileQR     = document.getElementById('fileQR');
-  const secureWarn = document.getElementById('secureWarn');
-
-  // Canvas offscreen
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  const ctx = canvas.getContext('2d',{willReadFrequently:true});
 
-  // Integración Supabase
-  const supabase = (window.CARITAS && window.CARITAS.supabase) || window.supabase;
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
-  // Estado de cámara
-  let stream = null;
-  let raf = null;
-  let currentDeviceId = null;
-  let lastUid = null;
-  let lastScanAt = 0;
-  let torchOn = false;
-  let torchTrack = null;
-
-  // Utils
-  const avatar = (n) => `https://ui-avatars.com/api/?name=${encodeURIComponent(n||'Usuario')}&background=004aad&color=fff`;
-  const setMsg = (html) => output.innerHTML = html;
-  const isSecure = () => (location.protocol === 'https:' || location.hostname === 'localhost');
-
-  // ====== UI mensajes sobre origen seguro ======
-  secureWarn.textContent = isSecure()
-    ? 'Consejo: mantén el QR estable y bien iluminado.'
-    : '⚠️ Para usar la cámara necesitas abrir esta página con HTTPS o localhost.';
-
-  // ====== Parseo de QR (URL ?id=... o JSON {"uid":"..."}) ======
   function parseQR(data){
-    // URL con ?id=
     try{
       const url = new URL(data);
-      const uid = url.searchParams.get('id');
-      if (uid) return { uid, source:'url' };
+      const id = url.searchParams.get('id');
+      if(id) return id;
     }catch{}
-    // JSON
     try{
-      const json = JSON.parse(data);
-      if (json && json.uid) return { uid: json.uid, source:'json' };
+      const j = JSON.parse(data);
+      if(j && j.user_id) return j.user_id;
     }catch{}
-    // Texto con "...uid=xxxxx" en crudo
-    const m = /(?:^|[?&])uid=([^&\s]+)/i.exec(data);
-    if (m && m[1]) return { uid:m[1], source:'text' };
     return null;
   }
 
-  // ====== Carga de credencial ======
-  async function cargar(uid){
-    if (!supabase){ setMsg('<span class="err">❌ Supabase no configurado.</span>'); return; }
+  async function cargarCredencial(uid){
     try{
       const { data, error } = await supabase
         .from('credenciales')
         .select('*')
-        .eq('uid', uid)
+        .eq('user_id', uid)
         .single();
-      if (error || !data) throw error || new Error('No encontrada');
-      foto.src = data.foto_url || avatar(data.nombre);
-      nombre.textContent = data.nombre || '—';
-      email.textContent  = data.email || '—';
-      codigo.textContent = data.codigo || 'N/A';
-      publicLink.href    = `${location.origin}/credencial.html?id=${encodeURIComponent(uid)}`;
+      if(error || !data) throw error || new Error("No encontrada");
 
-      card.style.display = 'block';
-      setMsg('<span class="ok">✅ Credencial válida</span>');
-
-      // Vibración ligera de feedback (si disponible)
-      if (navigator.vibrate) navigator.vibrate(60);
+      foto.src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre||'U')}&background=111&color=fff`;
+      nombre.textContent = esc(data.nombre||"—");
+      email.textContent = esc(data.email||"—");
+      codigo.textContent = esc(data.codigo_verificacion||"N/A");
+      card.style.display="block";
+      output.textContent = "✅ Credencial válida";
+      output.className = "success";
     }catch(e){
       console.error(e);
-      card.style.display = 'none';
-      setMsg('<span class="err">❌ Credencial no válida</span>');
+      card.style.display="none";
+      output.textContent = "❌ Credencial no válida";
+      output.className = "error";
     }
   }
 
-  // ====== Loop de escaneo ======
   function scanLoop(){
-    // Throttle para no sobrecargar CPU
-    const now = performance.now();
-    if (now - lastScanAt < 200) { raf = requestAnimationFrame(scanLoop); return; }
-    lastScanAt = now;
-
-    if (video.readyState === video.HAVE_ENOUGH_DATA){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const img = ctx.getImageData(0,0,canvas.width, canvas.height);
-      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-      if (code){
-        const parsed = parseQR(code.data);
-        if (parsed && parsed.uid){
-          // evitar re-escaneo del mismo UID
-          if (parsed.uid !== lastUid){
-            lastUid = parsed.uid;
-            detener(true); // true => no cambiar mensaje
-            setMsg('Leyendo credencial…');
-            cargar(parsed.uid);
-            return;
-          }
-        }
+    if(video.readyState===video.HAVE_ENOUGH_DATA){
+      canvas.width=video.videoWidth;
+      canvas.height=video.videoHeight;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+      if(code){
+        const uid=parseQR(code.data);
+        if(uid){ cargarCredencial(uid); stopScan(); }
       }
     }
-    raf = requestAnimationFrame(scanLoop);
+    requestAnimationFrame(scanLoop);
   }
 
-  // ====== Encender/Apagar linterna si hay soporte ======
-  async function toggleTorch(){
-    if (!torchTrack) return;
-    try{
-      torchOn = !torchOn;
-      await torchTrack.applyConstraints({ advanced:[{ torch: torchOn }] });
-      btnTorch.textContent = torchOn ? '🔦 Linterna (ON)' : '🔦 Linterna';
-    }catch(e){
-      console.warn('Torch no disponible:', e);
-      btnTorch.hidden = true;
-    }
-  }
-
-  // ====== Enumerar cámaras ======
-  async function listCameras(){
-    try{
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === 'videoinput');
-      if (cams.length > 1){
-        camSelect.innerHTML = cams.map(d => `<option value="${d.deviceId}">${d.label || 'Cámara ' + d.deviceId.slice(-4)}</option>`).join('');
-        camSelect.hidden = false;
-        // Seleccionar la trasera si la podemos inferir (usualmente la última)
-        if (!currentDeviceId) currentDeviceId = cams[cams.length-1].deviceId;
-        camSelect.value = currentDeviceId;
-      }else{
-        camSelect.hidden = true;
-      }
-    }catch(e){
-      console.warn('No se pudo listar cámaras:', e);
-      camSelect.hidden = true;
-    }
-  }
-
-  // ====== Iniciar cámara ======
-  async function iniciar(){
-    if (!isSecure()){
-      setMsg('<span class="err">❌ Cámara bloqueada por el navegador (usa HTTPS o localhost).</span>');
-      return;
-    }
-    try{
-      btnIniciar.disabled = true;
-      btnDetener.disabled = false;
-
-      const constraints = currentDeviceId
-        ? { video:{ deviceId:{ exact: currentDeviceId } } }
-        : { video:{ facingMode:{ ideal:'environment' } } };
-
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = stream;
-      await video.play();
-
-      // Torch support (Chrome Android)
-      const track = stream.getVideoTracks()[0];
-      const caps = track.getCapabilities && track.getCapabilities();
-      if (caps && 'torch' in caps){
-        torchTrack = track;
-        btnTorch.hidden = false;
-        btnTorch.textContent = '🔦 Linterna';
-      } else {
-        btnTorch.hidden = true;
-        torchTrack = null;
-        torchOn = false;
-      }
-
-      await listCameras();
-      setMsg('Escaneando…');
-      raf = requestAnimationFrame(scanLoop);
-    }catch(err){
+  function startScan(){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(stream=>{
+      video.srcObject=stream;
+      scanLoop();
+    }).catch(err=>{
       console.error(err);
-      setMsg('<span class="err">❌ No se pudo acceder a la cámara.</span>');
-      btnDetener.disabled = true;
-      btnIniciar.disabled = false;
-    }
+      output.textContent="❌ No se pudo acceder a la cámara.";
+      output.className="error";
+    });
   }
 
-  // ====== Detener cámara ======
-  function detener(keepMsg=false){
-    if (raf) cancelAnimationFrame(raf);
-    raf = null;
-    if (video) video.pause();
-    if (video && video.srcObject){
-      video.srcObject.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-    }
-    torchOn = false; torchTrack = null;
-    btnDetener.disabled = true;
-    btnIniciar.disabled = false;
-    if (!keepMsg) setMsg('Escaneo detenido.');
+  function stopScan(){
+    if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
   }
 
-  // ====== Cargar QR desde imagen ======
-  fileQR.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try{
-      const img = new Image();
-      img.onload = () => {
-        canvas.width = img.width; canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const data = ctx.getImageData(0,0,canvas.width,canvas.height);
-        const code = jsQR(data.data, data.width, data.height, { inversionAttempts:'dontInvert' });
-        if (code){
-          const parsed = parseQR(code.data);
-          if (parsed?.uid){
-            setMsg('Leyendo credencial…');
-            cargar(parsed.uid);
-          } else {
-            setMsg('<span class="err">QR sin UID válido.</span>');
-          }
-        }else{
-          setMsg('<span class="err">No se detectó QR.</span>');
-        }
-      };
-      img.src = URL.createObjectURL(file);
-    }catch(err){
-      console.error(err);
-      setMsg('<span class="err">No se pudo procesar la imagen.</span>');
-    }finally{
-      e.target.value = '';
-    }
-  });
-
-  // ====== Listeners UI ======
-  btnIniciar.addEventListener('click', iniciar);
-  btnDetener.addEventListener('click', () => detener(false));
-  camSelect.addEventListener('change', async () => {
-    currentDeviceId = camSelect.value || null;
-    if (stream) detener(true);
-    iniciar();
-  });
-  btnTorch.addEventListener('click', toggleTorch);
-
-  // Pausar si se cambia de pestaña
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) detener(true);
-  });
-
-  // Soporte para abrir con ?id=UID (carga directa sin escaneo)
-  (function checkDirectId(){
-    const uid = new URLSearchParams(location.search).get('id');
-    if (uid){
-      setMsg('Cargando credencial…');
-      cargar(uid);
-    }
-  })();
+  document.addEventListener('DOMContentLoaded',startScan);
 })();
 </script>
 </body>

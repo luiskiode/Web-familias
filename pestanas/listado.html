@@ -127,17 +127,27 @@
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
         const fila = btn.closest("tr");
+
         const nombre = fila.children[0].textContent;
-        const nuevoNombre = prompt("Editar nombre:", nombre);
-        if (nuevoNombre && nuevoNombre.trim() !== nombre) {
-          const { error } = await supabase.from("familias").update({ nombres_apellidos: nuevoNombre }).eq("id", id);
-          if (error) {
-            alert("❌ Error al editar familia");
-            console.error(error);
-          } else {
-            alert("✅ Familia actualizada");
-            cargarFamilias();
-          }
+        const apellido = fila.children[2].textContent;
+        const telefono = fila.children[5].textContent;
+
+        const nuevoNombre = prompt("Editar nombre:", nombre) || nombre;
+        const nuevoApellido = prompt("Editar apellido:", apellido) || apellido;
+        const nuevoTel = prompt("Editar teléfono:", telefono) || telefono;
+
+        const { error } = await supabase.from("familias").update({
+          nombres_apellidos: nuevoNombre,
+          apellido_familia: nuevoApellido,
+          telefono_contacto: nuevoTel
+        }).eq("id", id);
+
+        if (error) {
+          alert("❌ Error al editar familia");
+          console.error(error);
+        } else {
+          alert("✅ Familia actualizada");
+          cargarFamilias();
         }
       });
     });

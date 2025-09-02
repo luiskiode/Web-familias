@@ -8,14 +8,7 @@
   <!-- 📝 Mensaje semanal -->
   <article class="card" id="mensaje-semanal">
     <h3 class="with-emoji" data-emoji="📝">Mensaje Semanal</h3>
-    <p>
-      ✨ <strong>Querido Voluntario</strong>, la caridad es paciente, la caridad es
-      benigna; no es envidiosa, no obra con soberbia, no se jacta, no es ambiciosa,
-      no busca lo suyo, no se irrita, no toma en cuenta el mal, no se alegra por la
-      injusticia, se complace con la verdad; todo lo aguanta, todo lo cree, todo lo
-      espera, todo lo soporta. 🙏 Rezo por ello; y ustedes también, por favor, recen
-      por mí. ❤️‍🔥
-    </p>
+    <div id="mensajeSemanalContent" class="muted">Cargando mensaje...</div>
   </article>
 
   <!-- 📌 Pendientes (solo lectura) -->
@@ -31,7 +24,7 @@
       <thead>
         <tr><th scope="col">Tarea</th><th scope="col" style="width:120px">Estado</th></tr>
       </thead>
-      <tbody id="pendientesHomeBody"></tbody>
+      <tbody id="pendientesHomeBody"><tr><td colspan="2">Cargando...</td></tr></tbody>
     </table>
   </article>
 
@@ -63,13 +56,7 @@
   <!-- 📷 Galería -->
   <article class="card">
     <h3>📷 Nuestra comunidad</h3>
-    <div class="galeria-grid">
-      <img src="img/imagen de grupo 1.jpeg" alt="Grupo 1 de voluntarios" class="miniatura" loading="lazy"/>
-      <img src="img/imagen de grupo 2.jpeg" alt="Grupo 2 de voluntarios" class="miniatura" loading="lazy"/>
-      <img src="img/imagen de grupo 3.jpeg" alt="Grupo 3 de voluntarios" class="miniatura" loading="lazy"/>
-      <img src="img/imagen de grupo 4.jpeg" alt="Grupo 4 de voluntarios" class="miniatura" loading="lazy"/>
-      <img src="img/imagen de grupo 5.jpeg" alt="Grupo 5 de voluntarios" class="miniatura" loading="lazy"/>
-    </div>
+    <div id="galeriaGrid" class="galeria-grid">Cargando imágenes...</div>
   </article>
 
   <!-- 🖼️ Modal galería -->
@@ -81,78 +68,103 @@
 </section>
 
 <script>
-/* 🔧 Comportamiento de la pestaña Inicio (Cáritas) */
 (() => {
   'use strict';
+  const supabase = window.CARITAS?.supabase;
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
-  // === Galería con modal ===
-  const modal      = document.getElementById('modal');
-  const modalImg   = document.getElementById('img-ampliada');
-  const modalClose = document.getElementById('modalClose');
-  const caption    = document.getElementById('caption');
-
-  if (modal && modalImg && modalClose) {
-    document.querySelectorAll('.galeria-grid img').forEach(img => {
-      img.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden','false');
-        modalImg.src = img.src;
-        caption.textContent = img.alt || '';
-        modalImg.focus();
-      });
-    });
-    modalClose.addEventListener('click', () => {
-      modal.style.display='none';
-      modal.setAttribute('aria-hidden','true');
-    });
-    modal.addEventListener('click', e => {
-      if (e.target === modal) modalClose.click();
-    });
-    window.addEventListener('keydown', e => {
-      if (e.key === 'Escape') modalClose.click();
-    });
+  // === Mensaje Semanal ===
+  async function cargarMensajeSemanal(){
+    const box = document.getElementById("mensajeSemanalContent");
+    try{
+      const { data, error } = await supabase.from("mensajes")
+        .select("contenido,fecha")
+        .order("fecha",{ascending:false})
+        .limit(1)
+        .single();
+      if(error || !data){ box.textContent="❌ No hay mensaje disponible."; return; }
+      box.innerHTML = esc(data.contenido);
+    }catch(err){
+      console.error(err);
+      box.textContent="❌ Error al cargar mensaje.";
+    }
   }
 
   // === Pendientes (solo lectura) ===
   async function renderPendientesHome(){
     const tbody = document.getElementById('pendientesHomeBody');
     const empty = document.getElementById('pendientes-home-empty');
-    if (!tbody || !window.CARITAS?.supabase) {
-      empty?.removeAttribute("hidden");
-      return;
-    }
-    tbody.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="2">Cargando...</td></tr>';
     try {
-      const { data, error } = await window.CARITAS.supabase
-        .from('pendientes')
-        .select('descripcion, estado')
-        .order('id', { ascending: true });
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        empty?.removeAttribute("hidden");
-        return;
-      }
-      empty?.setAttribute("hidden","true");
-
-      data.forEach(p => {
-        const tr = document.createElement('tr');
-        const safeText = (p.descripcion || '').replace(/[&<>"']/g,
-          m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-        );
-        tr.innerHTML = `
-          <td>${safeText} ❤️</td>
-          <td>${p.estado ? '✔️ Hecho' : '⏳ Pendiente'}</td>`;
+      const { data, error } = await supabase.from('pendientes').select('descripcion, estado').order('id',{ascending:true});
+      if(error) throw error;
+      tbody.innerHTML="";
+      if(!data || data.length===0){ empty.hidden=false; return; }
+      empty.hidden=true;
+      data.forEach(p=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${esc(p.descripcion)} ❤️</td><td>${p.estado ? '✔️ Hecho':'⏳ Pendiente'}</td>`;
         tbody.appendChild(tr);
       });
-    } catch(err) {
-      console.error('❌ Error cargando pendientes:', err);
-      empty?.removeAttribute("hidden");
-      empty.textContent = "Error al cargar pendientes.";
+    }catch(err){
+      console.error(err);
+      tbody.innerHTML="";
+      empty.hidden=false;
+      empty.textContent="❌ Error al cargar pendientes.";
     }
   }
 
-  renderPendientesHome();
-  document.dispatchEvent(new CustomEvent('caritas:inicio:ready'));
+  // === Galería dinámica ===
+  async function cargarGaleria(){
+    const grid=document.getElementById("galeriaGrid");
+    grid.textContent="Cargando...";
+    try{
+      const { data, error } = await supabase.storage.from("galeria").list("",{ limit:12 });
+      if(error) throw error;
+      if(!data || data.length===0){ grid.textContent="No hay imágenes en la galería."; return; }
+      grid.innerHTML="";
+      data.forEach(file=>{
+        const url = supabase.storage.from("galeria").getPublicUrl(file.name).data.publicUrl;
+        const img=document.createElement("img");
+        img.src=url;
+        img.alt="Foto comunidad";
+        img.className="miniatura";
+        img.loading="lazy";
+        grid.appendChild(img);
+      });
+      bindGaleria();
+    }catch(err){
+      console.error(err);
+      grid.textContent="❌ Error cargando galería.";
+    }
+  }
+
+  // === Modal Galería ===
+  function bindGaleria(){
+    const modal=document.getElementById('modal');
+    const modalImg=document.getElementById('img-ampliada');
+    const modalClose=document.getElementById('modalClose');
+    const caption=document.getElementById('caption');
+    document.querySelectorAll('#galeriaGrid img').forEach(img=>{
+      img.addEventListener('click',()=>{
+        modal.style.display='flex';
+        modal.setAttribute('aria-hidden','false');
+        modalImg.src=img.src;
+        caption.textContent=img.alt||'';
+      });
+    });
+    modalClose.addEventListener('click',()=>{ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); });
+    modal.addEventListener('click',e=>{ if(e.target===modal) modalClose.click(); });
+    window.addEventListener('keydown',e=>{ if(e.key==='Escape') modalClose.click(); });
+  }
+
+  // Init
+  document.addEventListener("DOMContentLoaded",()=>{
+    cargarMensajeSemanal();
+    renderPendientesHome();
+    cargarGaleria();
+  });
 })();
 </script>

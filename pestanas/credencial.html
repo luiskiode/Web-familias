@@ -3,97 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <title>🎟️ Credencial — Cáritas CNC</title>
-  <link rel="stylesheet" href="estilos-familias.css">
-
-  <!-- Fuente Poppins -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+  <link rel="stylesheet" href="styles-caritas.css">
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="api.js/supabase-config-caritas.js"></script>
-
-  <style>
-    body { font-family: 'Poppins', sans-serif; background:#111; color:#f0f0f0; }
-    .credencial-card {
-      max-width: 650px; margin: 3rem auto; padding: 20px;
-      border-radius: 16px; background: rgba(30,30,30,0.9);
-      box-shadow: 0 6px 18px rgba(0,0,0,.5); display: flex; gap: 1.5rem;
-      align-items: center; justify-content: space-between;
-    }
-    .foto {
-      flex: 0 0 auto; text-align: center;
-    }
-    .foto img {
-      width: 120px; height: 120px; border-radius: 12px;
-      border: 3px solid #b91c1c; object-fit: cover;
-    }
-    .info {
-      flex: 1; min-width: 250px;
-    }
-    .info h2 { margin: 0; font-weight: 600; }
-    .info p { margin: 0.2rem 0; }
-    .badge {
-      display:inline-block; background:#b91c1c; color:#fff;
-      padding:4px 10px; border-radius:20px; font-size:0.9rem;
-      margin: 0.5rem 0;
-    }
-    .codigo {
-      font-weight:600; color:#4da3ff; margin: 0.5rem 0;
-    }
-    footer {
-      margin-top: 1rem; font-size: 0.85rem; color: #aaa; text-align: center;
-    }
-  </style>
 </head>
 <body>
-  <div class="credencial-card">
-    <div class="foto">
-      <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil">
-    </div>
-    <div class="info">
+  <header class="container" style="text-align:center;margin:1rem auto;">
+    <h1>🎟️ Credencial</h1>
+    <a href="index.html" class="btn-ghost">← Volver al inicio</a>
+  </header>
+
+  <main class="container" style="max-width:500px;">
+    <div class="card credencial-card" id="credCard" style="display:none;flex-direction:column;align-items:center;text-align:center;">
+      <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil" class="foto">
       <h2 id="nombrePerfil">—</h2>
       <p id="emailPerfil">—</p>
-      <span id="rolPerfil" class="badge">—</span>
+      <span id="rolPerfil" class="pill">—</span>
       <p class="codigo">Código: <span id="codigoPerfil">—</span></p>
     </div>
-  </div>
-  <footer>📌 Cáritas CNC</footer>
+
+    <div id="notFound" class="card error" style="display:none;text-align:center;">
+      <p id="notFoundMsg">❌ Credencial no encontrada</p>
+    </div>
+  </main>
 
 <script>
 document.addEventListener("DOMContentLoaded", async ()=>{
   const supabase = window.CARITAS?.supabase;
+  const uid = new URLSearchParams(window.location.search).get("id");
 
-  // Obtener el user_id desde la URL (?id=xxxx)
-  const params = new URLSearchParams(window.location.search);
-  const uid = params.get("id");
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
+  const credCard = document.getElementById("credCard");
+  const notFound = document.getElementById("notFound");
+  const notFoundMsg = document.getElementById("notFoundMsg");
+
+  if(!supabase){
+    notFound.style.display="block";
+    notFoundMsg.textContent="❌ Error: Supabase no inicializado.";
+    return;
+  }
   if(!uid){
-    alert("❌ Credencial no encontrada.");
+    notFound.style.display="block";
+    notFoundMsg.textContent="⚠️ No se proporcionó ID de usuario.";
     return;
   }
 
   try {
-    const { data, error } = await supabase
-      .from("credenciales")
-      .select("*")
-      .eq("user_id", uid)
-      .single();
-
+    const { data, error } = await supabase.from("credenciales").select("*").eq("user_id", uid).single();
     if(error || !data){
-      alert("❌ Credencial no válida.");
+      notFound.style.display="block";
+      notFoundMsg.textContent="❌ Credencial no encontrada.";
       return;
     }
 
-    // Llenar datos
-    document.getElementById("nombrePerfil").textContent = data.nombre || "Usuario";
-    document.getElementById("emailPerfil").textContent = data.email || "";
-    document.getElementById("rolPerfil").textContent = data.rol || "Voluntario Cáritas CNC";
-    document.getElementById("codigoPerfil").textContent = data.codigo_verificacion || uid.substring(0,8).toUpperCase();
-    document.getElementById("fotoPerfil").src = data.foto_url || 
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre || "U")}&background=111&color=fff`;
+    credCard.style.display="flex";
+    document.getElementById("nombrePerfil").textContent = esc(data.nombre) || "Usuario";
+    document.getElementById("emailPerfil").textContent = esc(data.email) || "";
+    document.getElementById("rolPerfil").textContent = esc(data.rol) || "Voluntario Cáritas CNC";
+    document.getElementById("codigoPerfil").textContent = esc(data.codigo_verificacion) || uid.substring(0,8).toUpperCase();
+    document.getElementById("fotoPerfil").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre||'U')}&background=111&color=fff`;
   } catch(err){
-    console.error("❌ Error cargando credencial:", err);
-    alert("No se pudo cargar la credencial.");
+    console.error(err);
+    notFound.style.display="block";
+    notFoundMsg.textContent="❌ Error cargando credencial.";
   }
 });
 </script>
