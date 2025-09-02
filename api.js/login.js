@@ -13,10 +13,11 @@
     if (type) el.classList.add(type);
   }
 
-  function getAuth() {
-    return (window.auth && typeof window.auth.signInWithEmailAndPassword === 'function' && window.auth)
-        || (window.firebase && firebase.auth && firebase.auth())
-        || null;
+ function getAuth() {
+  return (window.auth && typeof window.auth.signInWithEmailAndPassword === 'function' && window.auth)
+      || (window.CARITAS && window.CARITAS.auth)
+      || (window.firebase && firebase.auth && firebase.auth())
+      || null;
   }
 
   async function doLogin(getters) {
