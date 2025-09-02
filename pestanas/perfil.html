@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>👤 Mi Perfil / Credencial — Cáritas CNC</title>
-  <link rel="stylesheet" href="estilos-familias.css">
+  <link rel="stylesheet" href="../estilos-familias.css">
 
-  <!-- Fuente profesional -->
+  <!-- Fuente Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
   <!-- QR -->
@@ -14,11 +14,11 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="api.js/firebase-config-caritas.js"></script>
+  <script src="../api.js/firebase-config-caritas.js"></script>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="api.js/supabase-config-caritas.js"></script>
+  <script src="../api.js/supabase-config-caritas.js"></script>
 
   <style>
     body { font-family: 'Poppins', sans-serif; background:#0a0a0a; color:#f0f0f0; }
@@ -70,7 +70,7 @@
 
   <div class="perfil-card">
     <div class="perfil-left">
-      <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil">
+      <img id="fotoPerfil" src="../img/avatar-placeholder.png" alt="Foto de perfil">
     </div>
 
     <div class="perfil-center">
@@ -115,18 +115,26 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const fotoEl = document.getElementById("fotoPerfil");
   const codigoEl = document.getElementById("codigoPerfil");
   const qrCanvas = document.getElementById("qrCanvas");
+  const formEditar = document.getElementById("formEditar");
+
   let credencialData = null;
 
   async function cargarPerfil(user){
-    const { data } = await supabase.from("credenciales").select("*").eq("uid", user.uid).single();
+    const { data, error } = await supabase.from("credenciales")
+      .select("*")
+      .eq("user_id", user.uid)
+      .single();
+
+    if(error){ console.error("❌ Error cargando perfil:", error); return; }
+
     credencialData = data;
     const nombre = data?.nombre || user.displayName || (user.email?.split("@")[0]) || "Usuario";
     const rol = data?.rol || "Voluntario Cáritas CNC";
     const fotoUrl = data?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-    const codigo = data?.codigo || user.uid.substring(0,8).toUpperCase();
+    const codigo = data?.codigo_verificacion || user.uid.substring(0,8).toUpperCase();
 
     nombreEl.textContent = nombre;
-    emailEl.textContent = user.email;
+    emailEl.textContent = data?.email || user.email;
     rolEl.textContent = rol;
     fotoEl.src = fotoUrl;
     codigoEl.textContent = codigo;
@@ -141,12 +149,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   // Editar perfil
   document.getElementById("btnEditar").addEventListener("click", ()=>{
-    document.getElementById("formEditar").style.display = "block";
+    formEditar.style.display = formEditar.style.display === "block" ? "none" : "block";
     document.getElementById("editNombre").value = credencialData?.nombre || "";
     document.getElementById("editRol").value = credencialData?.rol || "Voluntario Cáritas CNC";
   });
 
-  document.getElementById("formEditar").addEventListener("submit", async (e)=>{
+  formEditar.addEventListener("submit", async (e)=>{
     e.preventDefault();
     const user = auth.currentUser;
     const nuevoNombre = document.getElementById("editNombre").value.trim();
@@ -154,24 +162,39 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const fotoFile = document.getElementById("editFoto").files[0];
 
     let fotoUrl = credencialData?.foto_url;
+
+    // Subir foto al bucket credenciales-fotos
     if(fotoFile){
-      const { data, error } = await supabase.storage
+      const filePath = `${user.uid}/${Date.now()}_${fotoFile.name}`;
+      const { error: uploadError } = await supabase.storage
         .from("credenciales-fotos")
-        .upload(`${user.uid}/${Date.now()}_${fotoFile.name}`, fotoFile, { upsert:true });
-      if(!error){
-        fotoUrl = supabase.storage.from("credenciales-fotos").getPublicUrl(data.path).data.publicUrl;
+        .upload(filePath, fotoFile, { upsert: true });
+
+      if (uploadError) {
+        console.error("❌ Error subiendo foto:", uploadError);
+        alert("No se pudo subir la foto");
+      } else {
+        const { data: publicUrl } = supabase.storage
+          .from("credenciales-fotos")
+          .getPublicUrl(filePath);
+        fotoUrl = publicUrl.publicUrl;
       }
     }
 
-    await supabase.from("credenciales").update({
+    const { error: updateError } = await supabase.from("credenciales").update({
       nombre: nuevoNombre,
       rol: nuevoRol,
       foto_url: fotoUrl
-    }).eq("uid", user.uid);
+    }).eq("user_id", user.uid);
 
-    alert("✅ Perfil actualizado");
-    document.getElementById("formEditar").style.display="none";
-    cargarPerfil(user);
+    if(updateError){
+      console.error("❌ Error actualizando perfil:", updateError);
+      alert("Error al actualizar perfil");
+    } else {
+      alert("✅ Perfil actualizado");
+      formEditar.style.display="none";
+      cargarPerfil(user);
+    }
   });
 
   // Copiar enlace

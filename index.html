@@ -25,14 +25,14 @@
  <!-- Firebase (Cáritas) -->
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script defer src="api.js/firebase-config-caritas.js"></script>
+<script defer src="../api.js/firebase-config-caritas.js"></script>
 
   <!-- Supabase (Cáritas) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script defer src="api.js/supabase-config-caritas.js"></script>
+  <script defer src="../api.js/supabase-config-caritas.js"></script>
 
   <!-- Router SPA -->
-  <script defer src="api.js/app-router-caritas.js"></script>
+  <script defer src="../api.js/app-router-caritas.js"></script>
 
   <style>
     /* Sólo trazos mínimos; el tema viene de styles-caritas.css */
@@ -76,7 +76,7 @@
 
     <div class="header-right">
       <div id="userPill" class="user-pill" title="Sesión activa">
-        <img id="userAvatar" src="img/avatar-placeholder.png" alt="Avatar" />
+        <img id="userAvatar" src="../img/avatar-placeholder.png" alt="Avatar" />
         <span id="userName">—</span>
         <small id="userRole" class="pill" style="margin-left:.25rem">voluntario</small>
       </div>
@@ -248,7 +248,7 @@
     if (nombre) { bienvenidaText.textContent = `👋 ¡Bienvenid@, ${nombre}!`; bienvenida.style.display=''; }
     else { bienvenida.style.display='none'; }
   }
-  
+
   // Arranques y eventos relevantes
   document.addEventListener('DOMContentLoaded', refresh);
   document.addEventListener('firebase:ready:caritas', () => {

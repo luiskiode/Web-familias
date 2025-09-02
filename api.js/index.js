@@ -1,151 +1,120 @@
+// index.js — API Cáritas CNC (Familias + Credenciales)
 import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
 import cors from "cors";
-import multer from "multer";
-import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import helmet from "helmet";
-import compression from "compression";
-import morgan from "morgan";
-
-dotenv.config();
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-// === Middlewares globales ===
-app.disable("x-powered-by");
-app.use(helmet());
-app.use(compression());
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
-app.use(morgan("dev"));
-
-// === CORS dinámico ===
-const allowedOrigins = [
-  "https://luiskiode.github.io",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-];
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      console.warn(`❌ Bloqueado por CORS: ${origin}`);
-      return callback(new Error(`CORS no permitido para: ${origin}`), false);
-    },
-  })
+// ================== Supabase Client ==================
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // ⚠️ usa la service_role key SOLO en backend
 );
 
-// === Multer (memoria) ===
-const upload = multer({ storage: multer.memoryStorage() });
-
-// === Supabase config ===
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-if (!supabaseUrl || !supabaseKey) {
-  console.error("❌ SUPABASE_URL y SUPABASE_KEY deben estar definidas en .env");
-  process.exit(1);
+// ================== Helpers ==================
+function handleError(res, error, context = "") {
+  console.error(`❌ Error en ${context}:`, error);
+  res.status(500).json({ error: error.message || error });
 }
-const supabase = createClient(supabaseUrl, supabaseKey);
 
-// === Static ===
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "public")));
+// ================== Rutas de Familias ==================
 
-// === Rutas API ===
-app.get("/health", (_, res) => res.json({ ok: true }));
-app.get("/", (_, res) =>
-  res.json({ status: "ok", message: "✅ Backend Cáritas CNC activo" })
-);
-
-// === Familias ===
-
-// 1) Obtener familias
-app.get("/familias", async (_, res) => {
+// Obtener todas las familias
+app.get("/api/familias", async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("familias")
-      .select("*")
-      .order("id", { ascending: false });
-    if (error) throw error;
+    const { data, error } = await supabase.from("familias").select("*").order("id", { ascending: true });
+    if (error) return handleError(res, error, "GET /familias");
     res.json(data);
   } catch (err) {
-    console.error("❌ Error al obtener familias:", err);
-    res.status(500).json({ error: err.message || "Error interno" });
+    handleError(res, err, "GET /familias");
   }
 });
 
-// 2) Registrar familia
-app.post("/familias", upload.single("archivo"), async (req, res) => {
+// Insertar una familia
+app.post("/api/familias", async (req, res) => {
   try {
-    const required = [
-      "nombres_apellidos",
-      "dni_solicitante",
-      "apellido_familia",
-      "direccion",
-      "fecha_registro",
-      "telefono_contacto",
-    ];
-    const faltantes = required.filter((f) => !String(req.body[f] || "").trim());
-    if (faltantes.length > 0) {
-      return res
-        .status(400)
-        .json({ error: `Faltan campos: ${faltantes.join(", ")}` });
-    }
-
-    // === Subida de archivo opcional ===
-    let archivoURL = null;
-    if (req.file) {
-      const safeName = `${Date.now()}_${req.file.originalname
-        .replace(/[^a-zA-Z0-9._-]/g, "_")
-        .slice(0, 80)}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("documentosfamilias")
-        .upload(safeName, req.file.buffer, {
-          contentType: req.file.mimetype,
-          upsert: false,
-        });
-      if (uploadError) throw uploadError;
-
-      const { data: publicData } = supabase.storage
-        .from("documentosfamilias")
-        .getPublicUrl(safeName);
-      archivoURL = publicData?.publicUrl || null;
-    }
-
-    const { error: dbError } = await supabase.from("familias").insert([
-      {
-        ...req.body,
-        archivo_url: archivoURL,
-        creado_en: new Date().toISOString(),
-      },
-    ]);
-    if (dbError) throw dbError;
-
-    res.json({ message: "✅ Familia registrada", archivo: archivoURL });
+    const payload = req.body;
+    const { data, error } = await supabase.from("familias").insert(payload).select();
+    if (error) return handleError(res, error, "POST /familias");
+    res.status(201).json(data);
   } catch (err) {
-    console.error("🔥 Error al registrar familia:", err);
-    res.status(500).json({ error: err.message || "Error interno" });
+    handleError(res, err, "POST /familias");
   }
 });
 
-// === Middleware 404 ===
-app.use((_, res) => res.status(404).json({ error: "No encontrado" }));
-
-// === Error handler global ===
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
-  console.error("🔥 Unhandled error:", err);
-  res.status(500).json({ error: err.message || "Error interno" });
+// Actualizar familia
+app.patch("/api/familias/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    const { data, error } = await supabase.from("familias").update(payload).eq("id", id).select();
+    if (error) return handleError(res, error, "PATCH /familias/:id");
+    res.json(data);
+  } catch (err) {
+    handleError(res, err, "PATCH /familias/:id");
+  }
 });
 
-// === Start ===
+// Eliminar familia
+app.delete("/api/familias/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from("familias").delete().eq("id", id);
+    if (error) return handleError(res, error, "DELETE /familias/:id");
+    res.status(204).send();
+  } catch (err) {
+    handleError(res, err, "DELETE /familias/:id");
+  }
+});
+
+// ================== Rutas de Credenciales ==================
+
+// Obtener credencial de un usuario por user_id
+app.get("/api/credenciales/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const { data, error } = await supabase.from("credenciales").select("*").eq("user_id", user_id).single();
+    if (error) return handleError(res, error, "GET /credenciales/:user_id");
+    res.json(data);
+  } catch (err) {
+    handleError(res, err, "GET /credenciales/:user_id");
+  }
+});
+
+// Crear credencial
+app.post("/api/credenciales", async (req, res) => {
+  try {
+    const payload = req.body;
+    const { data, error } = await supabase.from("credenciales").insert(payload).select();
+    if (error) return handleError(res, error, "POST /credenciales");
+    res.status(201).json(data);
+  } catch (err) {
+    handleError(res, err, "POST /credenciales");
+  }
+});
+
+// Actualizar credencial
+app.patch("/api/credenciales/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const payload = req.body;
+    const { data, error } = await supabase.from("credenciales").update(payload).eq("user_id", user_id).select();
+    if (error) return handleError(res, error, "PATCH /credenciales/:user_id");
+    res.json(data);
+  } catch (err) {
+    handleError(res, err, "PATCH /credenciales/:user_id");
+  }
+});
+
+// ================== Healthcheck ==================
+app.get("/", (req, res) => {
+  res.send("✅ API Cáritas CNC funcionando en Render");
+});
+
+// ================== Start ==================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`✅ API escuchando en http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+});
