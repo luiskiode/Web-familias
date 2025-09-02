@@ -8,94 +8,61 @@
   <!-- Tema global rojo/negro -->
   <link rel="stylesheet" href="styles-caritas.css" />
 
- <!-- Firebase compat -->
-<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script defer src="api.js/firebase-config-caritas.js"></script>
+  <!-- Firebase compat (SDKs primero) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- Tu config de Cáritas (expone window.CARITAS.{app,auth,db?}) -->
-  <script defer src="api.js/firebase-config-caritas.js"></script>
+  <!-- Configuración de Cáritas -->
+  <script src="api.js/firebase-config-caritas.js"></script>
 
   <style>
-    /* Ajustes específicos de la página de login sobre el tema rojo/negro */
     body.login-body{
       min-height:100vh; margin:0;
       display:flex; align-items:center; justify-content:center;
       background: var(--bg, #0a0a0a); color: var(--text, #f5f5f5);
       font-family: system-ui, "Segoe UI", Roboto, Ubuntu, Arial, sans-serif;
     }
-
-    /* Fondo de video compartido con el resto del sitio */
     #video-fondo{
       position: fixed; inset: 0; width:100%; height:100%;
       object-fit: cover; z-index:-1; opacity:.12;
       filter: saturate(.9) brightness(.7);
     }
-
-    .login-wrap{
-      width: 100%; max-width: 420px; padding: 1rem;
-    }
-
+    .login-wrap{ width: 100%; max-width: 420px; padding: 1rem; }
     .login-card{
       background: color-mix(in oklab, var(--surface, #1a1a1a) 88%, transparent);
       backdrop-filter: blur(8px);
       border: 1px solid var(--border, #333);
-      border-radius: var(--radius, 12px);
-      box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,.5));
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.5);
       padding: 1rem;
     }
-
-    .brand{
-      display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem;
-    }
-    .brand .pin{ font-size:1.25rem; }
-    .brand h1{
-      margin:0; font-size:1.1rem; letter-spacing:.2px;
-      color: var(--text, #f5f5f5);
-    }
+    .brand{ display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+    .brand .pin{ font-size:1.25rem; cursor:pointer; }
+    .brand h1{ margin:0; font-size:1.1rem; color: var(--text, #f5f5f5); }
     .brand h1 b{ color: var(--primary, #b91c1c); }
-
-    .sub{ margin:.25rem 0 1rem; color: var(--text-muted, #a3a3a3); font-size:.95rem; }
-
+    .sub{ margin:.25rem 0 1rem; color: #a3a3a3; font-size:.95rem; }
     form label{ display:block; font-size:.9rem; margin:.5rem 0 .25rem; }
     form input{
       width:100%; padding:.65rem .75rem; border-radius:10px;
-      border:1px solid var(--border,#333); background: #111; color: var(--text,#f5f5f5);
+      border:1px solid #333; background:#111; color:#f5f5f5;
     }
-    form input::placeholder{ color: color-mix(in oklab, var(--text-muted,#a3a3a3) 75%, #fff); }
-
+    form input::placeholder{ color:#aaa; }
     .submit-btn{
       width:100%; margin-top:.8rem; padding:.65rem .75rem;
-      background: var(--primary,#b91c1c); color:#fff;
-      border:1px solid var(--primary,#b91c1c); border-radius:10px; cursor:pointer;
-    }
-    .submit-btn:hover{ filter:brightness(0.96); }
-
-    .row-actions{
-      display:flex; gap:.5rem; justify-content:space-between; align-items:center; flex-wrap:wrap;
-      margin-top:.6rem;
-    }
-
-    .btn-ghost{
-      padding:.5rem .7rem; border:1px solid var(--border,#333);
-      background: #111; color: var(--text,#f5f5f5);
+      background: #b91c1c; color:#fff; border:1px solid #b91c1c;
       border-radius:10px; cursor:pointer;
     }
-    .btn-ghost:hover{ border-color: var(--primary,#b91c1c); }
-
+    .submit-btn:hover{ filter:brightness(0.96); }
+    .row-actions{ display:flex; gap:.5rem; justify-content:space-between; flex-wrap:wrap; margin-top:.6rem; }
+    .btn-ghost{
+      padding:.5rem .7rem; border:1px solid #333;
+      background:#111; color:#f5f5f5; border-radius:10px; cursor:pointer;
+    }
+    .btn-ghost:hover{ border-color:#b91c1c; }
     #loginMessage{ min-height:1.2rem; font-weight:600; margin-top:.6rem; }
     #loginMessage.error{ color:#ef4444; }
     #loginMessage.success{ color:#22c55e; }
-
-    /* Modal reset password */
-    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.75); }
-    .modal .modal-content{
-      background: color-mix(in oklab, var(--surface,#1a1a1a) 92%, transparent);
-      border:1px solid var(--border,#333); border-radius:12px; padding:16px; width: 320px;
-      color: var(--text,#f5f5f5);
-    }
-    .modal .modal-actions{ display:flex; gap:.5rem; justify-content:flex-end; margin-top:.6rem; }
   </style>
 </head>
 <body class="login-body">
@@ -115,10 +82,8 @@
       <form id="loginForm" autocomplete="on" novalidate>
         <label for="email">Correo</label>
         <input type="email" id="email" autocomplete="username" placeholder="tu@correo.com" required />
-
         <label for="password">Contraseña</label>
         <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required />
-
         <button type="submit" class="submit-btn">Ingresar</button>
       </form>
 
@@ -131,118 +96,31 @@
     </div>
   </main>
 
-  <!-- Modal Reset -->
-  <div id="modalReset" class="modal" role="dialog" aria-hidden="true" aria-labelledby="resetTitle">
-    <div class="modal-content">
-      <h3 id="resetTitle">Recuperar contraseña</h3>
-      <input type="email" id="resetEmail" placeholder="Ingresa tu correo" />
-      <div class="modal-actions">
-        <button id="sendReset" class="btn-ghost">Enviar enlace</button>
-        <button id="closeModalBtn" class="btn-ghost">Cerrar</button>
-      </div>
-      <p id="resetMessage" role="alert" aria-live="polite"></p>
-    </div>
-  </div>
-
+  <script src="api.js/login.js"></script>
   <script>
-  (function(){
+  (()=>{
     'use strict';
 
-    // Preferencias de movimiento
-    const video = document.getElementById('video-fondo');
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches && video) video.pause();
+    const form = document.getElementById('loginForm');
+    const msg  = document.getElementById('loginMessage');
+    const resetBtn = document.getElementById('resetPassBtn');
 
-    // Instancias Firebase (compatibles con tu config)
-    const auth = (window.CARITAS && window.CARITAS.auth) || (window.firebase && firebase.auth && firebase.auth());
-    const db   = (window.CARITAS && window.CARITAS.db)   || (window.firebase && firebase.firestore && firebase.firestore());
-
-    const loginForm = document.getElementById('loginForm');
-    const loginMsg  = document.getElementById('loginMessage');
-
-    function setMsg(t, cls){
-      loginMsg.textContent = t || '';
-      loginMsg.classList.remove('error','success');
-      if (cls) loginMsg.classList.add(cls);
+    function setMsg(text, type){
+      msg.textContent = text || '';
+      msg.classList.remove('error','success');
+      if (type) msg.classList.add(type);
     }
-
-    function saveUser(u, rol){
-      localStorage.setItem('caritasUser', JSON.stringify({ email: u.email, uid: u.uid, rol: rol || 'voluntario' }));
-    }
-
-    // Submit login
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      setMsg('', '');
-      if (!auth){ setMsg('Firebase no inicializado.', 'error'); return; }
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      if (!email || !password){ setMsg('Completa email y contraseña.','error'); return; }
-
-      try{
-        const { user } = await auth.signInWithEmailAndPassword(email, password);
-
-        // Leer rol (opcional) desde Firestore si existe
-        let rol = 'voluntario';
-        if (db){
-          try{
-            const snap = await db.collection('usuarios').doc(user.uid).get();
-            rol = snap.exists ? (snap.data().rol || 'voluntario') : 'voluntario';
-          }catch{}
-        }
-        saveUser(user, rol);
-        setMsg('✔ Acceso concedido. Redirigiendo…', 'success');
-
-        // Redirección priorizando "caritas:next"
-        setTimeout(() => {
-          const next = sessionStorage.getItem('caritas:next');
-          if (next){ sessionStorage.removeItem('caritas:next'); location.href = 'index.html' + next; return; }
-          // Por rol (admin→index, editor→familias, resto→carnet)
-          if (rol === 'admin') location.href = 'index.html';
-          else if (rol === 'editor') location.href = 'familias-listado.html';
-          else location.href = 'carnet.html';
-        }, 900);
-      }catch(err){
-        console.error(err);
-        const msg = (err.code === 'auth/network-request-failed')
-          ? 'Error de red. Verifica tu conexión.'
-          : 'Usuario o contraseña incorrectos.';
-        setMsg('❌ ' + msg, 'error');
-      }
-    });
 
     // Reset password
-    const modal = document.getElementById('modalReset');
-    const resetBtn = document.getElementById('resetPassBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const sendResetBtn = document.getElementById('sendReset');
-    const resetMsg = document.getElementById('resetMessage');
-
-    function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
-    function setResetMsg(t, cls){
-      resetMsg.textContent = t || '';
-      resetMsg.classList.remove('error','success');
-      if (cls) resetMsg.classList.add(cls);
-    }
-
-    resetBtn.addEventListener('click', () => {
-      modal.style.display='flex'; modal.setAttribute('aria-hidden','false');
-      setResetMsg('', ''); document.getElementById('resetEmail').value = '';
-    });
-    closeModalBtn.addEventListener('click', closeModal);
-    window.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
-    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
-
-    sendResetBtn.addEventListener('click', async () => {
-      const email = document.getElementById('resetEmail').value.trim();
-      setResetMsg('', '');
-      if (!email){ setResetMsg('Ingresa un correo.','error'); return; }
-      try {
-        await auth.sendPasswordResetEmail(email);
-        setResetMsg('📩 Si el correo existe, se envió el enlace.','success');
-      } catch(err){
-        console.error(err);
-        setResetMsg('❌ No se pudo enviar el correo.','error');
+    resetBtn.addEventListener('click', async ()=>{
+      const email = prompt('Ingresa tu correo para restablecer la contraseña:');
+      if (!email) return;
+      try{
+        await window.CARITAS?.auth?.sendPasswordResetEmail(email);
+        setMsg('📩 Si el correo existe, se envió un enlace de recuperación.','success');
+      }catch(e){
+        console.error(e);
+        setMsg('❌ No se pudo enviar el correo.','error');
       }
     });
   })();

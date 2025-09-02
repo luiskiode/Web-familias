@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="api.js/firebase-config-caritas.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="api.js/supabase-config-caritas.js"></script>
+
+  <style>
+    main { max-width: 500px; margin: 2rem auto; padding:1.5rem; background:#fff;
+           border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.1); }
+    label { display:block; margin:.5rem 0; }
+    input { width:100%; padding:.5rem; margin-top:.25rem; }
+    button { margin-top:1rem; padding:.6rem 1rem; cursor:pointer; }
+    #regMsg { margin-top:1rem; font-weight:bold; }
+    .success{color:green}.error{color:#b91c1c}
+  </style>
+</head>
+<body>
+  <main>
+    <h2>📝 Crear cuenta Cáritas CNC</h2>
+    <form id="registerForm">
+      <label>Email:
+        <input type="email" id="regEmail" required>
+      </label>
+      <label>Contraseña:
+        <input type="password" id="regPass" required minlength="6">
+      </label>
+      <button type="submit">✅ Registrarme</button>
+    </form>
+    <p id="regMsg"></p>
+  </main>
+
+  <script>
+  (()=>{
+    'use strict';
+
+    const form = document.getElementById('registerForm');
+    const msg  = document.getElementById('regMsg');
+    const supabase = window.CARITAS?.supabase;
+    const auth     = window.CARITAS?.auth;
+
+    function setMsg(text,type){
+      msg.textContent=text||''; msg.className=type||'';
+    }
+
+    function generarCodigo(){
+      return Math.random().toString(36).substring(2,8).toUpperCase();
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = regEmail.value.trim();
+      const pass  = regPass.value;
+
+      if(!email || !pass){ setMsg('❌ Completa todos los campos','error'); return; }
+
+      try{
+        // 1. Crear en Firebase
+        const userCred = await auth.createUserWithEmailAndPassword(email,pass);
+        const user = userCred.user;
+
+        // 2. Insertar en Supabase
+        const nombre = email.split('@')[0];
+        const { error } = await supabase.from('credenciales').insert({
+          uid: user.uid,
+          email: user.email,
+          nombre,
+          codigo: generarCodigo(),
+          creado_en: new Date().toISOString()
+        });
+        if(error) throw error;
+
+        // 3. Guardar en localStorage
+        localStorage.setItem('caritasUser', JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          nombre,
+          rol: 'voluntario'
+        }));
+
+        setMsg('✅ Cuenta creada, redirigiendo…','success');
+        setTimeout(()=> location.href='index.html',1200);
+
+      }catch(err){
+        console.error('Registro error:',err);
+        setMsg('❌ '+(err.message||'Error en el registro'),'error');
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
