@@ -5,7 +5,7 @@
   const app = document.getElementById('app');
   const nav = document.getElementById('main-nav');
 
- const ROUTES = new Set([
+const ROUTES = new Set([
   'inicio',
   'registro-fam',
   'perfil',
@@ -13,7 +13,10 @@
   'listado',
   'carnet',
   'credencial',
-  'credenciales-admin'
+  'credenciales-admin',
+  'terminos',
+  'validar',
+  'validar-direccion'
 ]);
 
 // Protegidas → solo con login
@@ -24,6 +27,7 @@ const PROTECTED = new Set([
   'listado',
   'carnet',
   'credenciales-admin'
+  // Ojo: "terminos" y "validar" mejor dejarlos públicos
 ]);
 
 // Carpetas donde buscar vistas
@@ -38,8 +42,12 @@ const TITLES = {
   'listado':             'Listado de Familias — Cáritas CNC',
   'carnet':              'Carnet Personal — Cáritas CNC',
   'credencial':          'Credencial Pública — Cáritas CNC',
-  'credenciales-admin':  'Gestión de Credenciales — Cáritas CNC'
+  'credenciales-admin':  'Gestión de Credenciales — Cáritas CNC',
+  'terminos':            'Términos y Condiciones — Cáritas CNC',
+  'validar':             'Validar Datos — Cáritas CNC',
+  'validar-direccion':   'Validar Dirección — Cáritas CNC'
 };
+
 
   let currentView = null;
   let inFlight = null;
