@@ -5,15 +5,16 @@
   const app = document.getElementById('app');
   const nav = document.getElementById('main-nav');
 
-  const ROUTES = new Set(['inicio', 'registro-fam', 'perfil', 'servicios']);
+ const ROUTES = new Set(['inicio', 'registro-fam', 'perfil', 'servicios', 'listado']);
   const PROTECTED = new Set(['perfil', 'servicios', 'registro-fam']); // ← protegido
 
   const BASE_PATHS = ['pestanas', 'pestañas'];
   const TITLES = {
-    'inicio':        'Inicio — Cáritas CNC',
-    'registro-fam':  'Registro de Familias — Cáritas CNC',
-    'perfil':        'Mi Perfil — Cáritas CNC',
-    'servicios':     'Servicios — Cáritas CNC'
+  'inicio':        'Inicio — Cáritas CNC',
+  'registro-fam':  'Registro de Familias — Cáritas CNC',
+  'perfil':        'Mi Perfil — Cáritas CNC',
+  'servicios':     'Servicios — Cáritas CNC',
+  'listado':       'Listado de Familias — Cáritas CNC'
   };
 
   let currentView = null;
