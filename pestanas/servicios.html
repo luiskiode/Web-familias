@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🛠️ Servicios — Cáritas CNC</title>
+  <link rel="stylesheet" href="../styles-caritas.css" />
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- Chart.js para estadísticas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../api.js/supabase-config-caritas.js"></script>
+
+<!-- Módulos -->
+<script src="../api.js/notificaciones.js" defer></script>
+<script src="../api.js/pendientes.js" defer></script>
+<script src="../api.js/calendario.js" defer></script>
+  <style>
+    body { padding: 1rem; }
+    header { text-align: center; margin-bottom: 1rem; }
+    .acciones-rapidas { display:flex; gap:1rem; justify-content:center; margin-bottom:1.5rem; }
+    .acciones-rapidas .btn { padding:0.6rem 1rem; border-radius:8px; background:#b91c1c; color:#fff; text-decoration:none; }
+    .acciones-rapidas .btn:hover { background:#a4161a; }
+    #estadisticas { max-width:600px; margin:2rem auto; display:none; }
+    #msg { text-align:center; margin:1rem; }
+    .contenedor { display:grid; grid-template-columns: 2fr 1fr; gap:1rem; }
+    #calendar { background:#fff; border-radius:8px; padding:0.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    #pendientes { background:#fff; border-radius:8px; padding:0.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ Servicios Cáritas CNC</h1>
+  </header>
+
+  <!-- Acciones rápidas -->
+  <div class="acciones-rapidas">
+    <a href="https://drive.google.com/drive/my-drive" target="_blank" class="btn">📂 Acceso a Drive</a>
+    <button id="btnEstadisticas" class="btn">📊 Ver Estadísticas</button>
+  </div>
+
+  <div id="msg"></div>
+
+  <!-- Calendario + Pendientes -->
+  <div class="contenedor">
+    <div id="calendar"></div>
+    <div id="pendientes">
+      <h3>📌 Pendientes</h3>
+      <ul id="listaPendientes"></ul>
+      <form id="formPendiente">
+        <input type="text" id="descPendiente" placeholder="Descripción" required>
+        <input type="date" id="fechaPendiente" required>
+        <button type="submit">➕ Agregar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div id="estadisticas" class="card">
+    <h3>📊 Estadísticas de Familias (según observaciones)</h3>
+    <canvas id="chartCasuisticas"></canvas>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  console.log("✅ [Servicios] cargado");
+
+  const supabase = window.CARITAS?.supabase;
+  const msg = document.getElementById("msg");
+  const btnEstadisticas = document.getElementById("btnEstadisticas");
+  const estadisticasDiv = document.getElementById("estadisticas");
+  const ctx = document.getElementById("chartCasuisticas");
+
+  function showMsg(text,type="info"){
+    msg.textContent=text;
+    msg.className=type;
+    setTimeout(()=>{ msg.textContent=""; msg.className=""; },4000);
+  }
+
+  // =========================
+  // 📌 Pendientes
+  // =========================
+  const listaPendientes = document.getElementById("listaPendientes");
+  const formPendiente = document.getElementById("formPendiente");
+
+  async function cargarPendientes(){
+    const { data, error } = await supabase.from("pendientes")
+      .select("*")
+      .order("fecha",{ascending:true});
+    if(error){ console.error(error); return; }
+    listaPendientes.innerHTML="";
+    data.forEach(p=>{
+      const li=document.createElement("li");
+      li.textContent=`${p.descripcion} (${p.fecha}) ${p.estado?"✔️":"⏳"}`;
+      listaPendientes.appendChild(li);
+    });
+  }
+
+  formPendiente.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const desc=document.getElementById("descPendiente").value.trim();
+    const fecha=document.getElementById("fechaPendiente").value;
+    try{
+      const { error } = await supabase.from("pendientes").insert({
+        descripcion:desc, fecha:fecha, estado:false
+      });
+      if(error) throw error;
+      showMsg("✅ Pendiente agregado","success");
+      enviarNotificacion("Nuevo pendiente",desc);
+      formPendiente.reset();
+      cargarPendientes();
+      cargarEventos(); // recargar calendario
+    }catch(err){
+      console.error(err);
+      showMsg("❌ Error al agregar pendiente","error");
+    }
+  });
+
+  // =========================
+  // 📅 Calendario (FullCalendar)
+  // =========================
+  let calendar;
+  function initCalendar(){
+    const el=document.getElementById("calendar");
+    calendar = new FullCalendar.Calendar(el,{
+      initialView:"dayGridMonth",
+      events: cargarEventos,
+      dateClick: function(info){
+        document.getElementById("fechaPendiente").value = info.dateStr;
+      }
+    });
+    calendar.render();
+  }
+
+  async function cargarEventos(fetchInfo, successCallback, failureCallback){
+    try{
+      const { data, error } = await supabase.from("pendientes")
+        .select("id, descripcion, fecha, estado");
+      if(error) throw error;
+
+      const eventos = data.map(p=>({
+        id: p.id,
+        title: (p.estado ? "✔️ " : "⏳ ") + p.descripcion,
+        start: p.fecha,
+        allDay: true,
+        color: p.estado ? "green" : "orange"
+      }));
+      successCallback(eventos);
+    }catch(err){
+      console.error("❌ Error cargando eventos:",err);
+      if(failureCallback) failureCallback(err);
+    }
+  }
+
+  // =========================
+  // 📊 Estadísticas
+  // =========================
+  let chartInstance=null;
+  async function cargarEstadisticas(){
+    showMsg("⏳ Procesando casuísticas...","info");
+    const { data, error } = await supabase.from("familias")
+      .select("observaciones");
+    if(error){ console.error(error); return; }
+
+    // Clasificación automática por palabras clave
+    const categorias = {
+      "Ayuda alimentaria": /alimento|comida|víveres|hambre/i,
+      "Asistencia médica": /salud|medico|hospital|enfermedad|doctor/i,
+      "Trabajo y economía": /trabajo|empleo|dinero|economía/i,
+      "Acompañamiento espiritual": /espiritual|iglesia|oración|misa/i,
+      "Otros": /.*/
+    };
+    const conteo = {};
+    data.forEach(f=>{
+      const obs = f.observaciones || "";
+      let encontrada = "Otros";
+      for(const [cat,regex] of Object.entries(categorias)){
+        if(regex.test(obs)){ encontrada=cat; break; }
+      }
+      conteo[encontrada] = (conteo[encontrada]||0)+1;
+    });
+
+    // Crear gráfico
+    if(chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx,{
+      type:"pie",
+      data:{
+        labels:Object.keys(conteo),
+        datasets:[{
+          data:Object.values(conteo),
+          backgroundColor:["#e11d48","#2563eb","#16a34a","#9333ea","#6b7280"]
+        }]
+      }
+    });
+
+    estadisticasDiv.style.display="block";
+    showMsg("✅ Estadísticas generadas","success");
+  }
+
+  btnEstadisticas.addEventListener("click", cargarEstadisticas);
+
+  // =========================
+  // 🚀 Inicialización
+  // =========================
+  initCalendar();
+  cargarPendientes();
+});
+</script>
+</body>
+</html>
