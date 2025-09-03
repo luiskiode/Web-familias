@@ -5,17 +5,41 @@
   const app = document.getElementById('app');
   const nav = document.getElementById('main-nav');
 
- const ROUTES = new Set(['inicio', 'registro-fam', 'perfil', 'servicios', 'listado']);
-  const PROTECTED = new Set(['perfil', 'servicios', 'registro-fam']); // ← protegido
+ const ROUTES = new Set([
+  'inicio',
+  'registro-fam',
+  'perfil',
+  'servicios',
+  'listado',
+  'carnet',
+  'credencial',
+  'credenciales-admin'
+]);
 
-  const BASE_PATHS = ['pestanas', 'pestañas'];
-  const TITLES = {
-  'inicio':        'Inicio — Cáritas CNC',
-  'registro-fam':  'Registro de Familias — Cáritas CNC',
-  'perfil':        'Mi Perfil — Cáritas CNC',
-  'servicios':     'Servicios — Cáritas CNC',
-  'listado':       'Listado de Familias — Cáritas CNC'
-  };
+// Protegidas → solo con login
+const PROTECTED = new Set([
+  'perfil',
+  'servicios',
+  'registro-fam',
+  'listado',
+  'carnet',
+  'credenciales-admin'
+]);
+
+// Carpetas donde buscar vistas
+const BASE_PATHS = ['pestanas', 'pestañas'];
+
+// Títulos de cada pestaña
+const TITLES = {
+  'inicio':              'Inicio — Cáritas CNC',
+  'registro-fam':        'Registro de Familias — Cáritas CNC',
+  'perfil':              'Mi Perfil — Cáritas CNC',
+  'servicios':           'Servicios — Cáritas CNC',
+  'listado':             'Listado de Familias — Cáritas CNC',
+  'carnet':              'Carnet Personal — Cáritas CNC',
+  'credencial':          'Credencial Pública — Cáritas CNC',
+  'credenciales-admin':  'Gestión de Credenciales — Cáritas CNC'
+};
 
   let currentView = null;
   let inFlight = null;
