@@ -1,0 +1,145 @@
+/* =========================
+   🎨 STYLES-CARITAS.CSS
+   CSS global unificado
+   ========================= */
+
+/* 🎨 Paleta de colores Cáritas CNC */
+:root {
+  --primary: #b91c1c;  /* rojo principal */
+  --bg: #0a0a0a;       /* fondo negro */
+  --text: #f5f5f5;     /* texto claro */
+  --border: #444;      /* bordes grises */
+  --muted: #888;       /* texto apagado */
+  --surface: #1e1e1e;  /* fondo de tarjetas */
+  --surface-2: #2a2a2a;
+}
+
+/* Reset básico */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  font-family: 'Poppins', Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+}
+
+/* 🎥 Fondo de video */
+#video-fondo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;              /* 👈 siempre al fondo */
+  opacity: 0.25;           /* visible pero no molesta */
+  pointer-events: none;    /* 👈 no bloquea clics */
+}
+
+/* Asegurar que todo el contenido quede encima del fondo */
+.card, header, nav, footer, main, section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Estructura básica */
+header {
+  background: var(--surface-2);
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+main.container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: auto;
+}
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+
+/* Textos */
+h1,h2,h3,h4 { font-weight:600; margin-bottom:.5rem; }
+p { margin-bottom:.5rem; line-height:1.4; }
+a { color: var(--primary); text-decoration:none; }
+a:hover { text-decoration: underline; }
+
+/* Botones */
+button, .btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-flex;     
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.2s;
+}
+button:hover, .btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--primary); }
+
+/* Formularios */
+input, select, textarea {
+  width: 100%;
+  padding: .6rem;
+  margin:.3rem 0 1rem;
+  border-radius: 6px;
+  border:1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+label { font-size:.9rem; margin-bottom:.2rem; display:block; }
+input[type="checkbox"] { width:auto; margin-right:.4rem; }
+
+/* Tablas */
+table { width:100%; border-collapse: collapse; margin-top:1rem; }
+th, td { padding:.6rem; border:1px solid var(--border); text-align:left; }
+th { background: var(--surface-2); }
+
+/* Perfíl y credencial */
+.perfil-card, .credencial-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding:1rem;
+}
+.perfil-left img,
+.credencial-card img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--primary);
+}
+.perfil-center { flex:1; }
+.perfil-right { }
+
+/* Pills (roles, estados) */
+.pill {
+  background: var(--surface-2);
+  padding:.3rem .6rem;
+  border-radius:999px;
+  font-size:.8rem;
+  font-weight:500;
+}
+
+/* Utilidades */
+.success { color:#16a34a; }
+.error { color:#dc2626; }
+.info { color:#2563eb; }
