@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Familias — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="api.js/supabase-config-caritas.js"></script>
+</head>
+<body>
+  <main class="container card" style="max-width:700px;">
+    <h2>
+      Formulario de <a href="familias-list.html" target="_blank">Registro</a>
+    </h2>
+    <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
+
+    <form id="famForm" enctype="multipart/form-data">
+      <label>Nombre y apellidos del solicitante:</label>
+      <input type="text" id="nombres_apellidos" required>
+
+      <label>DNI del solicitante:</label>
+      <input type="text" id="dni_solicitante" required>
+
+      <label>Apellido de la familia:</label>
+      <input type="text" id="apellido_familia" required>
+
+      <label>Fecha de registro de solicitud de ayuda:</label>
+      <input type="date" id="fecha_registro" required>
+
+      <label>Teléfono de contacto:</label>
+      <input type="tel" id="telefono_contacto" required>
+
+      <label>Observaciones:</label>
+      <textarea id="observaciones" rows="4" required></textarea>
+
+      <label>Dirección de la familia:</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="direccion" placeholder="Ej: Calle 123, Ciudad" required style="flex:1">
+        <button type="button" id="btnValidar" class="btn-ghost">📍 Validar dirección</button>
+      </div>
+
+      <label>Subir archivo de registro:</label>
+      <input type="file" id="archivo" accept=".pdf,.doc,.docx">
+
+      <label style="display:flex;align-items:center;gap:.4rem;margin-top:10px">
+        <input type="checkbox" id="acceptTerms" required>
+        Acepto <a href="terminos.html" target="_blank">términos y condiciones</a>
+      </label>
+
+      <button type="submit" class="btn">✅ Registrar familia</button>
+    </form>
+    <p id="famMsg" style="margin-top:1rem;"></p>
+  </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  console.log("✅ [Registro Familias] pestaña cargada");
+  console.log("🔌 Supabase conectado:", !!window.CARITAS?.supabase);
+
+  const form = document.getElementById('famForm');
+  const msg = document.getElementById('famMsg');
+  const btnValidar = document.getElementById('btnValidar');
+
+  function showMsg(text,type="info"){
+    msg.textContent=text;
+    msg.className=type;
+    setTimeout(()=>{ msg.textContent=""; },4000);
+  }
+
+  // Abrir mapa en pestaña aparte
+  btnValidar.addEventListener('click', ()=>{
+    const dir = document.getElementById('direccion').value.trim();
+    if(!dir){ showMsg("⚠️ Ingrese la dirección primero","error"); return; }
+    const url = `validar-direccion.html?dir=${encodeURIComponent(dir)}`;
+    console.log("🗺️ Validando dirección:", dir);
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  // Guardar familia
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    msg.textContent='';
+
+    const nombres_apellidos = document.getElementById('nombres_apellidos').value.trim();
+    const dni_solicitante = document.getElementById('dni_solicitante').value.trim();
+    const apellido_familia = document.getElementById('apellido_familia').value.trim();
+    const fecha_registro = document.getElementById('fecha_registro').value;
+    const telefono_contacto = document.getElementById('telefono_contacto').value.trim();
+    const observaciones = document.getElementById('observaciones').value.trim();
+    const direccion = document.getElementById('direccion').value.trim();
+    const archivo = document.getElementById('archivo').files[0];
+
+    if(!acceptTerms.checked){
+      showMsg("⚠️ Debes aceptar los términos.","error");
+      console.warn("⚠️ Intento de registro sin aceptar términos");
+      return;
+    }
+
+    try{
+      let archivo_url = null;
+      if(archivo){
+        console.log("📤 Subiendo archivo:", archivo.name);
+        const { data, error: upErr } = await window.CARITAS.supabase.storage
+          .from('familias-files')
+          .upload(`${Date.now()}_${archivo.name}`, archivo);
+        if(upErr) throw upErr;
+        archivo_url = data.path;
+        console.log("✅ Archivo subido a storage:", archivo_url);
+      }
+
+      console.log("📤 Insertando familia en Supabase...");
+      const { error } = await window.CARITAS.supabase.from('familias').insert({
+        nombres_apellidos, dni_solicitante, apellido_familia, fecha_registro,
+        telefono_contacto, observaciones, direccion, archivo_url,
+        visitada: false, creado_en: new Date().toISOString()
+      });
+      if(error) throw error;
+
+      showMsg("✅ Familia registrada correctamente","success");
+      console.log("✅ Familia registrada correctamente en Supabase");
+      form.reset();
+
+    }catch(err){
+      console.error("❌ Error al registrar familia:", err);
+      showMsg("❌ Error al registrar familia","error");
+    }
+  });
+});
+</script>
+</body>
+</html>
