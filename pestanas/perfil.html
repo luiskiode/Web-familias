@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>👤 Mi Perfil / Credencial — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css">
+
+  <!-- QR -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="../api.js/firebase-config-caritas.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="api.js/supabase-config-caritas.js"></script>
+</head>
+<body>
+  <h1>👤 Mi Perfil / Credencial</h1>
+
+  <!-- Card de perfil -->
+  <div class="perfil-card card" id="perfilCard">
+    <div class="perfil-left">
+      <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil">
+    </div>
+    <div class="perfil-center">
+      <h2 id="nombrePerfil">—</h2>
+      <p id="emailPerfil">—</p>
+      <span id="rolPerfil" class="pill">Voluntario Cáritas CNC</span>
+      <p class="codigo">Código: <span id="codigoPerfil">—</span></p>
+      <div class="acciones">
+        <button id="btnEditar">✏️ Editar</button>
+        <button id="btnCopiar">🔗 Copiar enlace</button>
+        <button id="btnDescargar">⬇️ Descargar QR</button>
+        <button id="btnLogout">🔒 Cerrar sesión</button>
+      </div>
+    </div>
+    <div class="perfil-right">
+      <canvas id="qrCanvas" width="140" height="140"></canvas>
+    </div>
+  </div>
+
+  <!-- Formulario de edición -->
+  <form id="formEditar" class="card" style="display:none;">
+    <h3>Editar perfil</h3>
+    <input type="text" id="editNombre" placeholder="Nombre completo" required>
+    <select id="editRol">
+      <option value="Voluntario Cáritas CNC">Voluntario Cáritas CNC</option>
+      <option value="Administrador">Administrador</option>
+    </select>
+    <input type="file" id="editFoto" accept="image/*">
+    <div class="acciones">
+      <button type="submit">💾 Guardar cambios</button>
+      <button type="button" id="btnCancelar">❌ Cancelar</button>
+    </div>
+  </form>
+
+  <div id="msg" class="msg"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  const auth = window.CARITAS?.auth;
+  const supabase = window.CARITAS?.supabase;
+  const msgBox = document.getElementById("msg");
+
+  if(!auth || !supabase){
+    console.error("❌ Firebase o Supabase no inicializados");
+    return;
+  }
+
+  // Mensajes de estado
+  function showMsg(text,type="info"){
+    msgBox.textContent=text;
+    msgBox.className="msg "+type;
+    setTimeout(()=>{ msgBox.textContent=""; msgBox.className="msg"; },4000);
+  }
+
+  const esc = s => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+
+  // Asegurar credencial
+  async function ensureCredencial(user){
+    const { data, error } = await supabase.from("credenciales")
+      .select("*").eq("user_id", user.uid).maybeSingle();
+
+    if(error){ console.error(error); return null; }
+
+    if(!data){
+      const base = {
+        user_id: user.uid,
+        email: user.email,
+        nombre: user.displayName || user.email.split("@")[0],
+        rol: "Voluntario Cáritas CNC",
+        codigo_verificacion: user.uid.substring(0,8).toUpperCase()
+      };
+      const { data: inserted, error: insErr } = await supabase
+        .from("credenciales")
+        .insert(base, { onConflict:"user_id" })
+        .select().single();
+      if(insErr){ console.error(insErr); return null; }
+      return inserted;
+    }
+    return data;
+  }
+
+  // Cargar perfil
+  async function cargarPerfil(user){
+    const data = await ensureCredencial(user);
+    if(!data) return;
+
+    document.getElementById("nombrePerfil").textContent = esc(data.nombre);
+    document.getElementById("emailPerfil").textContent = esc(data.email);
+    document.getElementById("rolPerfil").textContent = esc(data.rol);
+    document.getElementById("codigoPerfil").textContent = esc(data.codigo_verificacion);
+    document.getElementById("fotoPerfil").src = data.foto_url || 
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
+
+    QRCode.toCanvas(
+      document.getElementById("qrCanvas"),
+      `${location.origin}/credencial.html?id=${encodeURIComponent(user.uid)}`
+    );
+  }
+
+  // Auth
+  auth.onAuthStateChanged(user=>{
+    if(!user){ 
+      location.href="login.html"; 
+      return; 
+    }
+    cargarPerfil(user);
+  });
+
+  // Editar
+  document.getElementById("btnEditar").addEventListener("click", ()=>{
+    document.getElementById("perfilCard").style.display="none";
+    document.getElementById("formEditar").style.display="block";
+  });
+
+  document.getElementById("btnCancelar").addEventListener("click", ()=>{
+    document.getElementById("formEditar").reset();
+    document.getElementById("formEditar").style.display="none";
+    document.getElementById("perfilCard").style.display="flex";
+  });
+
+  // Guardar cambios
+  document.getElementById("formEditar").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const user = auth.currentUser;
+    if(!user) return;
+
+    const nuevoNombre=document.getElementById("editNombre").value.trim();
+    const nuevoRol=document.getElementById("editRol").value;
+    const fotoFile=document.getElementById("editFoto").files[0];
+    let fotoUrl;
+
+    try{
+      if(fotoFile){
+        const filePath=`${user.uid}/${Date.now()}_${fotoFile.name}`;
+        const { error: upErr } = await supabase.storage.from("credenciales-fotos")
+          .upload(filePath,fotoFile,{upsert:true});
+        if(upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from("credenciales-fotos").getPublicUrl(filePath);
+        fotoUrl=urlData?.publicUrl;
+      }
+
+      await supabase.from("credenciales").update({
+        nombre:nuevoNombre,
+        rol:nuevoRol,
+        ...(fotoUrl && { foto_url:fotoUrl })
+      }).eq("user_id",user.uid);
+
+      showMsg("✅ Perfil actualizado","success");
+      document.getElementById("formEditar").style.display="none";
+      document.getElementById("perfilCard").style.display="flex";
+      cargarPerfil(user);
+    }catch(err){
+      console.error(err);
+      showMsg("❌ Error al actualizar perfil","error");
+    }
+  });
+
+  // Copiar enlace
+  document.getElementById("btnCopiar").addEventListener("click", ()=>{
+    const uid=auth.currentUser?.uid;
+    if(!uid) return;
+    const url=`${location.origin}/credencial.html?id=${encodeURIComponent(uid)}`;
+    navigator.clipboard.writeText(url).then(()=> showMsg("🔗 Enlace copiado","success"));
+  });
+
+  // Descargar QR
+  document.getElementById("btnDescargar").addEventListener("click", ()=>{
+    const canvas=document.getElementById("qrCanvas");
+    if(!canvas) return;
+    const link=document.createElement("a");
+    link.download="credencial-qr.png";
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+  });
+
+  // Logout
+  document.getElementById("btnLogout").addEventListener("click", ()=>{
+    auth.signOut().then(()=>{
+      localStorage.removeItem("caritasUser");
+      location.href="login.html";
+    });
+  });
+});
+</script>
+</body>
+</html>

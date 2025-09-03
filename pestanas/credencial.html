@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🎟️ Credencial — Cáritas CNC</title>
+  <link rel="stylesheet" href="styles-caritas.css">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="api.js/supabase-config-caritas.js"></script>
+</head>
+<body>
+  <header class="container" style="text-align:center;margin:1rem auto;">
+    <h1>🎟️ Credencial</h1>
+    <a href="index.html" class="btn-ghost">← Volver al inicio</a>
+  </header>
+
+  <main class="container" style="max-width:500px;">
+    <div class="card credencial-card" id="credCard" style="display:none;flex-direction:column;align-items:center;text-align:center;">
+      <img id="fotoPerfil" src="img/avatar-placeholder.png" alt="Foto de perfil" class="foto">
+      <h2 id="nombrePerfil">—</h2>
+      <p id="emailPerfil">—</p>
+      <span id="rolPerfil" class="pill">—</span>
+      <p class="codigo">Código: <span id="codigoPerfil">—</span></p>
+    </div>
+
+    <div id="notFound" class="card error" style="display:none;text-align:center;">
+      <p id="notFoundMsg">❌ Credencial no encontrada</p>
+    </div>
+  </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const supabase = window.CARITAS?.supabase;
+  const uid = new URLSearchParams(window.location.search).get("id");
+
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+
+  const credCard = document.getElementById("credCard");
+  const notFound = document.getElementById("notFound");
+  const notFoundMsg = document.getElementById("notFoundMsg");
+
+  if(!supabase){
+    notFound.style.display="block";
+    notFoundMsg.textContent="❌ Error: Supabase no inicializado.";
+    return;
+  }
+  if(!uid){
+    notFound.style.display="block";
+    notFoundMsg.textContent="⚠️ No se proporcionó ID de usuario.";
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase.from("credenciales").select("*").eq("user_id", uid).single();
+    if(error || !data){
+      notFound.style.display="block";
+      notFoundMsg.textContent="❌ Credencial no encontrada.";
+      return;
+    }
+
+    credCard.style.display="flex";
+    document.getElementById("nombrePerfil").textContent = esc(data.nombre) || "Usuario";
+    document.getElementById("emailPerfil").textContent = esc(data.email) || "";
+    document.getElementById("rolPerfil").textContent = esc(data.rol) || "Voluntario Cáritas CNC";
+    document.getElementById("codigoPerfil").textContent = esc(data.codigo_verificacion) || uid.substring(0,8).toUpperCase();
+    document.getElementById("fotoPerfil").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre||'U')}&background=111&color=fff`;
+  } catch(err){
+    console.error(err);
+    notFound.style.display="block";
+    notFoundMsg.textContent="❌ Error cargando credencial.";
+  }
+});
+</script>
+</body>
+</html>
