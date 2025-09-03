@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>👨‍👩‍👧 Familias — Cáritas CNC</title>
   <link rel="stylesheet" href="styles-caritas.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="api.js/supabase-config-caritas.js"></script>
 </head>
 <body>
@@ -40,6 +41,9 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", ()=>{
+  console.log("✅ [Listado Familias] pestaña cargada");
+  console.log("🔌 Supabase conectado:", !!window.CARITAS?.supabase);
+
   const tabla = document.querySelector("#familiasTable tbody");
   const cambios = new Map();
   const msg = document.getElementById("msg");
@@ -49,6 +53,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   function showMsg(text, type="info"){
     msg.textContent = text;
     msg.className = type;
+    console.log(`[MSG-${type}]`, text);
     setTimeout(()=>{ msg.textContent=""; }, 4000);
   }
 
@@ -57,6 +62,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   );
 
   async function cargarFamilias(){
+    console.log("🔍 Cargando familias, página:", page);
     try {
       const start = page * pageSize;
       const end = start + pageSize - 1;
@@ -71,9 +77,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
       if(error) throw error;
       if(!data || data.length===0){
         tabla.innerHTML = "<tr><td colspan='6'>Sin registros</td></tr>";
+        console.warn("⚠️ No se encontraron registros");
         return;
       }
 
+      console.log("✅ Familias cargadas:", data.length);
       data.forEach(fam=>{
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -86,13 +94,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
         tabla.appendChild(tr);
       });
     }catch(err){
-      console.error(err);
+      console.error("❌ Error cargando familias:", err);
       tabla.innerHTML = "<tr><td colspan='6'>Error al cargar datos</td></tr>";
     }
   }
 
   // Guardar cambios visitada
   document.getElementById("guardarCambios").addEventListener("click", async ()=>{
+    console.log("💾 Guardando cambios visitada:", cambios.size);
     try{
       for(const [id,v] of cambios){
         await window.CARITAS.supabase.from("familias").update({visitada:v}).eq("id",id);
@@ -101,6 +110,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
       cambios.clear();
       cargarFamilias();
     }catch(err){
+      console.error("❌ Error guardando cambios:", err);
       showMsg("❌ Error guardando cambios","error");
     }
   });
@@ -109,6 +119,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("familiasTable").addEventListener("change", e=>{
     if(e.target.type==="checkbox"){
       cambios.set(e.target.dataset.id,e.target.checked);
+      console.log("✏️ Cambio marcado:", e.target.dataset.id, "->", e.target.checked);
     }
   });
 
@@ -116,11 +127,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
   document.getElementById("familiasTable").addEventListener("click", async e=>{
     if(e.target.dataset.del){
       if(confirm("¿Eliminar familia?")){
+        console.log("🗑️ Eliminando familia:", e.target.dataset.del);
         try{
           await window.CARITAS.supabase.from("familias").delete().eq("id",e.target.dataset.del);
           showMsg("🗑️ Familia eliminada","success");
           cargarFamilias();
-        }catch{
+        }catch(err){
+          console.error("❌ Error eliminando familia:", err);
           showMsg("❌ Error eliminando familia","error");
         }
       }
@@ -139,5 +152,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
 });
 </script>
 </body>
-
 </html>
