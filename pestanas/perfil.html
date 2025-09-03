@@ -18,7 +18,8 @@
 <body>
   <h1>👤 Mi Perfil / Credencial</h1>
 
-  <div class="perfil-card card">
+  <!-- Card de perfil -->
+  <div class="perfil-card card" id="perfilCard">
     <div class="perfil-left">
       <img id="fotoPerfil" src="../img/avatar-placeholder.png" alt="Foto de perfil">
     </div>
@@ -42,44 +43,50 @@
   <!-- Formulario de edición -->
   <form id="formEditar" class="card" style="display:none;">
     <h3>Editar perfil</h3>
-    <input type="text" id="editNombre" placeholder="Nombre completo">
+    <input type="text" id="editNombre" placeholder="Nombre completo" required>
     <select id="editRol">
       <option value="Voluntario Cáritas CNC">Voluntario Cáritas CNC</option>
       <option value="Administrador">Administrador</option>
     </select>
     <input type="file" id="editFoto" accept="image/*">
-    <button type="submit">💾 Guardar cambios</button>
+    <div class="acciones">
+      <button type="submit">💾 Guardar cambios</button>
+      <button type="button" id="btnCancelar">❌ Cancelar</button>
+    </div>
   </form>
 
-  <div id="msg" style="margin:1rem;text-align:center;"></div>
+  <div id="msg" class="msg"></div>
 
 <script>
 document.addEventListener("DOMContentLoaded", ()=>{
-  console.log("✅ [Perfil] pestaña cargada");
-  console.log("🔌 Supabase conectado:", !!window.CARITAS?.supabase);
-  console.log("🔑 Firebase auth listo:", !!window.CARITAS?.auth);
-
   const auth = window.CARITAS?.auth;
   const supabase = window.CARITAS?.supabase;
   const msgBox = document.getElementById("msg");
 
-  function showMsg(text,type="info"){
-    msgBox.textContent=text;
-    msgBox.className=type;
-    setTimeout(()=>{ msgBox.textContent=""; },4000);
+  if(!auth || !supabase){
+    console.error("❌ Firebase o Supabase no inicializados");
+    return;
   }
 
-  const esc = (s="") => String(s).replace(/[&<>"']/g,
+  // Mensajes de estado
+  function showMsg(text,type="info"){
+    msgBox.textContent=text;
+    msgBox.className="msg "+type;
+    setTimeout(()=>{ msgBox.textContent=""; msgBox.className="msg"; },4000);
+  }
+
+  const esc = s => String(s).replace(/[&<>"']/g,
     m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
   );
 
+  // Asegurar credencial
   async function ensureCredencial(user){
-    console.log("🔍 Buscando credencial de:", user.email, user.uid);
     const { data, error } = await supabase.from("credenciales")
       .select("*").eq("user_id", user.uid).maybeSingle();
-    if(error){ console.error("❌ Error buscando credencial:", error); return null; }
+
+    if(error){ console.error(error); return null; }
+
     if(!data){
-      console.log("⚠️ Credencial no existe, creando nueva...");
       const base = {
         user_id: user.uid,
         email: user.email,
@@ -87,68 +94,88 @@ document.addEventListener("DOMContentLoaded", ()=>{
         rol: "Voluntario Cáritas CNC",
         codigo_verificacion: user.uid.substring(0,8).toUpperCase()
       };
-      const { data: inserted, error: insErr } = await supabase.from("credenciales").upsert(base).select().single();
-      if(insErr){ console.error("❌ Error creando credencial:", insErr); return null; }
-      console.log("✅ Credencial creada:", inserted);
+      const { data: inserted, error: insErr } = await supabase
+        .from("credenciales")
+        .insert(base, { onConflict:"user_id" })
+        .select().single();
+      if(insErr){ console.error(insErr); return null; }
       return inserted;
     }
-    console.log("✅ Credencial encontrada:", data);
     return data;
   }
 
+  // Cargar perfil
   async function cargarPerfil(user){
     const data = await ensureCredencial(user);
     if(!data) return;
+
     document.getElementById("nombrePerfil").textContent = esc(data.nombre);
     document.getElementById("emailPerfil").textContent = esc(data.email);
     document.getElementById("rolPerfil").textContent = esc(data.rol);
     document.getElementById("codigoPerfil").textContent = esc(data.codigo_verificacion);
-    document.getElementById("fotoPerfil").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
-    QRCode.toCanvas(document.getElementById("qrCanvas"), `${location.origin}/credencial.html?id=${user.uid}`);
-    console.log("✅ Perfil cargado en DOM");
+    document.getElementById("fotoPerfil").src = data.foto_url || 
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
+
+    QRCode.toCanvas(
+      document.getElementById("qrCanvas"),
+      `${location.origin}/credencial.html?id=${encodeURIComponent(user.uid)}`
+    );
   }
 
-  auth?.onAuthStateChanged(user=>{
+  // Auth
+  auth.onAuthStateChanged(user=>{
     if(!user){ 
-      console.warn("⚠️ No hay sesión activa, redirigiendo a login...");
       location.href="login.html"; 
       return; 
     }
-    console.log("👤 Usuario autenticado:", user.email, user.uid);
     cargarPerfil(user);
   });
 
-  // Editar perfil
+  // Editar
   document.getElementById("btnEditar").addEventListener("click", ()=>{
-    console.log("✏️ Botón Editar clicado");
+    document.getElementById("perfilCard").style.display="none";
     document.getElementById("formEditar").style.display="block";
   });
 
+  document.getElementById("btnCancelar").addEventListener("click", ()=>{
+    document.getElementById("formEditar").reset();
+    document.getElementById("formEditar").style.display="none";
+    document.getElementById("perfilCard").style.display="flex";
+  });
+
+  // Guardar cambios
   document.getElementById("formEditar").addEventListener("submit", async e=>{
     e.preventDefault();
     const user = auth.currentUser;
+    if(!user) return;
+
     const nuevoNombre=document.getElementById("editNombre").value.trim();
     const nuevoRol=document.getElementById("editRol").value;
     const fotoFile=document.getElementById("editFoto").files[0];
-    let fotoUrl=null;
+    let fotoUrl;
 
     try{
       if(fotoFile){
-        console.log("📤 Subiendo nueva foto:", fotoFile.name);
         const filePath=`${user.uid}/${Date.now()}_${fotoFile.name}`;
-        const { error: upErr } = await supabase.storage.from("credenciales-fotos").upload(filePath,fotoFile,{upsert:true});
+        const { error: upErr } = await supabase.storage.from("credenciales-fotos")
+          .upload(filePath,fotoFile,{upsert:true});
         if(upErr) throw upErr;
-        const { data: publicUrl } = supabase.storage.from("credenciales-fotos").getPublicUrl(filePath);
-        fotoUrl=publicUrl.publicUrl;
-        console.log("✅ Foto subida:", fotoUrl);
+        const { data: urlData } = supabase.storage.from("credenciales-fotos").getPublicUrl(filePath);
+        fotoUrl=urlData?.publicUrl;
       }
-      console.log("📤 Actualizando perfil en Supabase...");
-      await supabase.from("credenciales").update({nombre:nuevoNombre,rol:nuevoRol,foto_url:fotoUrl}).eq("user_id",user.uid);
+
+      await supabase.from("credenciales").update({
+        nombre:nuevoNombre,
+        rol:nuevoRol,
+        ...(fotoUrl && { foto_url:fotoUrl })
+      }).eq("user_id",user.uid);
+
       showMsg("✅ Perfil actualizado","success");
-      cargarPerfil(user);
       document.getElementById("formEditar").style.display="none";
+      document.getElementById("perfilCard").style.display="flex";
+      cargarPerfil(user);
     }catch(err){
-      console.error("❌ Error al actualizar perfil:", err);
+      console.error(err);
       showMsg("❌ Error al actualizar perfil","error");
     }
   });
@@ -156,29 +183,29 @@ document.addEventListener("DOMContentLoaded", ()=>{
   // Copiar enlace
   document.getElementById("btnCopiar").addEventListener("click", ()=>{
     const uid=auth.currentUser?.uid;
+    if(!uid) return;
     const url=`${location.origin}/credencial.html?id=${encodeURIComponent(uid)}`;
-    navigator.clipboard.writeText(url).then(()=> {
-      console.log("🔗 Enlace copiado:", url);
-      showMsg("🔗 Enlace copiado","success");
-    });
+    navigator.clipboard.writeText(url).then(()=> showMsg("🔗 Enlace copiado","success"));
   });
 
   // Descargar QR
   document.getElementById("btnDescargar").addEventListener("click", ()=>{
-    console.log("⬇️ Botón Descargar QR clicado");
+    const canvas=document.getElementById("qrCanvas");
+    if(!canvas) return;
     const link=document.createElement("a");
     link.download="credencial-qr.png";
-    link.href=document.getElementById("qrCanvas").toDataURL("image/png");
+    link.href=canvas.toDataURL("image/png");
     link.click();
   });
 
   // Logout
   document.getElementById("btnLogout").addEventListener("click", ()=>{
-    console.log("🔒 Botón Logout clicado");
-    auth.signOut(); localStorage.removeItem("caritasUser"); location.href="login.html";
+    auth.signOut().then(()=>{
+      localStorage.removeItem("caritasUser");
+      location.href="login.html";
+    });
   });
 });
 </script>
 </body>
-
 </html>
