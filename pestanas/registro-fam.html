@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>👨‍👩‍👧 Registro de Familias — Cáritas CNC</title>
- 
+  <link rel="stylesheet" href="../styles-caritas.css">
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -14,7 +14,7 @@
     <h2>
       Formulario de 
       <!-- 👀 Botón oculto en la palabra Registro -->
-      <a href="./pestanas/listado.html" target="_blank" style="text-decoration:none;">
+      <a href="../pestanas/listado.html" target="_blank" style="text-decoration:none;">
         <span style="cursor:pointer">Registro</span>
       </a>
     </h2>
@@ -47,7 +47,7 @@
 
       <label style="display:flex;align-items:center;gap:.4rem;margin-top:10px">
         <input type="checkbox" id="acceptTerms" required>
-        Acepto <a href="./pestanas/terminos.html" target="_blank">términos y condiciones</a>
+        Acepto <a href="terminos.html" target="_blank">términos y condiciones</a>
       </label>
 
       <button type="submit" class="btn">✅ Registrar familia</button>
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const form = document.getElementById('famForm');
   const msg = document.getElementById('famMsg');
   const btnValidar = document.getElementById('btnValidar');
+  const acceptTerms = document.getElementById('acceptTerms');
 
   function showMsg(text,type="info"){
     msg.textContent=text;
@@ -100,7 +101,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     if(!acceptTerms.checked){
       showMsg("⚠️ Debes aceptar los términos.","error");
-      console.warn("⚠️ Intento de registro sin aceptar términos");
       return;
     }
 
@@ -110,36 +110,38 @@ document.addEventListener('DOMContentLoaded', ()=>{
       telefono_contacto, observaciones, direccion
     });
 
-    try{
+    try {
       let archivo_url = null;
       if(archivo){
         console.log("📤 Subiendo archivo:", archivo.name);
-        const { data, error: upErr } = await supabase.storage
+        const { data: up, error: upErr } = await supabase.storage
           .from('familias-files')
           .upload(`${Date.now()}_${archivo.name}`, archivo, { upsert:true });
         if(upErr) throw upErr;
-        archivo_url = data?.path || null;
+        archivo_url = up?.path || null;
         console.log("✅ Archivo subido:", archivo_url);
       }
 
       console.log("📤 Insertando familia en Supabase...");
-      const { data, error } = await supabase.from('familias').insert([{
+      const { data, error } = await supabase.from('familias').insert({
         nombres_apellidos,
         dni_solicitante,
         apellido_familia,
         telefono_contacto,
         observaciones,
         direccion,
-        archivo_url
-      }]).select().single();
+        archivo_url,
+        visitada: false,
+        creado_en: new Date().toISOString()
+      }).select().single();
 
-      console.log("📥 Resultado insert:", { data, error });
       if(error) throw error;
 
+      console.log("✅ Familia guardada:", data);
       showMsg("✅ Familia registrada correctamente","success");
       form.reset();
 
-    }catch(err){
+    } catch(err){
       console.error("❌ Error al registrar familia:", err);
       showMsg("❌ Error al registrar familia","error");
     }
@@ -147,7 +149,4 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 </body>
-
 </html>
-
-
