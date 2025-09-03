@@ -5,7 +5,7 @@
   const app = document.getElementById('app');
   const nav = document.getElementById('main-nav');
 
-const ROUTES = new Set([
+  const ROUTES = new Set([
   'inicio',
   'registro-fam',
   'perfil',
@@ -47,7 +47,6 @@ const TITLES = {
   'validar':             'Validar Datos — Cáritas CNC',
   'validar-direccion':   'Validar Dirección — Cáritas CNC'
 };
-
 
   let currentView = null;
   let inFlight = null;
