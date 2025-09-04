@@ -1,0 +1,205 @@
+/* =========================
+   🎨 STYLES-CARITAS.CSS
+   CSS global unificado
+   ========================= */
+
+/* 🎨 Paleta de colores Cáritas CNC */
+:root {
+  --primary: #b91c1c;  /* rojo principal */
+  --bg: #000000;       /* negro absoluto */
+  --text: #f5f5f5;
+  --border: #550000;   /* borde rojo oscuro */
+  --muted: #888;
+  --surface: linear-gradient(145deg, #1a0000, #0d0d0d);
+  --surface-2: linear-gradient(145deg, #330000, #111);
+}
+
+/* Reset básico */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  font-family: 'Poppins', Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+}
+
+/* 🎥 Fondo de video */
+#video-fondo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2; /* más al fondo */
+  opacity: 0.4; /* más visible */
+  filter: brightness(0.6) saturate(1.2);
+}
+
+/* Capa de degradado encima del video */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(185,28,28,0.85) 0%, rgba(10,10,10,0.95) 100%);
+  z-index: -1;
+}
+
+/* Encabezados */
+h1, h2, h3 {
+  font-weight: 600;
+  margin: 0.8rem 0;
+  color: var(--text);
+  text-align: center;
+}
+h1 span, h2 span, h3 span { color: var(--primary); }
+
+/* Contenedores */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Tarjetas */
+.card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 1rem auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,.6), 0 0 15px rgba(185,28,28,.4);
+}
+
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--surface-2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+thead th {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+}
+tbody td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:hover { background: #333; }
+
+/* Botones */
+button, .btn {
+  background: linear-gradient(135deg, #b91c1c, #3a0d0d);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+button:hover, .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(185,28,28,.5);
+}
+
+/* Inputs */
+input, select, textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #1a1a1a;
+  color: var(--text);
+}
+input::placeholder, textarea::placeholder { color: #aaa; }
+
+/* Estados */
+.success { color: #22c55e; font-weight: bold; }
+.error   { color: #ef4444; font-weight: bold; }
+.muted   { color: var(--muted); }
+
+/* Etiquetas pequeñas */
+.pill {
+  display:inline-block;
+  background: #444;
+  color:#fff;
+  padding:2px 8px;
+  border-radius:12px;
+  font-size:0.8rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+.modal img { max-width:90%; max-height:90%; border-radius:12px; }
+.modal .cerrar {
+  position:absolute; top:20px; right:20px;
+  background: var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:32px; height:32px;
+  cursor:pointer;
+}
+
+/* Galería */
+.galeria-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+  gap:8px;
+}
+.galeria-grid img {
+  width:100%;
+  border-radius:8px;
+  cursor:pointer;
+  object-fit:cover;
+}
+
+/* Credenciales */
+.credencial-card {
+  max-width: 650px;
+  margin: 3rem auto;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(30,30,30,0.9);
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.credencial-card img {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 3px solid var(--primary);
+  object-fit: cover;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--primary, #b91c1c);
+  color: var(--primary, #b91c1c);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-ghost:hover {
+  background: var(--primary, #b91c1c);
+  color: #fff;
+}
