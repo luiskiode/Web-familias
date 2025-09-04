@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>🏠 Inicio — Cáritas CNC</title>
-  <link rel="stylesheet" href="./styles-caritas.css">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="../api.js/supabase-config-caritas.js"></script>
+  <!-- Supabase: solo confía en config global -->
+  <script src="../api.js/supabase-config-caritas.js" defer></script>
+
   <style>
     #galeriaImagenes img { cursor: pointer; transition: transform 0.2s; }
     #galeriaImagenes img:hover { transform: scale(1.05); }
@@ -42,7 +41,6 @@
     <!-- Misión -->
     <section class="card">
       <h3>🎯 Misión</h3>
-      <h3>🌟 Nuestra Misión</h3>
       <ul>
         <li>❤️ Servir con respeto y empatía a las familias más necesitadas.</li>
         <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
@@ -55,7 +53,6 @@
     <!-- Visión -->
     <section class="card">
       <h3>🌟 Visión</h3>
-      <h3>🚀 Nuestra Visión</h3>
       <ul>
         <li>🏛 Ser referente de servicio y apoyo.</li>
         <li>💡 Construir una comunidad fraterna.</li>
@@ -63,8 +60,7 @@
         <li>🌍 Promover justicia social y desarrollo integral.</li>
         <li>🤗 Acompañar con acogida y transformación.</li>
       </ul>
-    </div>
-    <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión! ❤️</p>
+      <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión! ❤️</p>
     </section>
 
     <!-- Mensaje Semanal -->
@@ -73,7 +69,7 @@
       <div id="contenidoMensaje">Cargando...</div>
     </section>
 
-    <!-- Pendientes (solo lectura) -->
+    <!-- Pendientes -->
     <section class="card" id="pendientes-home">
       <h3>📌 Pendientes</h3>
       <ul id="listaPendientes">Cargando...</ul>
@@ -106,49 +102,21 @@ document.addEventListener("DOMContentLoaded", ()=>{
   // Refrescar al hacer click en el título
   document.getElementById("tituloInicio").addEventListener("click", ()=> location.reload());
 
-  // Bienvenida dinámica
-  const hora = new Date().getHours();
-  let saludo = "👋 Bienvenido";
-  if(hora >= 6 && hora < 12) saludo = "☀️ Buenos días";
-  else if(hora >= 12 && hora < 18) saludo = "🌤️ Buenas tardes";
-  else saludo = "🌙 Buenas noches";
-  document.getElementById("bienvenida").textContent = saludo;
-
-  function whenSupabaseReady(cb){
-    if(window.CARITAS?.supabase){
-      cb(window.CARITAS.supabase);
-    } else {
-      setTimeout(()=> whenSupabaseReady(cb), 100);
-    }
+  // Bienvenida dinámica con Firebase o visitante
+  function bienvenidaPersonalizada(user){
+    const hora = new Date().getHours();
+    let saludo = hora < 12 ? "☀️ Buenos días" : hora < 18 ? "🌤️ Buenas tardes" : "🌙 Buenas noches";
+    const nombre = user?.displayName || user?.email?.split("@")[0] || "";
+    document.getElementById("bienvenida").textContent = nombre ? `${saludo}, ${nombre}` : saludo;
   }
-// Bienvenida dinámica con nombre del usuario
-function bienvenidaPersonalizada(user){
-  const hora = new Date().getHours();
-  let saludo = "👋 Bienvenido";
-  if(hora >= 6 && hora < 12) saludo = "☀️ Buenos días";
-  else if(hora >= 12 && hora < 18) saludo = "🌤️ Buenas tardes";
-  else saludo = "🌙 Buenas noches";
 
-  const nombre = user?.displayName || user?.email?.split("@")[0] || "";
-  const texto = nombre ? `${saludo}, ${nombre}` : saludo;
-  document.getElementById("bienvenida").textContent = texto;
-}
-
-// Esperamos a Firebase Auth
-document.addEventListener("DOMContentLoaded", ()=>{
   const auth = window.CARITAS?.auth;
   if(auth){
-    auth.onAuthStateChanged(user=>{
-      if(user){
-        bienvenidaPersonalizada(user);
-      } else {
-        bienvenidaPersonalizada(null); // visitante sin login
-      }
-    });
+    auth.onAuthStateChanged(user=> bienvenidaPersonalizada(user));
   } else {
     bienvenidaPersonalizada(null);
   }
-});
+
   // 📝 Mensaje semanal
   async function cargarMensajeSemanal(supabase){
     try {
@@ -166,7 +134,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   }
 
-  // 📌 Pendientes (solo lectura)
+  // 📌 Pendientes
   async function renderPendientesHome(supabase){
     try {
       const { data, error } = await supabase
@@ -224,6 +192,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
 
   // 🚀 Inicializar
+  function whenSupabaseReady(cb){
+    if(window.CARITAS?.supabase) cb(window.CARITAS.supabase);
+    else setTimeout(()=> whenSupabaseReady(cb), 100);
+  }
   whenSupabaseReady(supabase=>{
     showMsg("✅ Inicio conectado a Supabase","success");
     cargarMensajeSemanal(supabase);
