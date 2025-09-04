@@ -30,116 +30,152 @@ html, body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 0;              /* 👈 siempre al fondo */
-  opacity: 0.25;           /* visible pero no molesta */
-  pointer-events: none;    /* 👈 no bloquea clics */
+  z-index: -1;
+  opacity: 0.12;
+  filter: saturate(.9) brightness(.7);
 }
 
-/* Asegurar que todo el contenido quede encima del fondo */
-.card, header, nav, footer, main, section {
-  position: relative;
-  z-index: 1;
-}
-
-/* Estructura básica */
-header {
-  background: var(--surface-2);
-  padding: 1rem;
+/* Encabezados */
+h1, h2, h3 {
+  font-weight: 600;
+  margin: 0.8rem 0;
+  color: var(--text);
   text-align: center;
-  font-size: 1.3rem;
-  font-weight: bold;
 }
-main.container {
-  padding: 1rem;
+h1 span, h2 span, h3 span { color: var(--primary); }
+
+/* Contenedores */
+.container {
+  width: 90%;
   max-width: 1200px;
-  margin: auto;
+  margin: 0 auto;
+  padding: 20px;
 }
+
+/* Tarjetas */
 .card {
   background: var(--surface);
   border-radius: 12px;
   padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  margin: 1rem auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,.4);
 }
 
-/* Textos */
-h1,h2,h3,h4 { font-weight:600; margin-bottom:.5rem; }
-p { margin-bottom:.5rem; line-height:1.4; }
-a { color: var(--primary); text-decoration:none; }
-a:hover { text-decoration: underline; }
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--surface-2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+thead th {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+}
+tbody td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:hover { background: #333; }
 
 /* Botones */
 button, .btn {
   background: var(--primary);
   color: #fff;
   border: none;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.95rem;
-  display: inline-flex;     
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background 0.2s, transform 0.2s;
 }
-button:hover, .btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
+button:hover, .btn:hover { filter: brightness(1.1); }
 .btn-ghost {
-  background: transparent;
+  background: #222;
   border: 1px solid var(--border);
-  color: var(--text);
 }
 .btn-ghost:hover { border-color: var(--primary); }
 
-/* Formularios */
+/* Inputs */
 input, select, textarea {
   width: 100%;
-  padding: .6rem;
-  margin:.3rem 0 1rem;
-  border-radius: 6px;
-  border:1px solid var(--border);
-  background: var(--surface-2);
+  padding: 8px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #1a1a1a;
   color: var(--text);
 }
-label { font-size:.9rem; margin-bottom:.2rem; display:block; }
-input[type="checkbox"] { width:auto; margin-right:.4rem; }
+input::placeholder, textarea::placeholder { color: #aaa; }
 
-/* Tablas */
-table { width:100%; border-collapse: collapse; margin-top:1rem; }
-th, td { padding:.6rem; border:1px solid var(--border); text-align:left; }
-th { background: var(--surface-2); }
+/* Estados */
+.success { color: #22c55e; font-weight: bold; }
+.error   { color: #ef4444; font-weight: bold; }
+.muted   { color: var(--muted); }
 
-/* Perfíl y credencial */
-.perfil-card, .credencial-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding:1rem;
+/* Etiquetas pequeñas */
+.pill {
+  display:inline-block;
+  background: #444;
+  color:#fff;
+  padding:2px 8px;
+  border-radius:12px;
+  font-size:0.8rem;
 }
-.perfil-left img,
+
+/* Modal */
+.modal {
+  position: fixed; inset:0;
+  background: rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+.modal img { max-width:90%; max-height:90%; border-radius:12px; }
+.modal .cerrar {
+  position:absolute; top:20px; right:20px;
+  background: var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:32px; height:32px;
+  cursor:pointer;
+}
+
+/* Galería */
+.galeria-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+  gap:8px;
+}
+.galeria-grid img {
+  width:100%;
+  border-radius:8px;
+  cursor:pointer;
+  object-fit:cover;
+}
+
+/* Credenciales */
+.credencial-card {
+  max-width: 650px;
+  margin: 3rem auto;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(30,30,30,0.9);
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
 .credencial-card img {
   width: 120px;
   height: 120px;
-  object-fit: cover;
-  border-radius: 50%;
+  border-radius: 12px;
   border: 3px solid var(--primary);
+  object-fit: cover;
 }
-.perfil-center { flex:1; }
-.perfil-right { }
-
-/* Pills (roles, estados) */
-.pill {
-  background: var(--surface-2);
-  padding:.3rem .6rem;
-  border-radius:999px;
-  font-size:.8rem;
-  font-weight:500;
-}
-
-/* Utilidades */
-.success { color:#16a34a; }
-.error { color:#dc2626; }
-.info { color:#2563eb; }
