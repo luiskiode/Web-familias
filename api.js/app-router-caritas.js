@@ -34,7 +34,7 @@ console.log("📌 app-router-caritas.js cargado");
     'carnet'
   ]);
 
-  const BASE_PATHS = ['pestanas', 'pestañas', ''];
+  const BASE_PATHS = ['pestanas'];
 
   const TITLES = {
     'inicio':              'Inicio — Cáritas CNC',
