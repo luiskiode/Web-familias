@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📍 Validar Dirección — Cáritas CNC</title>
+  <link rel="stylesheet" href="../styles-caritas.css">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <header class="container" style="text-align:center;margin:1rem auto;">
+    <h1>📍 Validar Dirección</h1>
+    <a href="#registro-fam" class="btn-ghost">← Volver al registro</a>
+  </header>
+
+  <main class="container card" style="max-width:800px;">
+    <p id="msg" class="muted">Cargando mapa...</p>
+    <div id="map" style="height:480px;margin-top:1rem;border-radius:12px;"></div>
+  </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const msg = document.getElementById("msg");
+  const mapContainer = document.getElementById("map");
+  const urlParams = new URLSearchParams(window.location.search);
+  const dir = urlParams.get("dir");
+
+  function showMsg(text,type="info"){
+    msg.textContent=text;
+    msg.className=type;
+  }
+
+  if(!dir){
+    showMsg("⚠️ No se proporcionó dirección","error");
+    return;
+  }
+
+  try {
+    // Inicializar mapa centrado en Perú como fallback
+    const map = L.map(mapContainer).setView([-12.0464, -77.0428], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    // Buscar dirección en Nominatim
+    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dir)}`, {
+      headers: { "User-Agent": "CaritasCNC/1.0 (caritas@ejemplo.com)" }
+    });
+    const data = await resp.json();
+
+    if(!data || data.length===0){
+      showMsg("❌ No se encontró la dirección especificada","error");
+      return;
+    }
+
+    const lat = parseFloat(data[0].lat);
+    const lon = parseFloat(data[0].lon);
+
+    map.setView([lat,lon], 16);
+    L.marker([lat,lon]).addTo(map).bindPopup(`<b>${dir}</b>`).openPopup();
+
+    showMsg(`✅ Dirección encontrada: ${dir}`,"success");
+
+  } catch(err){
+    console.error(err);
+    showMsg("❌ Error cargando mapa o dirección","error");
+  }
+});
+</script>
+</body>
+</html>
