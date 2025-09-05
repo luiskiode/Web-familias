@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🏠 Inicio — Cáritas CNC</title>
+
+  <!-- 👇 base para GitHub Pages -->
+  <base href="/Web-familias/">
+
+  <!-- Supabase: usa config global -->
+  <script src="api.js/supabase-config-caritas.js" defer></script>
+
+  <style>
+    #galeriaImagenes img { cursor: pointer; transition: transform 0.2s; }
+    #galeriaImagenes img:hover { transform: scale(1.05); }
+    #modalImg {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
+      justify-content:center; align-items:center; z-index:9999;
+    }
+    #modalImg img { max-width:90%; max-height:90%; border-radius:12px; }
+    #modalImg span { position:absolute; top:20px; right:30px; font-size:2rem; color:#fff; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="tituloInicio">🏠 Bienvenido a Cáritas CNC</h1>
+    <!-- 📌 Tachuela eliminada -->
+  </header>
+
+  <main class="container">
+    <!-- Bienvenida dinámica -->
+    <section class="card">
+      <h3 id="bienvenida">👋 Bienvenido</h3>
+      <p>Estamos felices de contar contigo en esta misión de servicio.</p>
+    </section>
+
+    <!-- Misión -->
+    <section class="card">
+      <h3>🎯 Misión</h3>
+      <ul>
+        <li>❤️ Servir con respeto y empatía a las familias más necesitadas.</li>
+        <li>🙏 Guiarnos por la fe, el compromiso y la compasión.</li>
+        <li>🤝 Promover dignidad, justicia y solidaridad.</li>
+        <li>🌱 Trabajar unidos para crear oportunidades y esperanza.</li>
+        <li>🔥 Transformar vidas a través de la acción social.</li>
+      </ul>
+    </section>
+
+    <!-- Visión -->
+    <section class="card">
+      <h3>🌟 Visión</h3>
+      <ul>
+        <li>🏛 Ser referente de servicio y apoyo.</li>
+        <li>💡 Construir una comunidad fraterna.</li>
+        <li>✝ Inspirarnos en el Evangelio.</li>
+        <li>🌍 Promover justicia social y desarrollo integral.</li>
+        <li>🤗 Acompañar con acogida y transformación.</li>
+      </ul>
+      <p class="agradecimiento">🙏 ¡Gracias por ser parte de esta misión! ❤️</p>
+    </section>
+
+    <!-- Mensaje Semanal -->
+    <section class="card" id="mensaje-semanal">
+      <h3>📝 Mensaje Semanal</h3>
+      <div id="contenidoMensaje">Cargando...</div>
+    </section>
+
+    <!-- Pendientes -->
+    <section class="card" id="pendientes-home">
+      <h3>📌 Pendientes</h3>
+      <ul id="listaPendientes">Cargando...</ul>
+    </section>
+
+    <!-- Galería -->
+    <section class="card" id="galeria-home">
+      <h3>🖼️ Galería</h3>
+      <div id="galeriaImagenes" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </section>
+  </main>
+
+  <div id="msg" style="text-align:center;margin:1rem;"></div>
+
+  <!-- Modal de imagen -->
+  <div id="modalImg">
+    <span onclick="cerrarModal()">&times;</span>
+    <img id="modalContent" src="" alt="Imagen ampliada">
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  function showMsg(text, type="info"){
+    const msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; },4000);
+  }
+
+  // Refrescar al hacer click en el título
+  document.getElementById("tituloInicio").addEventListener("click", ()=> location.hash = '#inicio');
+
+  // Bienvenida dinámica con Firebase o visitante
+  function bienvenidaPersonalizada(user){
+    const hora = new Date().getHours();
+    let saludo = hora < 12 ? "☀️ Buenos días" : hora < 18 ? "🌤️ Buenas tardes" : "🌙 Buenas noches";
+    const nombre = user?.displayName || user?.email?.split("@")[0] || "";
+    document.getElementById("bienvenida").textContent = nombre ? `${saludo}, ${nombre}` : saludo;
+  }
+
+  const auth = window.CARITAS?.auth;
+  if(auth){
+    auth.onAuthStateChanged(user=> bienvenidaPersonalizada(user));
+  } else {
+    bienvenidaPersonalizada(null);
+  }
+
+  // 📝 Mensaje semanal
+  async function cargarMensajeSemanal(supabase){
+    try {
+      const { data, error } = await supabase
+        .from("mensajes")
+        .select("contenido, created_at")
+        .order("created_at",{ascending:false})
+        .limit(1)
+        .maybeSingle();
+      if(error) throw error;
+      document.getElementById("contenidoMensaje").textContent = data?.contenido || "No hay mensaje semanal.";
+    } catch(err){
+      console.error(err);
+      document.getElementById("contenidoMensaje").textContent = "Error cargando mensaje.";
+    }
+  }
+
+  // 📌 Pendientes
+  async function renderPendientesHome(supabase){
+    try {
+      const { data, error } = await supabase
+        .from("pendientes")
+        .select("descripcion, estado, fecha")
+        .order("fecha",{ascending:true})
+        .limit(5);
+      if(error) throw error;
+      const lista=document.getElementById("listaPendientes");
+      lista.innerHTML="";
+      if(!data || data.length===0){ lista.innerHTML="<li>No hay pendientes.</li>"; return; }
+      data.forEach(p=>{
+        const li=document.createElement("li");
+        li.textContent=`${p.descripcion} ${p.estado?"✔️":"⏳"} (${p.fecha||"sin fecha"})`;
+        lista.appendChild(li);
+      });
+    } catch(err){
+      console.error(err);
+      document.getElementById("listaPendientes").innerHTML="<li>Error al cargar pendientes.</li>";
+    }
+  }
+
+  // 🖼️ Galería
+  async function cargarGaleria(supabase){
+    try {
+      const { data, error } = await supabase
+        .storage.from("galeria")
+        .list("",{ limit:6, sortBy:{ column:"created_at", order:"desc" }});
+      if(error) throw error;
+      const galeria=document.getElementById("galeriaImagenes");
+      galeria.innerHTML="";
+      if(!data || data.length===0){ galeria.textContent="No hay imágenes."; return; }
+      data.forEach(file=>{
+        const url = supabase.storage.from("galeria").getPublicUrl(file.name).data.publicUrl;
+        const img=document.createElement("img");
+        img.src=url; img.alt=file.name;
+        img.style.width="120px"; img.style.height="120px";
+        img.style.objectFit="cover"; img.style.borderRadius="8px";
+        img.addEventListener("click",()=>abrirModal(url));
+        galeria.appendChild(img);
+      });
+    } catch(err){
+      console.error(err);
+      document.getElementById("galeriaImagenes").textContent="Error al cargar galería.";
+    }
+  }
+
+  // Modal
+  window.abrirModal=function(url){
+    document.getElementById("modalContent").src=url;
+    document.getElementById("modalImg").style.display="flex";
+  }
+  window.cerrarModal=function(){
+    document.getElementById("modalImg").style.display="none";
+  }
+
+  // 🚀 Inicializar
+  function whenSupabaseReady(cb){
+    if(window.CARITAS?.supabase) cb(window.CARITAS.supabase);
+    else setTimeout(()=> whenSupabaseReady(cb), 100);
+  }
+  whenSupabaseReady(supabase=>{
+    showMsg("✅ Inicio conectado a Supabase","success");
+    cargarMensajeSemanal(supabase);
+    renderPendientesHome(supabase);
+    cargarGaleria(supabase);
+  });
+});
+</script>
+</body>
+</html>
