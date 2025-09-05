@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👨‍👩‍👧 Familias — Cáritas CNC</title>
+  <base href="/Web-familias/">
+  <link rel="stylesheet" href="styles-caritas.css" />
+  <!-- ✅ Supabase (ESM, sin eval) -->
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  window.CARITAS = window.CARITAS || {};
+  window.CARITAS.supabase = supabase;
+
+  // 🔔 Notificar que Supabase está listo
+  document.dispatchEvent(new Event("supabase:ready:caritas"));
+</script>
+  
+</head>
+<body>
+  <header>
+    <h1>👨‍👩‍👧 Familias registradas</h1>
+    <a href="#inicio" class="btn-ghost">← Volver al inicio</a>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div id="msg"></div>
+      <table id="familiasTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombres</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Visitada</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+        <button id="prevPage" class="btn-ghost">⏮ Anterior</button>
+        <button id="nextPage" class="btn-ghost">Siguiente ⏭</button>
+      </div>
+      <button id="guardarCambios" style="margin-top:1rem;">💾 Guardar cambios</button>
+    </div>
+  </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  const tabla = document.querySelector("#familiasTable tbody");
+  const cambios = new Map();
+  const msg = document.getElementById("msg");
+  let page = 0;
+  const pageSize = 20;
+
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; }, 4000);
+  }
+
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+
+  async function cargarFamilias(){
+    try {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      const { data, error } = await window.CARITAS.supabase
+        .from("familias")
+        .select("*")
+        .order("id",{ascending:true})
+        .range(start,end);
+
+      tabla.innerHTML = "";
+
+      if(error) throw error;
+      if(!data || data.length===0){
+        tabla.innerHTML = "<tr><td colspan='6'>Sin registros</td></tr>";
+        return;
+      }
+
+      data.forEach(fam=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fam.id}</td>
+          <td>${esc(fam.nombres_apellidos||"")}</td>
+          <td>${esc(fam.direccion||"")}</td>
+          <td>${esc(fam.telefono_contacto||"")}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+          <td><button class="btn btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>`;
+        tabla.appendChild(tr);
+      });
+    }catch(err){
+      console.error(err);
+      tabla.innerHTML = "<tr><td colspan='6'>Error al cargar datos</td></tr>";
+    }
+  }
+
+  // Guardar cambios visitada
+  document.getElementById("guardarCambios").addEventListener("click", async ()=>{
+    try{
+      for(const [id,v] of cambios){
+        await window.CARITAS.supabase.from("familias").update({visitada:v}).eq("id",id);
+      }
+      showMsg("✅ Cambios guardados","success");
+      cambios.clear();
+      cargarFamilias();
+    }catch(err){
+      showMsg("❌ Error guardando cambios","error");
+    }
+  });
+
+  // Detectar cambios en checkboxes
+  document.getElementById("familiasTable").addEventListener("change", e=>{
+    if(e.target.type==="checkbox"){
+      cambios.set(e.target.dataset.id,e.target.checked);
+    }
+  });
+
+  // Detectar eliminar
+  document.getElementById("familiasTable").addEventListener("click", async e=>{
+    if(e.target.dataset.del){
+      if(confirm("¿Eliminar familia?")){
+        try{
+          await window.CARITAS.supabase.from("familias").delete().eq("id",e.target.dataset.del);
+          showMsg("🗑️ Familia eliminada","success");
+          cargarFamilias();
+        }catch{
+          showMsg("❌ Error eliminando familia","error");
+        }
+      }
+    }
+  });
+  
+  // Paginación
+  document.getElementById("prevPage").addEventListener("click",()=>{
+    if(page>0){ page--; cargarFamilias(); }
+  });
+  document.getElementById("nextPage").addEventListener("click",()=>{
+    page++; cargarFamilias();
+  });
+
+  cargarFamilias();
+});
+</script>
+</body>
+</html>

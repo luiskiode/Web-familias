@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>👨‍👩‍👧 Familias Registradas — Cáritas CNC</title>
+  <base href="/Web-familias/">
+  <link rel="stylesheet" href="styles-caritas.css" />
+  <!-- ✅ Supabase (ESM, sin eval) -->
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  window.CARITAS = window.CARITAS || {};
+  window.CARITAS.supabase = supabase;
+
+  // 🔔 Notificar que Supabase está listo
+  document.dispatchEvent(new Event("supabase:ready:caritas"));
+</script>
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      padding: 1rem;
+      background: var(--bg,#f6f7fb);
+      color: var(--text,#111);
+    }
+    header { font-size: 1.5rem; margin-bottom: 1rem; text-align: center; }
+    #search {
+      width: 100%; max-width: 480px; margin: 0 auto 1rem;
+      padding: 0.6rem 0.8rem; border:1px solid var(--border,#ddd);
+      border-radius:10px; display:block;
+    }
+    table {
+      width: 100%; border-collapse: collapse; background: var(--surface,#fff);
+      box-shadow: 0 6px 16px rgba(0,0,0,.06);
+      border-radius:12px; overflow:hidden;
+    }
+    th, td { border-bottom: 1px solid var(--border,#eee); padding: 0.6rem; text-align: left; }
+    th { background-color: var(--primary,#b71c1c); color: #fff; }
+    a { text-decoration: none; color: var(--accent,#1d4ed8); }
+    a:hover { text-decoration: underline; }
+    .btn {
+      padding:4px 8px; border:1px solid var(--border,#ddd);
+      border-radius:6px; cursor:pointer; font-size:0.8rem;
+      background:var(--surface-2,#fafafa);
+    }
+    .btn:hover { background:var(--surface-2-hover,#f0f0f0); }
+    .btn-del { color:#b91c1c; }
+    #msg { margin:1rem 0; text-align:center; font-weight:500; }
+    #controls { margin-top:1rem; display:flex; gap:.5rem; justify-content:center; }
+    /* 🔎 Estilo para familias visitadas */
+    tr.visitada {
+      background-color: #e6f9e6; /* verde muy suave */
+    }
+  </style>
+
+  
+</head>
+<body>
+
+<header>📋 Familias Registradas</header>
+
+<input type="search" id="search" placeholder="🔍 Buscar por apellido, dirección, etc…" aria-label="Buscar familia">
+
+<div id="msg"></div>
+
+<table id="familiasTable" aria-label="Tabla de familias registradas">
+  <thead>
+    <tr>
+      <th>Nombres</th>
+      <th>DNI</th>
+      <th>Apellido</th>
+      <th>Dirección</th>
+      <th>Fecha</th>
+      <th>Teléfono</th>
+      <th>Observaciones</th>
+      <th>Documento</th>
+      <th>Mapa</th>
+      <th>Visitada</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div id="controls">
+  <button id="prevPage" class="btn">⏮ Anterior</button>
+  <button id="nextPage" class="btn">Siguiente ⏭</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  console.log("✅ [Listado Familias] pestaña cargada");
+
+  // Esperar a que Supabase esté listo
+  document.addEventListener("supabase:ready:caritas", ()=>{
+    const supabase = window.CARITAS?.supabase;
+    console.log("🔌 Supabase conectado:", !!supabase);
+
+    if(!supabase){
+      alert("❌ Supabase no inicializado");
+      return;
+    }
+
+    const tabla = document.querySelector("#familiasTable tbody");
+    const msg = document.getElementById("msg");
+    let page = 0;
+    const pageSize = 20;
+    let allData = []; // cache para buscador
+
+    function showMsg(text, type="info"){
+      msg.textContent = text;
+      msg.className = type;
+      console.log(`[MSG-${type}]`, text);
+      setTimeout(()=>{ msg.textContent=""; msg.className=""; }, 4000);
+    }
+
+    const esc = (s="") => String(s).replace(/[&<>"']/g,
+      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+    );
+
+    async function cargarFamilias(){
+      console.log("🔍 Cargando familias, página:", page);
+      try {
+        const start = page * pageSize;
+        const end = start + pageSize - 1;
+        const { data, error } = await supabase
+          .from("familias")
+          .select("*")
+          .order("id",{ascending:true})
+          .range(start,end);
+
+        if(error) throw error;
+
+        if(!data || data.length===0){
+          tabla.innerHTML = "<tr><td colspan='11'>Sin registros</td></tr>";
+          console.warn("⚠️ No se encontraron familias");
+          return;
+        }
+
+        allData = data;
+        renderTabla(allData);
+      }catch(err){
+        console.error("❌ Error cargando familias:", err);
+        tabla.innerHTML = "<tr><td colspan='11'>Error al cargar datos</td></tr>";
+      }
+    }
+
+    function renderTabla(rows){
+      tabla.innerHTML = "";
+      rows.forEach(fam=>{
+        const tr = document.createElement("tr");
+        if(fam.visitada) tr.classList.add("visitada");
+
+        tr.innerHTML = `
+          <td>${esc(fam.nombres_apellidos||"")}</td>
+          <td>${esc(fam.dni_solicitante||"")}</td>
+          <td>${esc(fam.apellido_familia||"")}</td>
+          <td>${esc(fam.direccion||"")}</td>
+          <td>${esc(fam.fecha_registro||"")}</td>
+          <td>${esc(fam.telefono_contacto||"")}</td>
+          <td>${esc(fam.observaciones||"")}</td>
+          <td>${fam.archivo_url ? `<a href="https://qivjlsvcjyqymommfdke.supabase.co/storage/v1/object/public/familias-files/${fam.archivo_url}" target="_blank">📄 Ver</a>` : "—"}</td>
+          <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+          <td><button class="btn btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>
+        `;
+        tabla.appendChild(tr);
+      });
+    }
+
+    // Guardar visitada
+    document.getElementById("familiasTable").addEventListener("change", async e => {
+      if (e.target.type === "checkbox") {
+        const id = e.target.dataset.id;
+        const nuevoValor = e.target.checked;
+        console.log("✏️ Actualizando visitada:", id, "->", nuevoValor);
+
+        try {
+          const { data, error } = await supabase
+            .from("familias")
+            .update({ visitada: nuevoValor })
+            .eq("id", id)
+            .select();
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+            if (nuevoValor) {
+              e.target.closest("tr").classList.add("visitada");
+            } else {
+              e.target.closest("tr").classList.remove("visitada");
+            }
+            showMsg("✅ Estado actualizado", "success");
+          } else {
+            showMsg("⚠️ Ningún cambio aplicado", "info");
+          }
+        } catch (err) {
+          console.error("❌ Error actualizando visitada:", err);
+          showMsg("❌ No se pudo actualizar", "error");
+          e.target.checked = !nuevoValor;
+        }
+      }
+    });
+
+    // Eliminar
+    document.getElementById("familiasTable").addEventListener("click", async e=>{
+      if(e.target.dataset.del){
+        if(confirm("¿Eliminar familia?")){
+          try{
+            await supabase.from("familias").delete().eq("id",e.target.dataset.del);
+            showMsg("🗑️ Familia eliminada","success");
+            cargarFamilias();
+          }catch(err){
+            console.error("❌ Error eliminando familia:", err);
+            showMsg("❌ Error eliminando familia","error");
+          }
+        }
+      }
+    });
+
+    // Paginación
+    document.getElementById("prevPage").addEventListener("click",()=>{
+      if(page>0){ page--; cargarFamilias(); }
+    });
+    document.getElementById("nextPage").addEventListener("click",()=>{
+      page++; cargarFamilias();
+    });
+
+    // Buscador
+    document.getElementById("search").addEventListener("input", e=>{
+      const term = e.target.value.toLowerCase();
+      const filtradas = allData.filter(fam =>
+        (fam.nombres_apellidos||"").toLowerCase().includes(term) ||
+        (fam.apellido_familia||"").toLowerCase().includes(term) ||
+        (fam.direccion||"").toLowerCase().includes(term) ||
+        (fam.telefono_contacto||"").toLowerCase().includes(term)
+      );
+      renderTabla(filtradas);
+    });
+
+    cargarFamilias();
+  });
+});
+</script>
+</body>
+</html>
