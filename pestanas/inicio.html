@@ -1,29 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🏠 Inicio — Cáritas CNC</title>
 
-  <!-- 👇 base para GitHub Pages -->
+  <!-- Base para GitHub Pages -->
   <base href="/Web-familias/">
+
+  <!-- Estilos globales -->
+  <link rel="stylesheet" href="styles-caritas.css" />
+
+  <!-- CSP segura (sin unsafe-eval) -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
+             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
+
+  <!-- Scripts de reparación / diagnóstico -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
   <script type="module" src="api.js/health-caritas.js"></script>
   <script defer src="api.js/error-overlay.js"></script>
-  
-  <!-- Supabase: usa config global -->
-  <script src="api.js/supabase-config-caritas.js" defer></script>
-  
 
-  <style>
-    #galeriaImagenes img { cursor: pointer; transition: transform 0.2s; }
-    #galeriaImagenes img:hover { transform: scale(1.05); }
-    #modalImg {
-      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
-      justify-content:center; align-items:center; z-index:9999;
+  <!-- ✅ Supabase ESM (CSP compatible) -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."; // tu anon key
+
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
+      console.log("✅ Supabase listo (inicio.html)");
     }
-    #modalImg img { max-width:90%; max-height:90%; border-radius:12px; }
-    #modalImg span { position:absolute; top:20px; right:30px; font-size:2rem; color:#fff; cursor:pointer; }
-  </style>
+  </script>
 </head>
 <body>
   <header>
