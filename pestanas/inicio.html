@@ -117,12 +117,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
 
   // Refrescar al hacer click en el título
-  const tituloInicio = document.getElementById("tituloInicio");
-  if (tituloInicio) {
-    tituloInicio.addEventListener("click", ()=> location.hash = '#inicio');
-  }
+  document.getElementById("tituloInicio")?.addEventListener("click", ()=> location.hash = '#inicio');
 
-  // 👋 Bienvenida dinámica con Firebase o visitante
+  // 👋 Bienvenida personalizada
   function bienvenidaPersonalizada(user){
     const hora = new Date().getHours();
     let saludo = hora < 12 ? "☀️ Buenos días" : hora < 18 ? "🌤️ Buenas tardes" : "🌙 Buenas noches";
@@ -138,7 +135,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     bienvenidaPersonalizada(null);
   }
 
-  // 📝 Mensaje semanal (tabla mensajes: contenido, creado_en)
+  // 📝 Mensaje semanal
   async function cargarMensajeSemanal(supabase){
     try {
       const { data, error } = await supabase
@@ -148,16 +145,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
         .limit(1)
         .maybeSingle();
       if(error) throw error;
-      const el = document.getElementById("contenidoMensaje");
-      if (el) el.textContent = data?.contenido || "No hay mensaje semanal.";
+      document.getElementById("contenidoMensaje").textContent = data?.contenido || "No hay mensaje semanal.";
     } catch(err){
       console.error("❌ Error mensaje semanal:", err);
-      const el = document.getElementById("contenidoMensaje");
-      if (el) el.textContent = "Error cargando mensaje.";
+      document.getElementById("contenidoMensaje").textContent = "Error cargando mensaje.";
     }
   }
 
-  // 📌 Pendientes (tabla pendientes: titulo, descripcion, creado_en)
+  // 📌 Pendientes
   async function renderPendientesHome(supabase){
     try {
       const { data, error } = await supabase
@@ -167,7 +162,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
         .limit(5);
       if(error) throw error;
       const lista=document.getElementById("listaPendientes");
-      if (!lista) return;
       lista.innerHTML="";
       if(!data || data.length===0){
         lista.innerHTML="<li>No hay pendientes.</li>";
@@ -175,17 +169,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
       }
       data.forEach(p=>{
         const li=document.createElement("li");
-        li.innerHTML = `<strong>${p.titulo}</strong><br>${p.descripcion||""}`;
+        li.innerHTML=`<strong>${p.titulo}</strong><br>${p.descripcion||""}`;
         lista.appendChild(li);
       });
     } catch(err){
       console.error("❌ Error pendientes:", err);
-      const lista=document.getElementById("listaPendientes");
-      if (lista) lista.innerHTML="<li>Error al cargar pendientes.</li>";
+      document.getElementById("listaPendientes").innerHTML="<li>Error al cargar pendientes.</li>";
     }
   }
 
-  // 🖼️ Galería desde bucket "galeria"
+  // 🖼️ Galería (bucket: galeria)
   async function cargarGaleria(supabase){
     try {
       const { data, error } = await supabase
@@ -193,7 +186,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
         .list("",{ limit:6, sortBy:{ column:"created_at", order:"desc" }});
       if(error) throw error;
       const galeria=document.getElementById("galeriaImagenes");
-      if (!galeria) return;
       galeria.innerHTML="";
       if(!data || data.length===0){
         galeria.textContent="No hay imágenes.";
@@ -202,37 +194,28 @@ document.addEventListener("DOMContentLoaded", ()=>{
       data.forEach(file=>{
         const url = supabase.storage.from("galeria").getPublicUrl(file.name).data.publicUrl;
         const img=document.createElement("img");
-        img.src=url;
-        img.alt=file.name;
-        img.style.width="120px";
-        img.style.height="120px";
-        img.style.objectFit="cover";
-        img.style.borderRadius="8px";
+        img.src=url; img.alt=file.name;
+        img.style.width="120px"; img.style.height="120px";
+        img.style.objectFit="cover"; img.style.borderRadius="8px";
         img.addEventListener("click",()=>abrirModal(url));
         galeria.appendChild(img);
       });
     } catch(err){
       console.error("❌ Error galería:", err);
-      const galeria=document.getElementById("galeriaImagenes");
-      if (galeria) galeria.textContent="Error al cargar galería.";
+      document.getElementById("galeriaImagenes").textContent="Error al cargar galería.";
     }
   }
 
   // Modal
   window.abrirModal=function(url){
-    const modal = document.getElementById("modalImg");
-    const content = document.getElementById("modalContent");
-    if(modal && content){
-      content.src=url;
-      modal.style.display="flex";
-    }
+    document.getElementById("modalContent").src=url;
+    document.getElementById("modalImg").style.display="flex";
   }
   window.cerrarModal=function(){
-    const modal = document.getElementById("modalImg");
-    if(modal) modal.style.display="none";
+    document.getElementById("modalImg").style.display="none";
   }
 
-  // 🚀 Inicializar cuando Supabase esté listo
+  // 🚀 Inicializar
   function whenSupabaseReady(cb){
     if(window.CARITAS?.supabase) cb(window.CARITAS.supabase);
     else setTimeout(()=> whenSupabaseReady(cb), 100);
