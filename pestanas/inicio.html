@@ -105,74 +105,87 @@
     <img id="modalContent" src="" alt="Imagen ampliada">
   </div>
 
-<script>
+<script type="module">
 document.addEventListener("DOMContentLoaded", ()=>{
+
   function showMsg(text, type="info"){
     const msg = document.getElementById("msg");
+    if (!msg) return;
     msg.textContent = text;
     msg.className = type;
-    setTimeout(()=>{ msg.textContent=""; },4000);
+    setTimeout(()=>{ msg.textContent=""; msg.className=""; }, 4000);
   }
 
   // Refrescar al hacer click en el título
-  document.getElementById("tituloInicio").addEventListener("click", ()=> location.hash = '#inicio');
+  const tituloInicio = document.getElementById("tituloInicio");
+  if (tituloInicio) {
+    tituloInicio.addEventListener("click", ()=> location.hash = '#inicio');
+  }
 
-  // Bienvenida dinámica con Firebase o visitante
+  // 👋 Bienvenida dinámica con Firebase o visitante
   function bienvenidaPersonalizada(user){
     const hora = new Date().getHours();
     let saludo = hora < 12 ? "☀️ Buenos días" : hora < 18 ? "🌤️ Buenas tardes" : "🌙 Buenas noches";
     const nombre = user?.displayName || user?.email?.split("@")[0] || "";
-    document.getElementById("bienvenida").textContent = nombre ? `${saludo}, ${nombre}` : saludo;
+    const el = document.getElementById("bienvenida");
+    if (el) el.textContent = nombre ? `${saludo}, ${nombre}` : saludo;
   }
 
   const auth = window.CARITAS?.auth;
-  if(auth){
+  if (auth) {
     auth.onAuthStateChanged(user=> bienvenidaPersonalizada(user));
   } else {
     bienvenidaPersonalizada(null);
   }
 
-  // 📝 Mensaje semanal
+  // 📝 Mensaje semanal (tabla mensajes: contenido, creado_en)
   async function cargarMensajeSemanal(supabase){
     try {
       const { data, error } = await supabase
         .from("mensajes")
-        .select("contenido, created_at")
-        .order("created_at",{ascending:false})
+        .select("contenido, creado_en")
+        .order("creado_en",{ascending:false})
         .limit(1)
         .maybeSingle();
       if(error) throw error;
-      document.getElementById("contenidoMensaje").textContent = data?.contenido || "No hay mensaje semanal.";
+      const el = document.getElementById("contenidoMensaje");
+      if (el) el.textContent = data?.contenido || "No hay mensaje semanal.";
     } catch(err){
-      console.error(err);
-      document.getElementById("contenidoMensaje").textContent = "Error cargando mensaje.";
+      console.error("❌ Error mensaje semanal:", err);
+      const el = document.getElementById("contenidoMensaje");
+      if (el) el.textContent = "Error cargando mensaje.";
     }
   }
 
-  // 📌 Pendientes
+  // 📌 Pendientes (tabla pendientes: titulo, descripcion, creado_en)
   async function renderPendientesHome(supabase){
     try {
       const { data, error } = await supabase
         .from("pendientes")
-        .select("descripcion, estado, fecha")
-        .order("fecha",{ascending:true})
+        .select("id, titulo, descripcion, creado_en")
+        .order("creado_en",{ascending:true})
         .limit(5);
       if(error) throw error;
       const lista=document.getElementById("listaPendientes");
+      if (!lista) return;
       lista.innerHTML="";
-      if(!data || data.length===0){ lista.innerHTML="<li>No hay pendientes.</li>"; return; }
+      if(!data || data.length===0){
+        lista.innerHTML="<li>No hay pendientes.</li>";
+        return;
+      }
       data.forEach(p=>{
         const li=document.createElement("li");
-        li.textContent=`${p.descripcion} ${p.estado?"✔️":"⏳"} (${p.fecha||"sin fecha"})`;
+        li.innerHTML = `<strong>${p.titulo}</strong><br>${p.descripcion||""}`;
         lista.appendChild(li);
       });
     } catch(err){
-      console.error(err);
-      document.getElementById("listaPendientes").innerHTML="<li>Error al cargar pendientes.</li>";
+      console.error("❌ Error pendientes:", err);
+      const lista=document.getElementById("listaPendientes");
+      if (lista) lista.innerHTML="<li>Error al cargar pendientes.</li>";
     }
   }
 
-  // 🖼️ Galería
+  // 🖼️ Galería desde bucket "galeria"
   async function cargarGaleria(supabase){
     try {
       const { data, error } = await supabase
@@ -180,33 +193,46 @@ document.addEventListener("DOMContentLoaded", ()=>{
         .list("",{ limit:6, sortBy:{ column:"created_at", order:"desc" }});
       if(error) throw error;
       const galeria=document.getElementById("galeriaImagenes");
+      if (!galeria) return;
       galeria.innerHTML="";
-      if(!data || data.length===0){ galeria.textContent="No hay imágenes."; return; }
+      if(!data || data.length===0){
+        galeria.textContent="No hay imágenes.";
+        return;
+      }
       data.forEach(file=>{
         const url = supabase.storage.from("galeria").getPublicUrl(file.name).data.publicUrl;
         const img=document.createElement("img");
-        img.src=url; img.alt=file.name;
-        img.style.width="120px"; img.style.height="120px";
-        img.style.objectFit="cover"; img.style.borderRadius="8px";
+        img.src=url;
+        img.alt=file.name;
+        img.style.width="120px";
+        img.style.height="120px";
+        img.style.objectFit="cover";
+        img.style.borderRadius="8px";
         img.addEventListener("click",()=>abrirModal(url));
         galeria.appendChild(img);
       });
     } catch(err){
-      console.error(err);
-      document.getElementById("galeriaImagenes").textContent="Error al cargar galería.";
+      console.error("❌ Error galería:", err);
+      const galeria=document.getElementById("galeriaImagenes");
+      if (galeria) galeria.textContent="Error al cargar galería.";
     }
   }
 
   // Modal
   window.abrirModal=function(url){
-    document.getElementById("modalContent").src=url;
-    document.getElementById("modalImg").style.display="flex";
+    const modal = document.getElementById("modalImg");
+    const content = document.getElementById("modalContent");
+    if(modal && content){
+      content.src=url;
+      modal.style.display="flex";
+    }
   }
   window.cerrarModal=function(){
-    document.getElementById("modalImg").style.display="none";
+    const modal = document.getElementById("modalImg");
+    if(modal) modal.style.display="none";
   }
 
-  // 🚀 Inicializar
+  // 🚀 Inicializar cuando Supabase esté listo
   function whenSupabaseReady(cb){
     if(window.CARITAS?.supabase) cb(window.CARITAS.supabase);
     else setTimeout(()=> whenSupabaseReady(cb), 100);
@@ -217,7 +243,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
     renderPendientesHome(supabase);
     cargarGaleria(supabase);
   });
+
 });
+</script>
+<script>
+function cerrarModal() {
+  const modal = document.getElementById("miModal"); // ajusta al id real
+  if (modal) modal.style.display = "none";
+}
 </script>
 </body>
 </html>
