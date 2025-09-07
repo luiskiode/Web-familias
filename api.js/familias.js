@@ -1,82 +1,116 @@
-// familias.js — Gestión de familias en Cáritas CNC
+// api.js/familias.js
 console.log("📌 familias.js cargado");
 
-(function () {
-  'use strict';
-
-  let supabase;            // ⬅️ antes era const ...
-  let tabla, msgBox;
-
-  function showMsg(text, type = "info") {
-    if (!msgBox) return console.warn("MSG:", text);
-    msgBox.textContent = text;
-    msgBox.className = type;
-    setTimeout(() => { msgBox.textContent = ""; msgBox.className = ""; }, 4000);
+document.addEventListener("DOMContentLoaded", () => {
+  const tabla = document.querySelector("#familiasTable tbody");
+  if (!tabla) {
+    // 👉 Evita warnings en páginas sin tabla
+    console.log("ℹ️ familias.js: no hay #familiasTable en esta página, se omite.");
+    return;
   }
 
-  const esc = (s = "") =>
-    String(s).replace(/[&<>"']/g, m =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])
-    );
+  const msg = document.getElementById("msg");
+  const cambios = new Map();
+  let page = 0;
+  const pageSize = 20;
 
-  async function cargarFamilias() {
-    if (!supabase || !tabla) return;
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; msg.className=""; }, 4000);
+  }
 
-    tabla.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+
+  async function cargarFamilias(){
+    const supabase = window.CARITAS?.supabase;
+    if (!supabase) {
+      console.warn("familias.js: Supabase no inicializado aún");
+      return;
+    }
     try {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      tabla.innerHTML = "<tr><td colspan='6'>Cargando...</td></tr>";
       const { data, error } = await supabase
         .from("familias")
         .select("*")
-        .order("id", { ascending: false })
-        .limit(50);
+        .order("id",{ascending:true})
+        .range(start,end);
 
       if (error) throw error;
-
-      tabla.innerHTML = "";
       if (!data || data.length === 0) {
-        tabla.innerHTML = "<tr><td colspan='6'>No hay familias registradas</td></tr>";
+        tabla.innerHTML = "<tr><td colspan='6'>Sin registros</td></tr>";
         return;
       }
 
-      data.forEach(f => {
+      tabla.innerHTML = "";
+      data.forEach(fam => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${esc(f.id)}</td>
-          <td>${esc(f.nombres_apellidos || "")}</td>
-          <td>${esc(f.dni_solicitante || "")}</td>
-          <td>${esc(f.apellido_familia || "")}</td>
-          <td>${esc(f.direccion || "")}</td>
-          <td>${esc(f.telefono_contacto || "")}</td>
-        `;
+          <td>${fam.id}</td>
+          <td>${esc(fam.nombres_apellidos||"")}</td>
+          <td>${esc(fam.direccion||"")}</td>
+          <td>${esc(fam.telefono_contacto||"")}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+          <td><button class="btn btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>`;
         tabla.appendChild(tr);
       });
-
-      showMsg("✅ Familias cargadas correctamente", "success");
-    } catch (err) {
+    } catch(err){
       console.error("❌ Error cargando familias:", err);
-      tabla.innerHTML = "<tr><td colspan='6'>Error al cargar familias</td></tr>";
-      showMsg("❌ Error al cargar familias", "error");
+      tabla.innerHTML = "<tr><td colspan='6'>Error al cargar datos</td></tr>";
     }
   }
 
-  // 🚀 Exponer inicializador global para el router
-  window.initFamilias = function () {
-    // Asegurar que Supabase ya esté listo
-    supabase = window.CARITAS?.supabase;
-    if (!supabase) {
-      setTimeout(window.initFamilias, 150);
-      return;
+  // Guardar cambios visitada
+  document.getElementById("guardarCambios")?.addEventListener("click", async ()=>{
+    const supabase = window.CARITAS?.supabase;
+    if (!supabase) return;
+    try {
+      for(const [id,v] of cambios){
+        await supabase.from("familias").update({visitada:v}).eq("id",id);
+      }
+      showMsg("✅ Cambios guardados","success");
+      cambios.clear();
+      cargarFamilias();
+    } catch(err){
+      showMsg("❌ Error guardando cambios","error");
     }
+  });
 
-    const tableEl = document.getElementById("familiasTable");
-    msgBox = document.getElementById("msg");
-    tabla = tableEl ? tableEl.querySelector("tbody") : null;
-
-    if (!tabla) {
-      console.warn("⚠️ No se encontró #familiasTable en DOM");
-      return;
+  // Detectar cambios en checkboxes
+  document.getElementById("familiasTable")?.addEventListener("change", e=>{
+    if(e.target.type==="checkbox"){
+      cambios.set(e.target.dataset.id, e.target.checked);
     }
+  });
 
-    cargarFamilias();
-  };
-})();
+  // Eliminar
+  document.getElementById("familiasTable")?.addEventListener("click", async e=>{
+    if(e.target.dataset.del){
+      if(confirm("¿Eliminar familia?")){
+        try{
+          await window.CARITAS.supabase.from("familias").delete().eq("id",e.target.dataset.del);
+          showMsg("🗑️ Familia eliminada","success");
+          cargarFamilias();
+        } catch{
+          showMsg("❌ Error eliminando familia","error");
+        }
+      }
+    }
+  });
+
+  // Paginación
+  document.getElementById("prevPage")?.addEventListener("click",()=>{
+    if(page>0){ page--; cargarFamilias(); }
+  });
+  document.getElementById("nextPage")?.addEventListener("click",()=>{
+    page++; cargarFamilias();
+  });
+
+  // 🚀 Iniciar carga
+  if (window.CARITAS?.supabase) cargarFamilias();
+  else document.addEventListener("supabase:ready:caritas", ()=> cargarFamilias(), {once:true});
+});
