@@ -21,7 +21,6 @@
 
   <!-- 🛠 Herramientas de diagnóstico -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script type="module" src="api.js/health-caritas.js"></script>
   <script defer src="api.js/error-overlay.js"></script>
 
   <!-- ✅ Supabase ESM -->
@@ -294,16 +293,19 @@
           return;
         }
 
-        data.forEach(fam=>{
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${fam.id}</td>
-            <td>${esc(fam.nombres_apellidos||"")}</td>
-            <td>${esc(fam.direccion||"")}</td>
-            <td>${esc(fam.telefono_contacto||"")}</td>
-            <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-            <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-          `;
+       data.forEach(fam=>{
+  const tr = document.createElement("tr");
+  tr.dataset.id = fam.id; // guardamos el ID en el <tr>
+
+  tr.innerHTML = `
+    <td>${fam.id}</td>
+    <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+    <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+    <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+    <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+    <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+  `;
+  tabla.appendChild(tr);
           tabla.appendChild(tr);
         });
       }catch(err){
@@ -349,6 +351,26 @@ document.getElementById("familiasTable")
     });
 
     cargarFamilias();
+    // Guardar cambios inline al salir de la celda
+document.getElementById("familiasTable").addEventListener("blur", async e => {
+  if (e.target.matches("[contenteditable]")) {
+    const id = e.target.closest("tr").dataset.id;
+    const field = e.target.dataset.field;
+    const value = e.target.textContent.trim();
+
+    try {
+      const { error } = await supabase
+        .from("familias")
+        .update({ [field]: value })
+        .eq("id", id);
+      if (error) throw error;
+      showMsg("✅ Campo actualizado", "success");
+    } catch (err) {
+      console.error("❌ Error al actualizar:", err);
+      showMsg("❌ Error al actualizar", "error");
+    }
+  }
+}, true);
   </script>
 </body>
 </html>
