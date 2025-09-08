@@ -312,12 +312,13 @@
         tr.dataset.id = fam.id; // guardamos el ID en el <tr>
 
         tr.innerHTML = `
-          <td>${fam.id}</td>
-          <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-          <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-          <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-          <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+           <td>${fam.id}</td>
+  <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+  <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+  <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+  <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+  <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+  <td><button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>
         `;
         tabla.appendChild(tr);
       });
@@ -377,6 +378,22 @@
       }
     }
   }, true);
+
+  document.getElementById("familiasTable").addEventListener("click", async e => {
+  if (e.target.dataset.del) {
+    const id = e.target.dataset.del;
+    if (confirm("¿Seguro que deseas eliminar esta familia?")) {
+      try {
+        await supabase.from("familias").delete().eq("id", id);
+        showMsg("🗑️ Familia eliminada", "success");
+        cargarFamilias();
+      } catch (err) {
+        console.error("❌ Error eliminando:", err);
+        showMsg("❌ Error al eliminar", "error");
+      }
+    }
+  }
+});
 </script>
 </body>
 </html>

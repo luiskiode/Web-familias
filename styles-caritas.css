@@ -25,11 +25,7 @@ html, body {
   z-index:-2;
   opacity:0.3;
 }
-body::before {
-  content:""; position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(185,28,28,0.85), rgba(0,0,0,0.95));
-  z-index:-1;
-}
+
 
 /* Cards */
 .card {
@@ -132,3 +128,16 @@ input:required, select:required {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+.btn-del {
+  background: #b91c1c;
+  border: none;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-del:hover {
+  background: #ff1a1a;
+}
+
