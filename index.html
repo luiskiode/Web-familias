@@ -19,12 +19,17 @@
              connect-src *;
              font-src * data:;">
 
+  <!-- 🛠 Herramientas de diagnóstico -->
+  <script type="module" src="api.js/self-heal-caritas.js"></script>
+  <script type="module" src="api.js/health-caritas.js"></script>
+  <script defer src="api.js/error-overlay.js"></script>
+
   <!-- ✅ Supabase ESM -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "TU_ANON_KEY"; // ⚠️ pon aquí tu anon key
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw"; // ⚠️ reemplaza con tu anon key
 
     window.CARITAS = window.CARITAS || {};
     window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -61,7 +66,147 @@
     <a class="btn" href="https://drive.google.com/" target="_blank">📂 Acceder a Drive</a>
   </section>
 
-  <!-- 👨‍👩‍👧 Familias registradas -->
+
+  
+  <!-- 📋 Formulario Integral -->
+  <section class="container card">
+    <h2>📋 Registro Integral de Familia</h2>
+    <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
+
+    <form id="famForm" enctype="multipart/form-data">
+      <label>👤 Nombre y apellidos del solicitante:</label>
+      <input type="text" id="nombres_apellidos" required>
+
+      <label>📍 Dirección de la familia:</label>
+      <input type="text" id="direccion" placeholder="Ej: Calle 123, Ciudad" required>
+
+      <label>📞 Teléfono de contacto:</label>
+      <input type="tel" id="telefono_contacto" required>
+
+      <label>🪪 DNI del solicitante:</label>
+      <input type="text" id="dni_solicitante">
+
+      <label>👨‍👩‍👧 Apellido de la familia:</label>
+      <input type="text" id="apellido_familia">
+
+      <label>📝 Observaciones:</label>
+      <textarea id="observaciones" rows="3"></textarea>
+
+      <label>📂 Subir archivo de registro:</label>
+      <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
+
+    <hr>
+
+    <!-- II. DATOS COMPLEMENTARIOS -->
+    <h3>Datos complementarios</h3>
+    <input type="text" id="jefe_hogar" placeholder="Nombre del Jefe(a) del Hogar">
+    <input type="number" id="edad" placeholder="Edad">
+    <select id="estado_civil">
+      <option value="">Estado Civil</option>
+      <option>Soltero(a)</option><option>Casado(a)</option><option>Conviviente</option>
+      <option>Divorciado(a)</option><option>Viudo(a)</option>
+    </select>
+    <input type="text" id="ocupacion" placeholder="Ocupación">
+    <select id="instruccion">
+      <option value="">Grado de Instrucción</option>
+      <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
+      <option>Técnico</option><option>Universitario</option><option>Otro</option>
+    </select>
+    <input type="number" id="num_integrantes" placeholder="Número de integrantes del hogar">
+    <input type="date" id="fecha_entrevista">
+
+    <hr>
+
+    <!-- III. SOCIO-ECONÓMICO -->
+    <h3>Aplicación socio-económica</h3>
+    <label>¿Viven en casa con materiales precarios?</label>
+    <select id="casa_precaria"><option>si</option><option>no</option></select>
+
+    <label>¿Tiene acceso a servicios básicos?</label>
+    <select id="servicios_basicos"><option>si</option><option>no</option></select>
+
+    <label>¿Se encuentra en el límite alimentario de la Ley?</label>
+    <select id="minimo_alimentario"><option>si</option><option>no</option></select>
+
+    <label>¿Dificultad para obtener alimentos básicos?</label>
+    <select id="dificultad_alimentos"><option>si</option><option>no</option></select>
+
+    <label>¿Viven en hacinamiento?</label>
+    <select id="hacinamiento"><option>si</option><option>no</option></select>
+
+    <label>¿Ha vendido pertenencias?</label>
+    <select id="vende_pertenencias"><option>si</option><option>no</option></select>
+
+    <hr>
+
+    <!-- IV. DISCAPACIDAD -->
+    <h3>Discapacidad</h3>
+    <label>¿Hay discapacidad grave?</label>
+    <select id="discapacidad_grave"><option>si</option><option>no</option></select>
+    <input type="text" id="tipo_discapacidad" placeholder="Tipo de discapacidad">
+    <label>¿Usa aparatos de ayuda?</label>
+    <select id="aparatos_ayuda"><option>si</option><option>no</option></select>
+
+    <label>¿Discapacidad intelectual grave?</label>
+    <select id="discapacidad_intelectual"><option>si</option><option>no</option></select>
+    <label>¿Bajo tratamiento médico?</label>
+    <select id="bajo_tratamiento"><option>si</option><option>no</option></select>
+    <label>¿Requiere cuidador?</label>
+    <select id="requiere_cuidador"><option>si</option><option>no</option></select>
+
+    <hr>
+
+    <!-- V. VULNERABILIDADES -->
+    <h3>Condiciones de vulnerabilidad</h3>
+    <label>¿Sufre abandono o depresión familiar?</label>
+    <select id="abandono_depresion"><option>si</option><option>no</option></select>
+    <input type="text" id="abandono_detalle" placeholder="Explique si aplica">
+
+    <label>¿Enfermedad crónica grave?</label>
+    <select id="enfermedad_cronica"><option>si</option><option>no</option></select>
+    <input type="text" id="enfermedad_detalle" placeholder="Cuál?">
+
+    <label>¿Exposición a violencia?</label>
+    <select id="violencia"><option>si</option><option>no</option></select>
+    <input type="text" id="violencia_detalle" placeholder="Explique si aplica">
+
+    <hr>
+
+    <!-- VI. EDUCACIÓN -->
+    <h3>Vulnerabilidad educativa</h3>
+    <label>¿Niños/as fuera de la escuela?</label>
+    <select id="ninos_fuera_colegio"><option>si</option><option>no</option></select>
+    <input type="text" id="quienes_fuera" placeholder="¿Quiénes?">
+    <label>Causas:</label>
+    <textarea id="causas_no_asistencia" rows="3"></textarea>
+    <label>¿Dispuestos a retorno?</label>
+    <select id="dispuesto_retorno"><option>si</option><option>no</option></select>
+    <input type="text" id="apoyo_requerido" placeholder="Apoyo que necesita">
+
+    <hr>
+
+    <!-- VII. PROGRAMAS DEL ESTADO -->
+    <h3>Programas de apoyo del Estado</h3>
+    <label>Seleccione los programas:</label>
+    <div>
+      <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label><br>
+      <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular / Ollas</label><br>
+      <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label><br>
+      <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label><br>
+      <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label><br>
+      <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label><br>
+      <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
+    </div>
+    <label>¿Es suficiente este apoyo?</label>
+    <select id="apoyo_suficiente"><option>si</option><option>no</option></select>
+    <input type="text" id="apoyo_adicional" placeholder="¿Qué más requiere?">
+
+    <br><br>
+   <button type="submit" class="btn">💾 Guardar Familia</button>
+    </form>
+  </section>
+
+   <!-- 👨‍👩‍👧 Familias registradas -->
   <main class="container card">
     <h2>👨‍👩‍👧 Familias Registradas</h2>
     <div id="msg"></div>
@@ -84,8 +229,8 @@
     </div>
     <button id="guardarCambios" class="btn" style="margin-top:1rem;">💾 Guardar cambios</button>
   </main>
-
-  <!-- ✅ Script de familias -->
+  
+   <!-- ✅ Script de formulario y listado -->
   <script type="module">
     const supabase = window.CARITAS?.supabase;
     const tabla = document.querySelector("#familiasTable tbody");
@@ -103,6 +248,32 @@
     const esc = (s="") => String(s).replace(/[&<>"']/g,
       m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
     );
+
+    // Guardar familia
+    document.getElementById("famForm").addEventListener("submit", async e=>{
+      e.preventDefault();
+      const form = e.target;
+
+      const datos = {
+        nombres_apellidos: form.nombres_apellidos.value,
+        direccion: form.direccion.value,
+        telefono_contacto: form.telefono_contacto.value,
+        dni_solicitante: form.dni_solicitante.value || null,
+        apellido_familia: form.apellido_familia.value || null,
+        observaciones: form.observaciones.value || null
+        // 👉 aquí añadirías el resto de campos opcionales del cuestionario
+      };
+
+      const { error } = await supabase.from("familias").insert([datos]);
+      if (error) {
+        alert("❌ Error al guardar");
+        console.error(error);
+      } else {
+        alert("✅ Familia registrada");
+        form.reset();
+        cargarFamilias();
+      }
+    });
 
     async function cargarFamilias(){
       try {
@@ -139,19 +310,26 @@
       }
     }
 
-    // Guardar cambios
-    document.getElementById("guardarCambios").addEventListener("click", async ()=>{
-      try{
-        for(const [id,v] of cambios){
-          await supabase.from("familias").update({visitada:v}).eq("id",id);
-        }
-        showMsg("✅ Cambios guardados","success");
-        cambios.clear();
-        cargarFamilias();
-      }catch{
-        showMsg("❌ Error guardando cambios","error");
+    // Cambios de visitada — guardado inmediato
+document.getElementById("familiasTable")
+  ?.addEventListener("change", async e => {
+    if (e.target && e.target.type === "checkbox") {
+      const id = e.target.dataset.id;
+      const visitada = e.target.checked;
+      const supabase = window.CARITAS?.supabase;
+      if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
+
+      try {
+        await supabase.from("familias").update({ visitada }).eq("id", id);
+        showMsg("✅ Estado actualizado", "success");
+      } catch (err) {
+        console.error("❌ Error actualizando visitada:", err);
+        showMsg("❌ Error actualizando", "error");
+        // revertir checkbox
+        e.target.checked = !visitada;
       }
-    });
+    }
+  });
 
     // Detectar cambios en checkboxes
     document.getElementById("familiasTable").addEventListener("change", e=>{

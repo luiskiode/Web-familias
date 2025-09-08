@@ -1,96 +1,91 @@
-/* =========================
-   🎨 STYLES-CARITAS.CSS
-   ========================= */
 :root {
-  --primary: #b91c1c;  /* rojo */
-  --bg: #000;          /* negro */
-  --text: #f5f5f5;
+  --primary: #b91c1c;   /* rojo */
+  --bg: #000;           /* negro */
+  --text: #fff;         /* blanco */
   --border: #550000;
-  --muted: #888;
-  --surface: #1a0000;
+  --muted: #aaa;
+  --surface: #1a0000;   /* fondo de tarjetas */
   --surface-2: #2a0000;
 }
 
+/* Reset */
 * { margin:0; padding:0; box-sizing:border-box; }
 html, body {
   font-family: 'Poppins', Arial, sans-serif;
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
   min-height: 100%;
 }
 
 /* 🎥 Fondo */
 #video-fondo {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -2;
-  opacity: 0.4;
-  filter: brightness(0.6) saturate(1.2);
+  position: fixed; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  z-index:-2;
+  opacity:0.3;
 }
 body::before {
-  content:"";
-  position:fixed; inset:0;
-  background:linear-gradient(180deg, rgba(185,28,28,0.85) 0%, rgba(10,10,10,0.95) 100%);
+  content:""; position:fixed; inset:0;
+  background:linear-gradient(180deg, rgba(185,28,28,0.85), rgba(0,0,0,0.95));
   z-index:-1;
 }
 
-/* Encabezados */
-h1, h2 {
-  text-align:center;
-  margin:1rem 0;
-  color:var(--text);
-}
-h2 span { color: var(--primary); }
-
-/* Card */
+/* Cards */
 .card {
   background: var(--surface);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1rem;
   margin: 1rem auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,.6), 0 0 15px rgba(185,28,28,.4);
+  box-shadow: 0 4px 12px rgba(0,0,0,.6);
 }
 
-/* Botón */
-.btn {
-  background: linear-gradient(135deg, #b91c1c, #3a0d0d);
-  color:#fff;
-  border:none;
-  padding:10px 16px;
-  border-radius:10px;
+/* Botones */
+.btn, .btn-ghost {
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor:pointer;
-  font-size:0.95rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  font-weight:600;
+}
+.btn {
+  background: var(--primary);
+  border:none;
+  color: var(--text);
 }
 .btn:hover {
-  transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(185,28,28,.5);
+  background: #ff1a1a;
+}
+.btn-ghost {
+  border:1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+}
+.btn-ghost:hover {
+  background: var(--primary);
+  color: var(--text);
 }
 
-/* Tabla */
+/* Tablas */
 table {
   width:100%;
   border-collapse:collapse;
   margin-top:1rem;
   background: var(--surface-2);
-  border-radius:8px;
-  overflow:hidden;
 }
 thead th {
   background: var(--primary);
   color:#fff;
-  padding:12px;
-  text-align:left;
+  padding: 10px;
 }
 tbody td {
-  padding:10px;
+  padding: 8px;
   border-bottom:1px solid var(--border);
 }
-tbody tr:hover { background:#222; }
+tbody tr:hover {
+  background:#111;
+}
 
-/* Estados */
-.success { color:#22c55e; font-weight:bold; }
-.error { color:#ef4444; font-weight:bold; }
+/* Mensajes */
+.success { color:#22c55e; }
+.error { color:#ef4444; }
+.muted { color:var(--muted); }
