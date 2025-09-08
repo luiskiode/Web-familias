@@ -63,7 +63,7 @@
 
   <!-- 📂 Botón a Google Drive -->
   <section class="container card center">
-    <a class="btn" href="https://drive.google.com/" target="_blank">📂 Acceder a Drive</a>
+    <a class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
   </section>
 
 
@@ -207,8 +207,10 @@
 
    <!-- 👨‍👩‍👧 Familias registradas -->
   <main class="container card">
-    <h2>👨‍👩‍👧 Familias Registradas</h2>
-    <div id="msg"></div>
+  <h2>👨‍👩‍👧 Familias Registradas</h2>
+  <div id="msg"></div>
+
+  <div class="table-wrapper">
     <table id="familiasTable">
       <thead>
         <tr>
@@ -222,12 +224,13 @@
       </thead>
       <tbody></tbody>
     </table>
-    <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
-      <button id="prevPage" class="btn">⏮ Anterior</button>
-      <button id="nextPage" class="btn">Siguiente ⏭</button>
-    </div>
-    <button id="guardarCambios" class="btn" style="margin-top:1rem;">💾 Guardar cambios</button>
-  </main>
+  </div>
+
+  <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+    <button id="prevPage" class="btn">⏮ Anterior</button>
+    <button id="nextPage" class="btn">Siguiente ⏭</button>
+  </div>
+</main>
   
    <!-- ✅ Script de formulario y listado -->
   <script type="module">

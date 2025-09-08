@@ -124,3 +124,11 @@ input:required, select:required {
   border-left:3px solid var(--primary);
 }
 .center { text-align:center; }
+
+/* Contenedor con scroll para la lista de familias */
+.table-wrapper {
+  max-height: 400px;   /* ajusta según tu preferencia */
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
