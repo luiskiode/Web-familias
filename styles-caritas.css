@@ -89,3 +89,38 @@ tbody tr:hover {
 .success { color:#22c55e; }
 .error { color:#ef4444; }
 .muted { color:var(--muted); }
+
+fieldset {
+  border:1px solid var(--primary);
+  border-radius:8px;
+  margin:1rem 0;
+  padding:1rem;
+}
+legend {
+  color: var(--primary);
+  font-weight:bold;
+  padding:0 8px;
+}
+.form-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap:1rem;
+  margin-bottom:1rem;
+}
+label {
+  display:block;
+  font-size:0.9rem;
+  margin-bottom:0.5rem;
+}
+input, select, textarea {
+  width:100%;
+  padding:8px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:#111;
+  color:var(--text);
+}
+input:required, select:required {
+  border-left:3px solid var(--primary);
+}
+.center { text-align:center; }

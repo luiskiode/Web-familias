@@ -70,141 +70,140 @@
   
   <!-- 📋 Formulario Integral -->
   <section class="container card">
-    <h2>📋 Registro Integral de Familia</h2>
-    <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
+  <h2>📋 Registro Integral de Familia</h2>
+  <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
 
-    <form id="famForm" enctype="multipart/form-data">
-      <label>👤 Nombre y apellidos del solicitante:</label>
-      <input type="text" id="nombres_apellidos" required>
+  <form id="famForm" enctype="multipart/form-data">
 
-      <label>📍 Dirección de la familia:</label>
-      <input type="text" id="direccion" placeholder="Ej: Calle 123, Ciudad" required>
-
-      <label>📞 Teléfono de contacto:</label>
-      <input type="tel" id="telefono_contacto" required>
-
-      <label>🪪 DNI del solicitante:</label>
-      <input type="text" id="dni_solicitante">
-
-      <label>👨‍👩‍👧 Apellido de la familia:</label>
-      <input type="text" id="apellido_familia">
-
-      <label>📝 Observaciones:</label>
-      <textarea id="observaciones" rows="3"></textarea>
-
-      <label>📂 Subir archivo de registro:</label>
-      <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
-
-    <hr>
+    <!-- I. DATOS BÁSICOS -->
+    <fieldset>
+      <legend>I. Datos Básicos</legend>
+      <div class="form-grid">
+        <label>👤 Nombre y apellidos*<br>
+          <input type="text" id="nombres_apellidos" required>
+        </label>
+        <label>📍 Dirección*<br>
+          <input type="text" id="direccion" required>
+        </label>
+        <label>📞 Teléfono*<br>
+          <input type="tel" id="telefono_contacto" required>
+        </label>
+      </div>
+      <div class="form-grid">
+        <label>🪪 DNI<br>
+          <input type="text" id="dni_solicitante">
+        </label>
+        <label>👨‍👩‍👧 Apellido de la familia<br>
+          <input type="text" id="apellido_familia">
+        </label>
+      </div>
+      <label>📝 Observaciones<br>
+        <textarea id="observaciones" rows="3"></textarea>
+      </label>
+      <label>📂 Subir archivo<br>
+        <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
+      </label>
+    </fieldset>
 
     <!-- II. DATOS COMPLEMENTARIOS -->
-    <h3>Datos complementarios</h3>
-    <input type="text" id="jefe_hogar" placeholder="Nombre del Jefe(a) del Hogar">
-    <input type="number" id="edad" placeholder="Edad">
-    <select id="estado_civil">
-      <option value="">Estado Civil</option>
-      <option>Soltero(a)</option><option>Casado(a)</option><option>Conviviente</option>
-      <option>Divorciado(a)</option><option>Viudo(a)</option>
-    </select>
-    <input type="text" id="ocupacion" placeholder="Ocupación">
-    <select id="instruccion">
-      <option value="">Grado de Instrucción</option>
-      <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
-      <option>Técnico</option><option>Universitario</option><option>Otro</option>
-    </select>
-    <input type="number" id="num_integrantes" placeholder="Número de integrantes del hogar">
-    <input type="date" id="fecha_entrevista">
-
-    <hr>
+    <fieldset>
+      <legend>II. Datos Complementarios</legend>
+      <div class="form-grid">
+        <label>Jefe(a) de hogar<br><input type="text" id="jefe_hogar"></label>
+        <label>Edad<br><input type="number" id="edad"></label>
+        <label>Estado civil<br>
+          <select id="estado_civil">
+            <option value="">Seleccione...</option>
+            <option>Soltero(a)</option><option>Casado(a)</option>
+            <option>Conviviente</option><option>Divorciado(a)</option><option>Viudo(a)</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-grid">
+        <label>Ocupación<br><input type="text" id="ocupacion"></label>
+        <label>Grado de instrucción<br>
+          <select id="instruccion">
+            <option value="">Seleccione...</option>
+            <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
+            <option>Técnico</option><option>Universitario</option><option>Otro</option>
+          </select>
+        </label>
+        <label>Integrantes<br><input type="number" id="num_integrantes"></label>
+      </div>
+      <label>Fecha entrevista<br><input type="date" id="fecha_entrevista"></label>
+    </fieldset>
 
     <!-- III. SOCIO-ECONÓMICO -->
-    <h3>Aplicación socio-económica</h3>
-    <label>¿Viven en casa con materiales precarios?</label>
-    <select id="casa_precaria"><option>si</option><option>no</option></select>
-
-    <label>¿Tiene acceso a servicios básicos?</label>
-    <select id="servicios_basicos"><option>si</option><option>no</option></select>
-
-    <label>¿Se encuentra en el límite alimentario de la Ley?</label>
-    <select id="minimo_alimentario"><option>si</option><option>no</option></select>
-
-    <label>¿Dificultad para obtener alimentos básicos?</label>
-    <select id="dificultad_alimentos"><option>si</option><option>no</option></select>
-
-    <label>¿Viven en hacinamiento?</label>
-    <select id="hacinamiento"><option>si</option><option>no</option></select>
-
-    <label>¿Ha vendido pertenencias?</label>
-    <select id="vende_pertenencias"><option>si</option><option>no</option></select>
-
-    <hr>
+    <fieldset>
+      <legend>III. Socio-Económico</legend>
+      <div class="form-grid">
+        <label>🏠 Casa precaria<br><select id="casa_precaria"><option></option><option>si</option><option>no</option></select></label>
+        <label>💧 Servicios básicos<br><select id="servicios_basicos"><option></option><option>si</option><option>no</option></select></label>
+        <label>🍽 Dificultad alimentos<br><select id="dificultad_alimentos"><option></option><option>si</option><option>no</option></select></label>
+      </div>
+      <div class="form-grid">
+        <label>⚖️ Mínimo alimentario<br><select id="minimo_alimentario"><option></option><option>si</option><option>no</option></select></label>
+        <label>👥 Hacinamiento<br><select id="hacinamiento"><option></option><option>si</option><option>no</option></select></label>
+        <label>💸 Vendió pertenencias<br><select id="vende_pertenencias"><option></option><option>si</option><option>no</option></select></label>
+      </div>
+    </fieldset>
 
     <!-- IV. DISCAPACIDAD -->
-    <h3>Discapacidad</h3>
-    <label>¿Hay discapacidad grave?</label>
-    <select id="discapacidad_grave"><option>si</option><option>no</option></select>
-    <input type="text" id="tipo_discapacidad" placeholder="Tipo de discapacidad">
-    <label>¿Usa aparatos de ayuda?</label>
-    <select id="aparatos_ayuda"><option>si</option><option>no</option></select>
+    <fieldset>
+      <legend>IV. Discapacidad</legend>
+      <div class="form-grid">
+        <label>Discapacidad grave<br><select id="discapacidad_grave"><option></option><option>si</option><option>no</option></select></label>
+        <label>Tipo discapacidad<br><input type="text" id="tipo_discapacidad"></label>
+        <label>Aparatos de ayuda<br><select id="aparatos_ayuda"><option></option><option>si</option><option>no</option></select></label>
+      </div>
+      <div class="form-grid">
+        <label>Intelectual grave<br><select id="discapacidad_intelectual"><option></option><option>si</option><option>no</option></select></label>
+        <label>Bajo tratamiento<br><select id="bajo_tratamiento"><option></option><option>si</option><option>no</option></select></label>
+        <label>Requiere cuidador<br><select id="requiere_cuidador"><option></option><option>si</option><option>no</option></select></label>
+      </div>
+    </fieldset>
 
-    <label>¿Discapacidad intelectual grave?</label>
-    <select id="discapacidad_intelectual"><option>si</option><option>no</option></select>
-    <label>¿Bajo tratamiento médico?</label>
-    <select id="bajo_tratamiento"><option>si</option><option>no</option></select>
-    <label>¿Requiere cuidador?</label>
-    <select id="requiere_cuidador"><option>si</option><option>no</option></select>
-
-    <hr>
-
-    <!-- V. VULNERABILIDADES -->
-    <h3>Condiciones de vulnerabilidad</h3>
-    <label>¿Sufre abandono o depresión familiar?</label>
-    <select id="abandono_depresion"><option>si</option><option>no</option></select>
-    <input type="text" id="abandono_detalle" placeholder="Explique si aplica">
-
-    <label>¿Enfermedad crónica grave?</label>
-    <select id="enfermedad_cronica"><option>si</option><option>no</option></select>
-    <input type="text" id="enfermedad_detalle" placeholder="Cuál?">
-
-    <label>¿Exposición a violencia?</label>
-    <select id="violencia"><option>si</option><option>no</option></select>
-    <input type="text" id="violencia_detalle" placeholder="Explique si aplica">
-
-    <hr>
+    <!-- V. VULNERABILIDAD -->
+    <fieldset>
+      <legend>V. Vulnerabilidad</legend>
+      <div class="form-grid">
+        <label>Abandono/depresión<br><select id="abandono_depresion"><option></option><option>si</option><option>no</option></select></label>
+        <label>Enfermedad crónica<br><select id="enfermedad_cronica"><option></option><option>si</option><option>no</option></select></label>
+        <label>Violencia<br><select id="violencia"><option></option><option>si</option><option>no</option></select></label>
+      </div>
+    </fieldset>
 
     <!-- VI. EDUCACIÓN -->
-    <h3>Vulnerabilidad educativa</h3>
-    <label>¿Niños/as fuera de la escuela?</label>
-    <select id="ninos_fuera_colegio"><option>si</option><option>no</option></select>
-    <input type="text" id="quienes_fuera" placeholder="¿Quiénes?">
-    <label>Causas:</label>
-    <textarea id="causas_no_asistencia" rows="3"></textarea>
-    <label>¿Dispuestos a retorno?</label>
-    <select id="dispuesto_retorno"><option>si</option><option>no</option></select>
-    <input type="text" id="apoyo_requerido" placeholder="Apoyo que necesita">
+    <fieldset>
+      <legend>VI. Educación</legend>
+      <label>Niños fuera de escuela<br><select id="ninos_fuera_colegio"><option></option><option>si</option><option>no</option></select></label>
+      <label>¿Quiénes?<br><input type="text" id="quienes_fuera"></label>
+      <label>Causas<br><textarea id="causas_no_asistencia" rows="3"></textarea></label>
+      <label>Dispuestos a retorno<br><select id="dispuesto_retorno"><option></option><option>si</option><option>no</option></select></label>
+      <label>Apoyo requerido<br><input type="text" id="apoyo_requerido"></label>
+    </fieldset>
 
-    <hr>
+    <!-- VII. PROGRAMAS -->
+    <fieldset>
+      <legend>VII. Programas del Estado</legend>
+      <div class="form-grid">
+        <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label>
+        <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular</label>
+        <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label>
+        <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label>
+        <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label>
+        <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label>
+        <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
+      </div>
+      <label>¿Apoyo suficiente?<br><select id="apoyo_suficiente"><option></option><option>si</option><option>no</option></select></label>
+      <label>Apoyo adicional<br><input type="text" id="apoyo_adicional"></label>
+    </fieldset>
 
-    <!-- VII. PROGRAMAS DEL ESTADO -->
-    <h3>Programas de apoyo del Estado</h3>
-    <label>Seleccione los programas:</label>
-    <div>
-      <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label><br>
-      <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular / Ollas</label><br>
-      <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label><br>
-      <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label><br>
-      <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label><br>
-      <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label><br>
-      <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
+    <div class="center">
+      <button type="submit" class="btn">💾 Guardar Familia</button>
     </div>
-    <label>¿Es suficiente este apoyo?</label>
-    <select id="apoyo_suficiente"><option>si</option><option>no</option></select>
-    <input type="text" id="apoyo_adicional" placeholder="¿Qué más requiere?">
-
-    <br><br>
-   <button type="submit" class="btn">💾 Guardar Familia</button>
-    </form>
-  </section>
+  </form>
+</section>
 
    <!-- 👨‍👩‍👧 Familias registradas -->
   <main class="container card">
