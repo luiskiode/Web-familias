@@ -231,146 +231,152 @@
   </div>
 </main>
   
-   <!-- ✅ Script de formulario y listado -->
-  <script type="module">
-    const supabase = window.CARITAS?.supabase;
-    const tabla = document.querySelector("#familiasTable tbody");
-    const msg = document.getElementById("msg");
-    const cambios = new Map();
-    let page = 0;
-    const pageSize = 10;
+<!-- ✅ Script de formulario y listado -->
+<script type="module">
+  import { savePendiente } from "./api.js/db.js";
 
-    function showMsg(text, type="info"){
-      msg.textContent = text;
-      msg.className = type;
-      setTimeout(()=>{ msg.textContent=""; },4000);
-    }
+  const supabase = window.CARITAS?.supabase;
+  const tabla = document.querySelector("#familiasTable tbody");
+  const msg = document.getElementById("msg");
+  let page = 0;
+  const pageSize = 10;
 
-    const esc = (s="") => String(s).replace(/[&<>"']/g,
-      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-    );
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; },4000);
+  }
 
-    // Guardar familia
-    document.getElementById("famForm").addEventListener("submit", async e=>{
-      e.preventDefault();
-      const form = e.target;
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
-      const datos = {
-        nombres_apellidos: form.nombres_apellidos.value,
-        direccion: form.direccion.value,
-        telefono_contacto: form.telefono_contacto.value,
-        dni_solicitante: form.dni_solicitante.value || null,
-        apellido_familia: form.apellido_familia.value || null,
-        observaciones: form.observaciones.value || null
-        // 👉 aquí añadirías el resto de campos opcionales del cuestionario
-      };
+  // Guardar familia
+  const form = document.getElementById("famForm");
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
 
+    const datos = {
+      nombres_apellidos: form.nombres_apellidos.value,
+      direccion: form.direccion.value,
+      telefono_contacto: form.telefono_contacto.value,
+      dni_solicitante: form.dni_solicitante.value || null,
+      apellido_familia: form.apellido_familia.value || null,
+      observaciones: form.observaciones.value || null
+      // 👉 aquí puedes añadir los demás campos opcionales
+    };
+
+    if (!navigator.onLine) {
+      // 📦 Guardar localmente en IndexedDB
+      await savePendiente(datos);
+      alert("📦 Guardado localmente. Se enviará cuando vuelva internet.");
+
+      // Registrar sync en el service worker
+      if ("serviceWorker" in navigator && "SyncManager" in window) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.sync.register("sync-familias");
+      }
+    } else {
+      // 🚀 Guardar directamente en Supabase
       const { error } = await supabase.from("familias").insert([datos]);
       if (error) {
-        alert("❌ Error al guardar");
-        console.error(error);
+        console.error("❌ Error guardando en Supabase:", error);
+        alert("❌ Error al guardar en Supabase");
       } else {
-        alert("✅ Familia registrada");
+        alert("✅ Familia registrada en Supabase");
         form.reset();
         cargarFamilias();
-      }
-    });
-
-    async function cargarFamilias(){
-      try {
-        const start = page * pageSize;
-        const end = start + pageSize - 1;
-        const { data, error } = await supabase
-          .from("familias")
-          .select("*")
-          .order("id",{ascending:true})
-          .range(start,end);
-
-        if(error) throw error;
-        tabla.innerHTML="";
-        if(!data || data.length===0){
-          tabla.innerHTML="<tr><td colspan='6'>Sin registros</td></tr>";
-          return;
-        }
-
-       data.forEach(fam=>{
-  const tr = document.createElement("tr");
-  tr.dataset.id = fam.id; // guardamos el ID en el <tr>
-
-  tr.innerHTML = `
-    <td>${fam.id}</td>
-    <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-    <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-    <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-    <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-    <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-  `;
-  tabla.appendChild(tr);
-          tabla.appendChild(tr);
-        });
-      }catch(err){
-        console.error(err);
-        tabla.innerHTML="<tr><td colspan='6'>Error al cargar datos</td></tr>";
-      }
-    }
-
-    // Cambios de visitada — guardado inmediato
-document.getElementById("familiasTable")
-  ?.addEventListener("change", async e => {
-    if (e.target && e.target.type === "checkbox") {
-      const id = e.target.dataset.id;
-      const visitada = e.target.checked;
-      const supabase = window.CARITAS?.supabase;
-      if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
-
-      try {
-        await supabase.from("familias").update({ visitada }).eq("id", id);
-        showMsg("✅ Estado actualizado", "success");
-      } catch (err) {
-        console.error("❌ Error actualizando visitada:", err);
-        showMsg("❌ Error actualizando", "error");
-        // revertir checkbox
-        e.target.checked = !visitada;
       }
     }
   });
 
-    // Detectar cambios en checkboxes
-    document.getElementById("familiasTable").addEventListener("change", e=>{
-      if(e.target.type==="checkbox"){
-        cambios.set(e.target.dataset.id,e.target.checked);
+  async function cargarFamilias(){
+    try {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      const { data, error } = await supabase
+        .from("familias")
+        .select("*")
+        .order("id",{ascending:true})
+        .range(start,end);
+
+      if(error) throw error;
+      tabla.innerHTML="";
+      if(!data || data.length===0){
+        tabla.innerHTML="<tr><td colspan='6'>Sin registros</td></tr>";
+        return;
+      }
+
+      data.forEach(fam=>{
+        const tr = document.createElement("tr");
+        tr.dataset.id = fam.id; // guardamos el ID en el <tr>
+
+        tr.innerHTML = `
+          <td>${fam.id}</td>
+          <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+          <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+          <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+          <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+        `;
+        tabla.appendChild(tr);
+      });
+    }catch(err){
+      console.error(err);
+      tabla.innerHTML="<tr><td colspan='6'>Error al cargar datos</td></tr>";
+    }
+  }
+
+  // Guardar cambios de visitada — inmediato
+  document.getElementById("familiasTable")
+    ?.addEventListener("change", async e => {
+      if (e.target && e.target.type === "checkbox") {
+        const id = e.target.dataset.id;
+        const visitada = e.target.checked;
+        if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
+
+        try {
+          await supabase.from("familias").update({ visitada }).eq("id", id);
+          showMsg("✅ Estado actualizado", "success");
+        } catch (err) {
+          console.error("❌ Error actualizando visitada:", err);
+          showMsg("❌ Error al actualizar", "error");
+          // revertir checkbox
+          e.target.checked = !visitada;
+        }
       }
     });
 
-    // Paginación
-    document.getElementById("prevPage").addEventListener("click",()=>{
-      if(page>0){ page--; cargarFamilias(); }
-    });
-    document.getElementById("nextPage").addEventListener("click",()=>{
-      page++; cargarFamilias();
-    });
+  // Paginación
+  document.getElementById("prevPage").addEventListener("click",()=>{
+    if(page>0){ page--; cargarFamilias(); }
+  });
+  document.getElementById("nextPage").addEventListener("click",()=>{
+    page++; cargarFamilias();
+  });
 
-    cargarFamilias();
-    // Guardar cambios inline al salir de la celda
-document.getElementById("familiasTable").addEventListener("blur", async e => {
-  if (e.target.matches("[contenteditable]")) {
-    const id = e.target.closest("tr").dataset.id;
-    const field = e.target.dataset.field;
-    const value = e.target.textContent.trim();
+  cargarFamilias();
 
-    try {
-      const { error } = await supabase
-        .from("familias")
-        .update({ [field]: value })
-        .eq("id", id);
-      if (error) throw error;
-      showMsg("✅ Campo actualizado", "success");
-    } catch (err) {
-      console.error("❌ Error al actualizar:", err);
-      showMsg("❌ Error al actualizar", "error");
+  // Guardar cambios inline al salir de la celda
+  document.getElementById("familiasTable").addEventListener("blur", async e => {
+    if (e.target.matches("[contenteditable]")) {
+      const id = e.target.closest("tr").dataset.id;
+      const field = e.target.dataset.field;
+      const value = e.target.textContent.trim();
+
+      try {
+        const { error } = await supabase
+          .from("familias")
+          .update({ [field]: value })
+          .eq("id", id);
+        if (error) throw error;
+        showMsg("✅ Campo actualizado", "success");
+      } catch (err) {
+        console.error("❌ Error al actualizar:", err);
+        showMsg("❌ Error al actualizar", "error");
+      }
     }
-  }
-}, true);
-  </script>
+  }, true);
+</script>
 </body>
 </html>
