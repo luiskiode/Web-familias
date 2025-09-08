@@ -1,17 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🪪 Credenciales — Admin</title>
-  <link rel="stylesheet" href="styles-caritas.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪪 Credenciales — Cáritas CNC</title>
   <base href="/Web-familias/">
-  <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script type="module" src="api.js/health-caritas.js"></script>
-  <script defer src="api.js/error-overlay.js"></script>
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
-  <script src="api.js/supabase-config-caritas.js" defer></script>
+  <link rel="stylesheet" href="../../styles-caritas.css">
+
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
+             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
+
+  <script type="module" src="../../api.js/self-heal-caritas.js"></script>
+  <script type="module" src="../../api.js/health-caritas.js"></script>
+  <script defer src="../../api.js/error-overlay.js"></script>
+
+  <!-- ✅ Supabase ESM -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "TU_ANON_KEY";
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
+    }
+  </script>
 </head>
 <body>
   <header class="container" style="text-align:center;margin:1rem auto;">

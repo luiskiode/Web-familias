@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🛠️ Servicios — Cáritas CNC</title>
-  <link rel="stylesheet" href="../styles-caritas.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛠 Servicios — Cáritas CNC</title>
   <base href="/Web-familias/">
-  <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script type="module" src="api.js/health-caritas.js"></script>
-  <script defer src="api.js/error-overlay.js"></script>
-  <!-- FullCalendar -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <link rel="stylesheet" href="../../styles-caritas.css">
 
-  <!-- Chart.js para estadísticas -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
+             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="../api.js/supabase-config-caritas.js"></script>
+  <script type="module" src="../../api.js/self-heal-caritas.js"></script>
+  <script type="module" src="../../api.js/health-caritas.js"></script>
+  <script defer src="../../api.js/error-overlay.js"></script>
 
-<!-- Módulos -->
-<script src="../api.js/notificaciones.js" defer></script>
-<script src="../api.js/pendientes.js" defer></script>
-<script src="../api.js/calendario.js" defer></script>
-  <style>
-    body { padding: 1rem; }
-    header { text-align: center; margin-bottom: 1rem; }
-    .acciones-rapidas { display:flex; gap:1rem; justify-content:center; margin-bottom:1.5rem; }
-    .acciones-rapidas .btn { padding:0.6rem 1rem; border-radius:8px; background:#b91c1c; color:#fff; text-decoration:none; }
-    .acciones-rapidas .btn:hover { background:#a4161a; }
-    #estadisticas { max-width:600px; margin:2rem auto; display:none; }
-    #msg { text-align:center; margin:1rem; }
-    .contenedor { display:grid; grid-template-columns: 2fr 1fr; gap:1rem; }
-    #calendar { background:#fff; border-radius:8px; padding:0.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-    #pendientes { background:#fff; border-radius:8px; padding:0.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-  </style>
+  <!-- ✅ Supabase ESM -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
+    }
+  </script>
 </head>
 <body>
   <header>
