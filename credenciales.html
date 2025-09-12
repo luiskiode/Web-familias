@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎫 Credenciales — Cáritas CNC</title>
+
+  <!-- 🛣️ Importante para GitHub Pages -->
+  <base href="/Web-familias/">
+  <link rel="stylesheet" href="styles-caritas.css">
+
+  <!-- 🔒 CSP -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh;
+             style-src  'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
+
+  <!-- 🛠 Diagnóstico (una sola vez) -->
+  <script type="module" src="api.js/self-heal-caritas.js"></script>
+  <script type="module" src="api.js/health-caritas.js"></script>
+  <script defer src="api.js/error-overlay.js"></script>
+
+  <!-- ✅ Supabase -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
+    }
+  </script>
+</head>
+<body>
+  <h1 style="text-align:center;">🎫 Credenciales Cáritas CNC</h1>
+
+  <!-- 📌 Carnet personal -->
+  <section id="view-carnet" style="display:none;">
+    <div class="perfil-card card" style="max-width:400px;margin:auto;">
+      <div class="perfil-left">
+        <img id="fotoCarnet" src="img/avatar-placeholder.png" alt="Foto de perfil">
+      </div>
+      <div class="perfil-center">
+        <h2 id="nombreCarnet">—</h2>
+        <p id="emailCarnet">—</p>
+        <span id="rolCarnet" class="pill">Voluntario Cáritas CNC</span>
+        <p class="codigo">Código: <span id="codigoCarnet">—</span></p>
+        <div class="acciones">
+          <button id="btnCopiar">🔗 Copiar enlace</button>
+          <button id="btnDescargar">⬇️ Descargar QR</button>
+          <button id="btnLogout">🔒 Cerrar sesión</button>
+        </div>
+      </div>
+      <div class="perfil-right">
+        <canvas id="qrCarnet" width="140" height="140"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- 📌 Credencial pública -->
+  <section id="view-public" style="display:none;">
+    <div class="perfil-card card" style="max-width:420px;margin:auto;">
+      <div class="perfil-left">
+        <img id="fotoPublic" src="img/avatar-placeholder.png" alt="Foto de perfil">
+      </div>
+      <div class="perfil-center">
+        <h2 id="nombrePublic">—</h2>
+        <p id="emailPublic">—</p>
+        <span id="rolPublic" class="pill">—</span>
+        <p class="codigo">Código: <span id="codigoPublic">—</span></p>
+      </div>
+      <div class="perfil-right">
+        <canvas id="qrPublic" width="140" height="140"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- 📌 Admin listado -->
+  <section id="view-admin" style="display:none;">
+    <header class="container" style="text-align:center;margin:1rem auto;">
+      <h2>🪪 Listado de credenciales</h2>
+      <input class="search" id="q" type="search" placeholder="Buscar por nombre o email…" />
+    </header>
+    <main class="container">
+      <div id="msgAdmin"></div>
+      <div class="grid" id="grid"></div>
+      <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+        <button id="prevPage" class="btn-ghost">⏮ Anterior</button>
+        <button id="nextPage" class="btn-ghost">Siguiente ⏭</button>
+      </div>
+    </main>
+  </section>
+
+  <div id="msg" style="margin:1rem;text-align:center;"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+  const supabase = window.CARITAS?.supabase;
+  const auth = window.CARITAS?.auth; // si usas Firebase Auth
+  const msgBox = document.getElementById("msg");
+  const params = new URLSearchParams(location.search);
+  const view = params.get("view");
+
+  const showMsg = (t, type="info")=>{
+    msgBox.textContent=t; msgBox.className=type;
+    if(type!=="info") setTimeout(()=> msgBox.textContent="", 4000);
+  };
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+  const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
+
+  // Asegurar QRCode (fallback por si self-heal no lo cargó)
+  if (typeof QRCode === "undefined") {
+    try { await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"); }
+    catch(e){ console.warn("No se pudo cargar QRCode:", e); }
+  }
+
+  // ---------- Carnet personal
+  async function ensureCredencial(user){
+    const base = {
+      user_id: user.uid,
+      email: user.email,
+      nombre: user.displayName || user.email.split("@")[0],
+      rol: "Voluntario Cáritas CNC",
+      codigo_verificacion: user.uid.substring(0,8).toUpperCase()
+    };
+    // Si ya migraste a RPC upsert_mi_credencial, puedes usarla aquí:
+    // return (await supabase.rpc("upsert_mi_credencial", { uid:user.uid, p_email:user.email, p_nombre:base.nombre, p_rol:base.rol, p_foto:null })).data;
+    const { data, error } = await supabase.from("credenciales").upsert(base).select().single();
+    if (error) { console.error(error); return null; }
+    return data;
+  }
+  async function cargarCarnet(user){
+    const data = await ensureCredencial(user);
+    if(!data){ showMsg("❌ No se pudo cargar el carnet","error"); return; }
+    document.getElementById("nombreCarnet").textContent = esc(data.nombre);
+    document.getElementById("emailCarnet").textContent = esc(data.email);
+    document.getElementById("rolCarnet").textContent   = esc(data.rol);
+    document.getElementById("codigoCarnet").textContent= esc(data.codigo_verificacion);
+    document.getElementById("fotoCarnet").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
+    const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
+    if (window.QRCode) QRCode.toCanvas(document.getElementById("qrCarnet"), qrUrl);
+  }
+
+  // ---------- Credencial pública (ahora vía RPC segura)
+  async function cargarPublica(uid){
+    const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+    if(error || !data){ showMsg("❌ Credencial no encontrada","error"); return; }
+    document.getElementById("nombrePublic").textContent = esc(data.nombre);
+    document.getElementById("emailPublic").textContent  = esc(data.email);
+    document.getElementById("rolPublic").textContent    = esc(data.rol);
+    document.getElementById("codigoPublic").textContent = esc(data.codigo_verificacion);
+    document.getElementById("fotoPublic").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
+    const qrUrl = urlFromBase(`credenciales.html?view=public&id=${uid}`);
+    if (window.QRCode) QRCode.toCanvas(document.getElementById("qrPublic"), qrUrl);
+  }
+
+  // ---------- Admin listado (vía tabla o RPC; aquí dejamos RPC listo)
+  let page=0, pageSize=20, lastQ="";
+  async function getCredencialesAdmin(q){
+    // Opción RPC (recomendada si tienes la función creada)
+    const { data, error } = await supabase.rpc("list_credenciales_admin", {
+      p_page: page, p_size: pageSize, p_q: q || null
+    });
+    if (error) { console.error(error); return []; }
+    return data || [];
+    // Opción directa a tabla (requiere política select abierta): 
+    // return (await supabase.from("credenciales").select("*").order("creado_en",{ascending:false}).range(page*pageSize, page*pageSize+pageSize-1)).data||[];
+  }
+  async function renderCredenciales(){
+    const grid=document.getElementById("grid");
+    const lista=await getCredencialesAdmin(lastQ);
+    grid.innerHTML="";
+    if(lista.length===0){ grid.innerHTML="<p>No hay credenciales.</p>"; return; }
+    lista.forEach(c=>{
+      const el=document.createElement("article");
+      el.className="card";
+      el.innerHTML=`
+        <div class="row">
+          <img class="foto" src="${c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.nombre)}&background=004aad&color=fff`}" alt="Foto de ${esc(c.nombre)}">
+          <div>
+            <strong>${esc(c.nombre)}</strong>
+            <div class="muted">${esc(c.email)}</div>
+            <div class="muted">Código: ${esc(c.codigo_verificacion)}</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <a class="btn" href="${urlFromBase(`credenciales.html?view=public&id=${encodeURIComponent(c.user_id)}`)}" target="_blank">Ver</a>
+        </div>`;
+      grid.appendChild(el);
+    });
+  }
+
+  // ---------- Router simple por ?view=
+  if(view==="carnet"){
+    document.getElementById("view-carnet").style.display="";
+    auth?.onAuthStateChanged(user=>{
+      if(!user){ location.href = urlFromBase("login.html"); return; }
+      cargarCarnet(user);
+    });
+    document.getElementById("btnCopiar").onclick=()=>{
+      const uid=auth.currentUser?.uid;
+      navigator.clipboard.writeText(urlFromBase(`credenciales.html?view=public&id=${uid}`)).then(()=> showMsg("🔗 Enlace copiado","success"));
+    };
+    document.getElementById("btnDescargar").onclick=()=>{
+      const link=document.createElement("a");
+      link.download="credencial-qr.png";
+      link.href=document.getElementById("qrCarnet").toDataURL("image/png");
+      link.click();
+    };
+    document.getElementById("btnLogout").onclick=()=>{ auth.signOut?.(); localStorage.removeItem("caritasUser"); location.href=urlFromBase("login.html"); };
+  }
+  else if(view==="public"){
+    document.getElementById("view-public").style.display="";
+    const uid=params.get("id");
+    if(uid) cargarPublica(uid);
+    else showMsg("❌ Falta parámetro id","error");
+  }
+  else if(view==="admin"){
+    document.getElementById("view-admin").style.display="";
+    const user=JSON.parse(localStorage.getItem("caritasUser")||"{}");
+    if(!["Administrador","admin","editor"].includes(user.rol)){
+      showMsg("❌ No tienes permiso para ver esta sección","error");
+      setTimeout(()=> location.href=urlFromBase("index.html"),2000);
+    }else{
+      renderCredenciales();
+      document.getElementById("prevPage").onclick=()=>{ if(page>0){page--;renderCredenciales();} };
+      document.getElementById("nextPage").onclick=()=>{ page++;renderCredenciales(); };
+      document.getElementById("q").oninput=e=>{ lastQ=e.target.value.trim(); renderCredenciales(); };
+    }
+  } else {
+    // fallback
+    location.href = urlFromBase("index.html");
+  }
+});
+</script>
+</body>
+</html>

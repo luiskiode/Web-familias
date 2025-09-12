@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪪 Credenciales — Cáritas CNC</title>
+  <base href="/Web-familias/">
+  <link rel="stylesheet" href="../../styles-caritas.css">
+
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
+             style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
+
+  <script type="module" src="../../api.js/self-heal-caritas.js"></script>
+  <script type="module" src="../../api.js/health-caritas.js"></script>
+  <script defer src="../../api.js/error-overlay.js"></script>
+
+  <!-- ✅ Supabase ESM -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "TU_ANON_KEY";
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
+    }
+  </script>
+</head>
+<body>
+  <header class="container" style="text-align:center;margin:1rem auto;">
+    <h1>🪪 Listado de credenciales</h1>
+    <a href="index.html" class="btn-ghost">← Volver al inicio</a>
+    <input class="search" id="q" type="search" placeholder="Buscar por nombre o email…" />
+  </header>
+
+  <main class="container">
+    <div id="msg" style="margin-bottom:1rem;"></div>
+    <div class="grid" id="grid"></div>
+    <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+      <button id="prevPage" class="btn-ghost">⏮ Anterior</button>
+      <button id="nextPage" class="btn-ghost">Siguiente ⏭</button>
+    </div>
+  </main>
+
+<script>
+(() => {
+  const supabase = window.CARITAS?.supabase;
+  const msg = document.getElementById("msg");
+  const grid = document.getElementById("grid");
+  const pageSize = 20;
+  let page = 0;
+
+  console.log("✅ [Credenciales Admin] pestaña cargada");
+  console.log("🔌 Supabase conectado:", !!supabase);
+
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    console.log(`[MSG-${type}]`, text);
+    setTimeout(()=>{ msg.textContent=""; }, 4000);
+  }
+
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
+
+  const avatar = (nombre) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre||'Usuario')}&background=004aad&color=fff`;
+
+  function card(c){
+    const el = document.createElement("article");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="row">
+        <img class="foto" src="${c.foto_url || avatar(c.nombre)}" alt="Foto de ${esc(c.nombre)||'usuario'}">
+        <div>
+          <div><strong>${esc(c.nombre)||'—'}</strong></div>
+          <div class="muted">${esc(c.email)||'—'}</div>
+          <div class="muted">Código: ${esc(c.codigo_verificacion)||'N/A'}</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <a class="btn" href="credencial.html?id=${encodeURIComponent(c.user_id)}" target="_blank">Ver</a>
+        ${c.foto_url ? `<a class="btn" href="${c.foto_url}" target="_blank">Foto</a>` : ''}
+      </div>`;
+    return el;
+  }
+
+  async function getCredenciales(){
+    const start = page * pageSize;
+    const end = start + pageSize - 1;
+    console.log("🔍 Consultando credenciales página:", page);
+    const { data, error } = await supabase
+      .from("credenciales")
+      .select("*")
+      .order("creado_en",{ascending:false})
+      .range(start,end);
+    if(error){
+      console.error("❌ Error cargando credenciales:", error);
+      throw error;
+    }
+    console.log("✅ Credenciales obtenidas:", data?.length || 0);
+    return data || [];
+  }
+
+  async function renderCredenciales(){
+    try {
+      const lista = await getCredenciales();
+      grid.innerHTML = "";
+      if(lista.length === 0){
+        grid.innerHTML = "<p>No hay credenciales registradas.</p>";
+        console.warn("⚠️ No se encontraron credenciales");
+        return;
+      }
+      lista.forEach(c => grid.appendChild(card(c)));
+    } catch(err){
+      showMsg("❌ Error cargando credenciales","error");
+    }
+  }
+
+  // Paginación
+  document.getElementById("prevPage").addEventListener("click",()=>{
+    if(page>0){ 
+      page--; 
+      console.log("⏮ Página anterior:", page);
+      renderCredenciales(); 
+    }
+  });
+  document.getElementById("nextPage").addEventListener("click",()=>{
+    page++; 
+    console.log("⏭ Página siguiente:", page);
+    renderCredenciales();
+  });
+
+  // Filtro búsqueda
+  document.getElementById("q").addEventListener("input", e=>{
+    const q = e.target.value.toLowerCase();
+    console.log("🔍 Buscando credencial por:", q);
+    [...grid.children].forEach(card=>{
+      card.style.display = card.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  // Control de roles
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const user = JSON.parse(localStorage.getItem("caritasUser")||"{}");
+    console.log("🔑 Usuario localStorage:", user);
+    if(!["Administrador","admin","editor"].includes(user.rol)){
+      showMsg("❌ No tienes permiso para ver esta página","error");
+      console.warn("⚠️ Acceso denegado a credenciales-admin.html");
+      setTimeout(()=> location.href="index.html", 2000);
+      return;
+    }
+    renderCredenciales();
+  });
+})();
+</script>
+</body>
+</html>

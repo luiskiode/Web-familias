@@ -65,7 +65,22 @@
     <a class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
   </section>
 
+<!-- 🎫 Accesos a Credenciales -->
+<section class="container card center">
+  <h2>🎫 Credenciales Cáritas CNC</h2>
+  <p>Accede a tu carnet personal, comparte tu credencial o administra todas.</p>
 
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+    <!-- Carnet personal (requiere login Firebase) -->
+    <a class="btn" href="credenciales.html?view=carnet">🎫 Mi Carnet</a>
+
+    <!-- Ejemplo credencial pública (reemplaza UID_DE_EJEMPLO por un uid real) -->
+    <a class="btn" href="credenciales.html?view=public&id=UID_DE_EJEMPLO">👤 Ver Credencial</a>
+
+    <!-- Solo administradores -->
+    <a class="btn" href="credenciales.html?view=admin">🪪 Administrar Credenciales</a>
+  </div>
+</section>
   
   <!-- 📋 Formulario Integral -->
   <section class="container card">
@@ -393,6 +408,7 @@
       }
     }
   }
+  
 });
 </script>
 </body>
