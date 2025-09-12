@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🔑 Acceso — Cáritas CNC</title>
 
+  <!-- Base para GitHub Pages -->
   <base href="/Web-familias/">
   <link rel="stylesheet" href="styles-caritas.css" />
 
+  <!-- CSP segura -->
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self';
              script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
@@ -16,16 +18,18 @@
              connect-src *;
              font-src * data:;">
 
-  <!-- Diagnóstico -->
+  <!-- 🛠 Diagnóstico -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script type="module" src="api.js/health-caritas.js"></script>
   <script defer src="api.js/error-overlay.js"></script>
 
-  <!-- Firebase compat -->
+  <!-- ✅ Firebase (compat) -->
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-  <!-- Supabase (mismo anon key que en index/credenciales) -->
+  <!-- 🔧 Config Firebase (emite 'firebase:ready:caritas' y define window.CARITAS.auth) -->
+  <script defer src="api.js/firebase-config-caritas.js"></script>
+
+  <!-- ✅ Supabase (mismo anon key que index.html) -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
@@ -35,15 +39,12 @@
       window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
   </script>
-
-  <!-- Config de Firebase (inicializa window.CARITAS.auth y emite 'firebase:ready:caritas') -->
-  <script defer src="api.js/firebase-config-caritas.js"></script>
 </head>
 <body class="login-body">
   <!-- 🎥 Fondo -->
   <video id="video-fondo" autoplay muted loop>
     <source src="videos/fondo.mp4" type="video/mp4">
-  </video> 
+  </video>
 
   <main class="login-wrap">
     <div class="login-card">
@@ -70,7 +71,7 @@
       </div>
     </div>
 
-    <!-- 📸 Datos de credencial -->
+    <!-- 🪪 Completar credencial (tipo licencia) -->
     <div id="credForm" class="login-card" style="display:none;">
       <h2>🪪 Completa tu credencial</h2>
       <form id="credencialForm">
@@ -86,10 +87,11 @@
     </div>
   </main>
 
+<!-- 🧠 Lógica integrada -->
 <script type="module">
 const supabase = window.CARITAS.supabase;
-
-function setMsg(el,text,type){ el.textContent=text||''; el.className=type||''; }
+const $ = (sel)=>document.querySelector(sel);
+const setMsg = (el,text,type)=>{ el.textContent=text||''; el.className=type||''; };
 
 function waitForAuth(timeout=8000){
   return new Promise((resolve,reject)=>{
@@ -104,44 +106,46 @@ function waitForAuth(timeout=8000){
   });
 }
 
+// RPC helpers
 async function getPublicCred(uid){
   const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
   if (error) throw error;
   return data;
 }
-
 async function upsertCred(uid, email, nombre, foto_url=null){
   const { data, error } = await supabase.rpc("upsert_mi_credencial", {
-    uid, p_email: email, p_nombre: nombre,
-    p_rol: "Voluntario Cáritas CNC",
-    p_foto: foto_url
+    uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
   });
   if (error) throw error;
   return data;
 }
 
-const form     = document.getElementById('loginForm');
-const msg      = document.getElementById('loginMessage');
-const credBox  = document.getElementById('credForm');
-const credMsg  = document.getElementById('credMessage');
-const credForm = document.getElementById('credencialForm');
+// UI refs
+const form     = $('#loginForm');
+const msg      = $('#loginMessage');
+const regBtn   = $('#registerBtn');
+const resetBtn = $('#resetPassBtn');
+const credBox  = $('#credForm');
+const credForm = $('#credencialForm');
+const credMsg  = $('#credMessage');
 
+// LOGIN
 form.addEventListener("submit", async e=>{
   e.preventDefault();
-  const email = document.getElementById("email").value.trim();
-  const pass  = document.getElementById("password").value.trim();
+  const email = $('#email').value.trim();
+  const pass  = $('#password').value.trim();
   try{
     const auth = await waitForAuth();
     const { user } = await auth.signInWithEmailAndPassword(email,pass);
     localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
-    // ¿Ya tiene credencial completa?
-    const cred = await getPublicCred(user.uid);
+    // ¿ya tiene credencial completa?
+    const cred = await getPublicCred(user.uid).catch(()=>null);
     if (cred && cred.nombre && cred.foto_url){
-      location.href = "credenciales.html?view=carnet";
+      window.location.href = "credenciales.html?view=carnet";
     } else {
       setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
       credBox.style.display="";
-      document.getElementById('nombreCred').value = user.displayName || (user.email||"").split("@")[0];
+      $('#nombreCred').value = user.displayName || (user.email||"").split("@")[0];
     }
   }catch(err){
     console.error(err);
@@ -149,9 +153,10 @@ form.addEventListener("submit", async e=>{
   }
 });
 
-document.getElementById("registerBtn").addEventListener("click", async ()=>{
-  const email = document.getElementById("email").value.trim();
-  const pass  = document.getElementById("password").value.trim();
+// REGISTRO
+regBtn.addEventListener("click", async ()=>{
+  const email = $('#email').value.trim();
+  const pass  = $('#password').value.trim();
   if(!email||!pass) return setMsg(msg,"Completa correo y contraseña","error");
   try{
     const auth = await waitForAuth();
@@ -159,14 +164,15 @@ document.getElementById("registerBtn").addEventListener("click", async ()=>{
     localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
     setMsg(msg,"✅ Cuenta creada, completa tu credencial","success");
     credBox.style.display="";
-    document.getElementById('nombreCred').value = (user.email||"").split("@")[0];
+    $('#nombreCred').value = (user.email||"").split("@")[0];
   }catch(err){
     console.error(err);
     setMsg(msg,"❌ "+(err.message||err),"error");
   }
 });
 
-document.getElementById("resetPassBtn").addEventListener("click", async ()=>{
+// RESET PASSWORD
+resetBtn.addEventListener("click", async ()=>{
   const email = prompt("Ingresa tu correo para restablecer:");
   if(!email) return;
   try{
@@ -178,29 +184,32 @@ document.getElementById("resetPassBtn").addEventListener("click", async ()=>{
   }
 });
 
-// 📸 Guardar credencial (foto a Supabase Storage + RPC upsert)
+// GUARDAR CREDENCIAL (sube foto a Storage y guarda vía RPC)
 credForm.addEventListener("submit", async e=>{
   e.preventDefault();
   try{
-    const auth  = await waitForAuth();
-    const user  = auth.currentUser;
+    const auth = await waitForAuth();
+    const user = auth.currentUser;
     if(!user) throw new Error("No hay usuario autenticado");
 
-    const nombre   = document.getElementById("nombreCred").value.trim();
-    const fotoFile = document.getElementById("fotoCred").files[0];
-    if(!nombre)  throw new Error("Completa el nombre");
+    const nombre   = $('#nombreCred').value.trim();
+    const fotoFile = $('#fotoCred').files[0];
+    if(!nombre)   throw new Error("Completa el nombre");
     if(!fotoFile) throw new Error("Sube una foto");
 
     const ext  = (fotoFile.name.split(".").pop() || "jpg").toLowerCase();
     const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
+
+    // Sube a bucket 'fotos' (política insert habilitada)
     const { error: upErr } = await supabase.storage.from("fotos").upload(path, fotoFile, { upsert:true });
     if (upErr) throw upErr;
+
     const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
     const foto_url = pub.publicUrl;
 
     await upsertCred(user.uid, user.email, nombre, foto_url);
     setMsg(credMsg,"✅ Credencial guardada","success");
-    setTimeout(()=> location.href="credenciales.html?view=carnet", 1200);
+    setTimeout(()=> window.location.href="credenciales.html?view=carnet", 1200);
   }catch(err){
     console.error(err);
     setMsg(credMsg,"❌ "+(err.message||err),"error");
