@@ -101,10 +101,23 @@
 <script>
 document.addEventListener("DOMContentLoaded", async ()=>{
   const supabase = window.CARITAS?.supabase;
-  const auth = window.CARITAS?.auth; // si usas Firebase Auth
   const msgBox = document.getElementById("msg");
   const params = new URLSearchParams(location.search);
   const view = params.get("view");
+
+  // Esperar Firebase Auth (si está disponible)
+  function waitForAuth(timeout=8000){
+    return new Promise((resolve,reject)=>{
+      if (window.CARITAS?.auth) return resolve(window.CARITAS.auth);
+      const t0=performance.now();
+      const onReady=()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
+      document.addEventListener('firebase:ready:caritas', onReady);
+      const iv=setInterval(()=>{
+        if (window.CARITAS?.auth){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); }
+        if (performance.now()-t0>timeout){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(null); } // no bloquea
+      }, 50);
+    });
+  }
 
   const showMsg = (t, type="info")=>{
     msgBox.textContent=t; msgBox.className=type;
@@ -115,63 +128,66 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   );
   const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
 
-  // Asegurar QRCode (fallback por si self-heal no lo cargó)
+  // Asegurar QRCode (fallback)
   if (typeof QRCode === "undefined") {
     try { await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"); }
     catch(e){ console.warn("No se pudo cargar QRCode:", e); }
   }
 
-  // ---------- Carnet personal
-  async function ensureCredencial(user){
-    const base = {
-      user_id: user.uid,
-      email: user.email,
-      nombre: user.displayName || user.email.split("@")[0],
-      rol: "Voluntario Cáritas CNC",
-      codigo_verificacion: user.uid.substring(0,8).toUpperCase()
-    };
-    // Si ya migraste a RPC upsert_mi_credencial, puedes usarla aquí:
-    // return (await supabase.rpc("upsert_mi_credencial", { uid:user.uid, p_email:user.email, p_nombre:base.nombre, p_rol:base.rol, p_foto:null })).data;
-    const { data, error } = await supabase.from("credenciales").upsert(base).select().single();
+  // ---------- RPC helpers
+  async function getPublicCred(uid){
+    const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
     if (error) { console.error(error); return null; }
     return data;
   }
+  async function upsertCred(uid, email, nombre, foto_url=null){
+    const { data, error } = await supabase.rpc("upsert_mi_credencial", {
+      uid, p_email: email, p_nombre: nombre,
+      p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
+    });
+    if (error) { console.error(error); return null; }
+    return data;
+  }
+
+  // ---------- Carnet personal (usa RPC, no upsert directo a tabla)
   async function cargarCarnet(user){
-    const data = await ensureCredencial(user);
+    // Asegura existencia mínima
+    const nombreBase = user.displayName || (user.email||"").split("@")[0];
+    await upsertCred(user.uid, user.email, nombreBase, null);
+    const data = await getPublicCred(user.uid);
     if(!data){ showMsg("❌ No se pudo cargar el carnet","error"); return; }
+
     document.getElementById("nombreCarnet").textContent = esc(data.nombre);
-    document.getElementById("emailCarnet").textContent = esc(data.email);
-    document.getElementById("rolCarnet").textContent   = esc(data.rol);
-    document.getElementById("codigoCarnet").textContent= esc(data.codigo_verificacion);
+    document.getElementById("emailCarnet").textContent  = esc(data.email);
+    document.getElementById("rolCarnet").textContent    = esc(data.rol||"Voluntario Cáritas CNC");
+    document.getElementById("codigoCarnet").textContent = esc(data.codigo_verificacion||"");
     document.getElementById("fotoCarnet").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
+
     const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
     if (window.QRCode) QRCode.toCanvas(document.getElementById("qrCarnet"), qrUrl);
   }
 
-  // ---------- Credencial pública (ahora vía RPC segura)
+  // ---------- Credencial pública (RPC)
   async function cargarPublica(uid){
-    const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-    if(error || !data){ showMsg("❌ Credencial no encontrada","error"); return; }
+    const data = await getPublicCred(uid);
+    if(!data){ showMsg("❌ Credencial no encontrada","error"); return; }
     document.getElementById("nombrePublic").textContent = esc(data.nombre);
     document.getElementById("emailPublic").textContent  = esc(data.email);
-    document.getElementById("rolPublic").textContent    = esc(data.rol);
-    document.getElementById("codigoPublic").textContent = esc(data.codigo_verificacion);
+    document.getElementById("rolPublic").textContent    = esc(data.rol||"Voluntario Cáritas CNC");
+    document.getElementById("codigoPublic").textContent = esc(data.codigo_verificacion||"");
     document.getElementById("fotoPublic").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=111&color=fff`;
     const qrUrl = urlFromBase(`credenciales.html?view=public&id=${uid}`);
     if (window.QRCode) QRCode.toCanvas(document.getElementById("qrPublic"), qrUrl);
   }
 
-  // ---------- Admin listado (vía tabla o RPC; aquí dejamos RPC listo)
+  // ---------- Admin listado (RPC list_credenciales_admin)
   let page=0, pageSize=20, lastQ="";
   async function getCredencialesAdmin(q){
-    // Opción RPC (recomendada si tienes la función creada)
     const { data, error } = await supabase.rpc("list_credenciales_admin", {
       p_page: page, p_size: pageSize, p_q: q || null
     });
     if (error) { console.error(error); return []; }
     return data || [];
-    // Opción directa a tabla (requiere política select abierta): 
-    // return (await supabase.from("credenciales").select("*").order("creado_en",{ascending:false}).range(page*pageSize, page*pageSize+pageSize-1)).data||[];
   }
   async function renderCredenciales(){
     const grid=document.getElementById("grid");
@@ -187,7 +203,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
           <div>
             <strong>${esc(c.nombre)}</strong>
             <div class="muted">${esc(c.email)}</div>
-            <div class="muted">Código: ${esc(c.codigo_verificacion)}</div>
+            <div class="muted">Código: ${esc(c.codigo_verificacion||"")}</div>
           </div>
         </div>
         <div style="margin-top:10px;">
@@ -197,15 +213,24 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     });
   }
 
-  // ---------- Router simple por ?view=
+  // ---------- Router por ?view=
+  const auth = await waitForAuth();
+
   if(view==="carnet"){
     document.getElementById("view-carnet").style.display="";
-    auth?.onAuthStateChanged(user=>{
-      if(!user){ location.href = urlFromBase("login.html"); return; }
-      cargarCarnet(user);
-    });
+    if(!auth?.currentUser){
+      // escucha login y luego carga carnet
+      auth?.onAuthStateChanged?.(u=>{
+        if(!u){ location.href = urlFromBase("login.html"); return; }
+        cargarCarnet(u);
+      });
+      if (!auth) location.href = urlFromBase("login.html");
+    } else {
+      cargarCarnet(auth.currentUser);
+    }
     document.getElementById("btnCopiar").onclick=()=>{
-      const uid=auth.currentUser?.uid;
+      const uid=auth?.currentUser?.uid;
+      if(!uid) return showMsg("❌ No hay usuario","error");
       navigator.clipboard.writeText(urlFromBase(`credenciales.html?view=public&id=${uid}`)).then(()=> showMsg("🔗 Enlace copiado","success"));
     };
     document.getElementById("btnDescargar").onclick=()=>{
@@ -214,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       link.href=document.getElementById("qrCarnet").toDataURL("image/png");
       link.click();
     };
-    document.getElementById("btnLogout").onclick=()=>{ auth.signOut?.(); localStorage.removeItem("caritasUser"); location.href=urlFromBase("login.html"); };
+    document.getElementById("btnLogout").onclick=()=>{ auth?.signOut?.(); localStorage.removeItem("caritasUser"); location.href=urlFromBase("login.html"); };
   }
   else if(view==="public"){
     document.getElementById("view-public").style.display="";
@@ -235,7 +260,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       document.getElementById("q").oninput=e=>{ lastQ=e.target.value.trim(); renderCredenciales(); };
     }
   } else {
-    // fallback
     location.href = urlFromBase("index.html");
   }
 });
