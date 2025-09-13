@@ -12,12 +12,12 @@
 
   <!-- ✅ CSP -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self';
-             script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com;
-             style-src 'self' 'unsafe-inline' https://unpkg.com;
-             img-src * data: blob:;
-             connect-src *;
-             font-src * data:;">
+  content="default-src 'self';
+           script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com https://www.gstatic.com;
+           style-src 'self' 'unsafe-inline' https://unpkg.com;
+           img-src * data: blob:;
+           connect-src *;
+           font-src * data:;">
 
   <!-- 🛠 Herramientas de diagnóstico -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
@@ -245,16 +245,57 @@
     <button id="nextPage" class="btn">Siguiente ⏭</button>
   </div>
 </main>
-  
-<!-- ✅ Script de formulario y listado -->
-<script type="module">
-  import { savePendiente } from "./api.js/db.js";
 
+<!-- 🔐 Firebase ESM bootstrap: inicializa y expone window.CARITAS.auth en esta página -->
+<script type="module">
+  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+    authDomain: "web-familias.firebaseapp.com",
+    projectId: "web-familias",
+    storageBucket: "web-familias.appspot.com",
+    messagingSenderId: "261699620792",
+    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+  };
+
+  const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  await setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+  window.CARITAS = window.CARITAS || {};
+  window.CARITAS.auth = auth;
+
+  // Notifica listo y re-notifica en cada cambio
+  document.dispatchEvent(new Event("firebase:ready:caritas"));
+  onAuthStateChanged(auth, () => document.dispatchEvent(new Event("firebase:ready:caritas")));
+</script>
+
+<!-- ✅ Script de formulario y listado (con fallback a db.js) -->
+<script type="module">
   const supabase = window.CARITAS?.supabase;
   const tabla = document.querySelector("#familiasTable tbody");
   const msg = document.getElementById("msg");
   let page = 0;
   const pageSize = 10;
+
+  // Fallback para savePendiente si ./api.js/db.js no existe
+  let savePendiente = async (datos) => {
+    try {
+      const k = "pendiente:" + Date.now();
+      localStorage.setItem(k, JSON.stringify(datos));
+      console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
+    } catch(e) { console.warn("No se pudo guardar localmente:", e); }
+  };
+  try {
+    const mod = await import("./api.js/db.js");
+    if (mod?.savePendiente) savePendiente = mod.savePendiente;
+  } catch(e) {
+    console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
+  }
 
   function showMsg(text, type="info"){
     msg.textContent = text;
@@ -278,21 +319,16 @@
       dni_solicitante: form.dni_solicitante.value || null,
       apellido_familia: form.apellido_familia.value || null,
       observaciones: form.observaciones.value || null
-      // 👉 aquí puedes añadir los demás campos opcionales
     };
 
     if (!navigator.onLine) {
-      // 📦 Guardar localmente en IndexedDB
       await savePendiente(datos);
-      alert("📦 Guardado localmente. Se enviará cuando vuelva internet.");
-
-      // Registrar sync en el service worker
+      alert("📦 Guardado local. Se enviará cuando vuelva internet.");
       if ("serviceWorker" in navigator && "SyncManager" in window) {
         const reg = await navigator.serviceWorker.ready;
         await reg.sync.register("sync-familias");
       }
     } else {
-      // 🚀 Guardar directamente en Supabase
       const { error } = await supabase.from("familias").insert([datos]);
       if (error) {
         console.error("❌ Error guardando en Supabase:", error);
@@ -324,16 +360,16 @@
 
       data.forEach(fam=>{
         const tr = document.createElement("tr");
-        tr.dataset.id = fam.id; // guardamos el ID en el <tr>
+        tr.dataset.id = fam.id;
 
         tr.innerHTML = `
-           <td>${fam.id}</td>
-  <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-  <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-  <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-  <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-  <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-  <td><button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>
+          <td>${fam.id}</td>
+          <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+          <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+          <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+          <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+          <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+          <td><button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button></td>
         `;
         tabla.appendChild(tr);
       });
@@ -343,7 +379,7 @@
     }
   }
 
-  // Guardar cambios de visitada — inmediato
+  // Guardar cambios de visitada
   document.getElementById("familiasTable")
     ?.addEventListener("change", async e => {
       if (e.target && e.target.type === "checkbox") {
@@ -357,23 +393,18 @@
         } catch (err) {
           console.error("❌ Error actualizando visitada:", err);
           showMsg("❌ Error al actualizar", "error");
-          // revertir checkbox
           e.target.checked = !visitada;
         }
       }
     });
 
   // Paginación
-  document.getElementById("prevPage").addEventListener("click",()=>{
-    if(page>0){ page--; cargarFamilias(); }
-  });
-  document.getElementById("nextPage").addEventListener("click",()=>{
-    page++; cargarFamilias();
-  });
+  document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
+  document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
 
   cargarFamilias();
 
-  // Guardar cambios inline al salir de la celda
+  // Guardado inline
   document.getElementById("familiasTable").addEventListener("blur", async e => {
     if (e.target.matches("[contenteditable]")) {
       const id = e.target.closest("tr").dataset.id;
@@ -394,22 +425,22 @@
     }
   }, true);
 
+  // Eliminar fila
   document.getElementById("familiasTable").addEventListener("click", async e => {
-  if (e.target.dataset.del) {
-    const id = e.target.dataset.del;
-    if (confirm("¿Seguro que deseas eliminar esta familia?")) {
-      try {
-        await supabase.from("familias").delete().eq("id", id);
-        showMsg("🗑️ Familia eliminada", "success");
-        cargarFamilias();
-      } catch (err) {
-        console.error("❌ Error eliminando:", err);
-        showMsg("❌ Error al eliminar", "error");
+    if (e.target.dataset.del) {
+      const id = e.target.dataset.del;
+      if (confirm("¿Seguro que deseas eliminar esta familia?")) {
+        try {
+          await supabase.from("familias").delete().eq("id", id);
+          showMsg("🗑️ Familia eliminada", "success");
+          cargarFamilias();
+        } catch (err) {
+          console.error("❌ Error eliminando:", err);
+          showMsg("❌ Error al eliminar", "error");
+        }
       }
     }
-  }
-  
-});
+  });
 </script>
 </body>
 </html>
