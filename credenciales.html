@@ -6,94 +6,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎫 Credenciales — Cáritas CNC</title>
   
-  <!-- 🔐 Firebase ESM bootstrap (añadir en <head> de credenciales.html) -->
-<script type="module">
-  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-  
-  const firebaseConfig = {
-    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-    authDomain: "web-familias.firebaseapp.com",
-    projectId: "web-familias",
-    storageBucket: "web-familias.appspot.com",
-    messagingSenderId: "261699620792",
-    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-  };
 
-  const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  await setPersistence(auth, browserLocalPersistence).catch(()=>{});
-  window.CARITAS = window.CARITAS || {};
-  window.CARITAS.auth = auth;
-  document.dispatchEvent(new Event("firebase:ready:caritas"));
-  onAuthStateChanged(auth, () => document.dispatchEvent(new Event("firebase:ready:caritas")));
-</script>
-  <!-- 🛣️ Importante para GitHub Pages -->
-  <base href="/Web-familias/">
-  <link rel="stylesheet" href="styles-caritas.css">
-  <style>
-  :root{
-    --red:#b91c1c; --bg:#0b0b0f; --text:#fff; --muted:#cfcfcf; --radius:6mm;
-    /* 📏 Calibración foto (centro X/Y y diámetro) — valores por defecto equivalentes a tu layout actual */
-    --cx: 21mm;  /* = 6mm (left) + 15mm (radio) */
-    --cy: 23mm;  /* = 8mm (top)  + 15mm (radio) */
-    --d : 30mm;  /* diámetro */
-  }
-  html,body{height:100%;margin:0;background:#111;color:var(--text);font-family:Poppins,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{display:grid;gap:18px;place-items:center;padding:24px}
-  .controls{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{padding:10px 14px;border-radius:10px;border:1px solid #333;background:#1b1b1b;color:#fff;cursor:pointer}
-  .btn:hover{filter:brightness(1.1)}
-  .sheet{display:flex;gap:18px;flex-wrap:wrap}
-  .card{position:relative;width:85.6mm;height:54mm;border-radius:var(--radius);background:linear-gradient(135deg,#0b0b0f,#17171c);box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;isolation:isolate}
-  .wm{position:absolute;inset:0;display:block;opacity:.08;z-index:0}
-  .stripes{position:absolute;right:6mm;top:16mm;display:grid;gap:4mm;z-index:1}
-  .stripes span{display:block;width:10mm;height:4mm;background:var(--red);border-radius:2mm}
-  /* 📸 Foto con aro blanco y calibración por variables */
-  .front .photo{
-    position:absolute; z-index:2; border-radius:50%; overflow:hidden; background:#000;
-    left: calc(var(--cx) - var(--d)/2);
-    top:  calc(var(--cy) - var(--d)/2);
-    width: var(--d); height: var(--d);
-    box-shadow: 0 0 0 2mm #fff, 0 0 0 2.4mm rgba(0,0,0,.6); /* aro blanco + sombra */
-  }
-  .front .photo img{width:100%;height:100%;object-fit:cover}
-  .brand-row{position:absolute;left:40mm;top:10mm;display:flex;align-items:center;gap:6mm;z-index:2}
-  .logo{width:12mm;height:12mm;display:grid;place-items:center;color:#fff}
-  .name{font-weight:800;font-size:6mm;line-height:1;color:#fff}
-  .role{position:absolute;left:40mm;top:24mm;font-weight:600;font-size:3.6mm;color:#fff}
-  .band{position:absolute;left:0;right:0;bottom:0;background:var(--red);color:#fff;padding:4mm 6mm;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:4mm;z-index:2}
-  .back .scan{position:absolute;left:0;right:0;top:8mm;text-align:center;font-weight:800;font-size:7mm;letter-spacing:.5px}
-  .back .qr-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-36%);padding:3mm;border-radius:3mm;background:#fff}
-  .back #qr{width:26mm;height:26mm}
-  .back .footer{position:absolute;left:0;right:0;bottom:4mm;text-align:center;font-weight:700;letter-spacing:.6px}
-  @media print{body{background:#fff}.controls{display:none}.wrap{padding:0}.sheet{gap:8mm;justify-content:flex-start}.card{box-shadow:none}@page{size:auto;margin:10mm}}
-</style>
-  <!-- 🔒 CSP -->
-  <meta http-equiv="Content-Security-Policy"
-  content="default-src 'self';
-           script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://www.gstatic.com;
-           style-src  'self' 'unsafe-inline' https://unpkg.com;
-           img-src * data: blob:;
-           connect-src *;
-           font-src * data:;">
-
-  <!-- 🛠 Diagnóstico (una sola vez) -->
-  <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script type="module" src="api.js/health-caritas.js"></script>
-  <script defer src="api.js/error-overlay.js"></script>
-
-  <!-- ✅ Supabase -->
+  <!-- <script type="module" src="api.js/self-heal-caritas.js"></script> -->
+<!-- <script type="module" src="api.js/health-caritas.js"></script> -->
+<!-- <script defer src="api.js/error-overlay.js"></script> -->
+ 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-    window.CARITAS = window.CARITAS || {};
-    if (!window.CARITAS.supabase) {
-      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      document.dispatchEvent(new Event("supabase:ready:caritas"));
+  import * as QR from "https://esm.sh/qrcode@1.5.3";
+
+  // Evitar doble inicialización si el HTML se vuelve a evaluar
+  if (window.__CRED_INIT__) {
+    console.debug("CRED: módulo ya inicializado, se omite duplicado.");
+  } else {
+    window.__CRED_INIT__ = true;
+
+    // ===== Helpers =====
+    const esc = (s = "") =>
+      String(s).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
+
+    // Esperas Firebase (ya lo inicializas en el <head>)
+    function waitForAuth(timeout=12000){
+      if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
+      const t0=performance.now();
+      return new Promise((resolve,reject)=>{
+        const onReady=()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
+        document.addEventListener('firebase:ready:caritas', onReady);
+        const iv=setInterval(()=>{
+          if (window.CARITAS?.auth){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); }
+          if (performance.now()-t0>timeout){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); reject(new Error("Firebase no inicializado")); }
+        },50);
+      });
     }
-  </script>
+    async function waitForUser(){
+      const auth = await waitForAuth();
+      return auth?.currentUser || await new Promise(r=>auth?.onAuthStateChanged?.(u=>r(u||null)));
+    }
+
+    // Supabase (lo expusiste en el bloque del <head>)
+    const supabase = window.CARITAS?.supabase;
+
+    // ===== RPC helpers =====
+    async function getPublicCred(uid){
+      const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+      if (error) throw error;
+      return (Array.isArray(data) ? data[0] : data) || null; // <- fila única
+    }
+    async function upsertCred(uid, email, nombre, foto_url=null){
+      const { data, error } = await supabase.rpc("upsert_mi_credencial", {
+        uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
+      });
+      if (error) throw error;
+      return data;
+    }
+
+    // ===== Render carnet (frente + reverso) =====
+    async function drawCarnet(user){
+      const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
+
+      // 1) Leer
+      let data = await getPublicCred(user.uid).catch(()=>null);
+      // 2) Si no existe, crear sin pisar foto
+      if (!data){
+        await upsertCred(user.uid, user.email, nombreBase, null);
+        data = await getPublicCred(user.uid).catch(()=>null);
+      }
+      if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
+
+      const nombre = data.nombre || nombreBase;
+
+      // Frente
+      document.getElementById("nombre").textContent = esc(nombre);
+      document.getElementById("rol").textContent    = esc(data.rol || "Voluntario Cáritas CNC");
+      document.getElementById("foto").src = data.foto_url
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
+
+      // Reverso (QR apunta a la vista pública)
+      const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
+      await QR.toCanvas(document.getElementById("qr"), qrUrl, { width:260, margin:1 });
+    }
+
+    // ===== Descargar PNG (ambas caras) =====
+    document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
+      const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+      const node = document.getElementById("sheet");
+      const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
+      const link = document.createElement('a');
+      link.download = `credencial-cnc_${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // ===== Router (view=carnet / public) =====
+    const params = new URLSearchParams(location.search);
+    const view = params.get("view");
+    if (view === "public"){
+      const uid = params.get("id");
+      const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
+      if(!data){ alert("❌ No se pudo cargar la credencial pública"); }
+      const nombre = data?.nombre || "Voluntario";
+      document.getElementById("nombre").textContent = esc(nombre);
+      document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
+      document.getElementById("foto").src = data?.foto_url
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
+      await QR.toCanvas(document.getElementById("qr"), urlFromBase(`credenciales.html?view=public&id=${uid}`), { width:260, margin:1 });
+    } else {
+      const user = await waitForUser();
+      if (!user) { location.href="login.html"; }
+      else { await drawCarnet(user); }  // <- nuevo nombre
+    }
+
+    // ===== Calibración: teclas + guardado =====
+    (function(){
+      const root = document.documentElement;
+      function loadLayout(){
+        try{
+          const cfg = JSON.parse(localStorage.getItem("cred:layout")||"{}");
+          ["--cx","--cy","--d"].forEach(k=> cfg[k] && root.style.setProperty(k, cfg[k]));
+        }catch{}
+      }
+      function saveLayout(){
+        const cs = getComputedStyle(root);
+        const cfg = {
+          "--cx": cs.getPropertyValue("--cx").trim(),
+          "--cy": cs.getPropertyValue("--cy").trim(),
+          "--d" : cs.getPropertyValue("--d").trim()
+        };
+        localStorage.setItem("cred:layout", JSON.stringify(cfg));
+        alert("📏 Layout guardado");
+      }
+      loadLayout();
+      document.addEventListener("keydown",(e)=>{
+        if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
+        const cs = getComputedStyle(root);
+        const num = v => parseFloat(String(v).replace("mm",""))||0;
+        let cx = num(cs.getPropertyValue("--cx"));
+        let cy = num(cs.getPropertyValue("--cy"));
+        let d  = num(cs.getPropertyValue("--d"));
+        const step = e.shiftKey ? 1 : .5;
+        let used=false;
+        switch(e.key){
+          case "ArrowLeft":  cx -= step; used=true; break;
+          case "ArrowRight": cx += step; used=true; break;
+          case "ArrowUp":    cy -= step; used=true; break;
+          case "ArrowDown":  cy += step; used=true; break;
+          case "+": case "=": case "NumpadAdd": d += step; used=true; break;
+          case "-": case "NumpadSubtract": d -= step; used=true; break;
+        }
+        if (!used) return;
+        e.preventDefault();
+        root.style.setProperty("--cx", cx+"mm");
+        root.style.setProperty("--cy", cy+"mm");
+        root.style.setProperty("--d" , Math.max(10, d)+"mm");
+      });
+      document.getElementById("btn-save-layout")?.addEventListener("click", saveLayout);
+    })();
+
+  }
+</script>
 </head>
 <body>
   <div class="wrap">
