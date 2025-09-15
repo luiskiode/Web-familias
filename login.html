@@ -70,151 +70,148 @@
   </main>
 
   <!-- 🧠 Lógica con Firebase ESM + Supabase -->
-  <script type="module">
-    // --- Firebase (ESM / modular) ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getAuth, setPersistence, browserLocalPersistence,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+<script type="module">
+  // --- Firebase (ESM / modular) ---
+  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getAuth, setPersistence, browserLocalPersistence,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // --- Supabase ---
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  // --- Supabase ---
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    // ⚙️ Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-      authDomain: "web-familias.firebaseapp.com",
-      projectId: "web-familias",
-      storageBucket: "web-familias.appspot.com",
-      messagingSenderId: "261699620792",
-      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-    };
+  // ⚙️ Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+    authDomain: "web-familias.firebaseapp.com",
+    projectId: "web-familias",
+    storageBucket: "web-familias.appspot.com",
+    messagingSenderId: "261699620792",
+    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+  };
+  const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
 
-    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+  // 🔌 Inicializar
+  const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  await setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
-    // 🔌 Inicializar
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
+  window.CARITAS = window.CARITAS || {};
+  window.CARITAS.auth = auth;
 
-    window.CARITAS = window.CARITAS || {};
-    window.CARITAS.auth = auth;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.CARITAS.supabase = supabase;
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.CARITAS.supabase = supabase;
+  // 🔔 Compat con otros módulos
+  document.dispatchEvent(new Event("firebase:ready:caritas"));
+  document.dispatchEvent(new Event("supabase:ready:caritas"));
+  onAuthStateChanged(auth, ()=> document.dispatchEvent(new Event("firebase:ready:caritas")));
 
-    // 🔔 Por compatibilidad con otros módulos
-    document.dispatchEvent(new Event("firebase:ready:caritas"));
-    document.dispatchEvent(new Event("supabase:ready:caritas"));
-    onAuthStateChanged(auth, ()=> document.dispatchEvent(new Event("firebase:ready:caritas")));
+  // -------- Helpers UI --------
+  const $ = (s) => document.querySelector(s);
+  const setMsg = (el, text, type) => { el.textContent = text || ""; el.className = type || ""; };
 
-    // ------------- Helpers UI -------------
-    const $ = (s) => document.querySelector(s);
-    const setMsg = (el, text, type) => { el.textContent = text || ""; el.className = type || ""; };
-
-   // Reemplaza esta función:
-async function getPublicCred(uid){
-  const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-  if (error) throw error;
-  return (Array.isArray(data) ? data[0] : data) || null; // <- fila única
-}
-
-// En el submit de login, cambia este bloque:
-const row = await getPublicCred(user.uid).catch(()=>null);
-if (row && row.nombre && row.foto_url){
-  window.location.href = "credenciales.html?view=carnet";
-} else {
-  setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
-  credBox.style.display="";
-  $('#nombreCred').value = user.displayName || (user.email||"").split("@")[0];
-}
-
-    // ------------- Login / Registro -------------
-    const form     = $('#loginForm');
-    const msg      = $('#loginMessage');
-    const regBtn   = $('#registerBtn');
-    const resetBtn = $('#resetPassBtn');
-    const credBox  = $('#credForm');
-    const credForm = $('#credencialForm');
-    const credMsg  = $('#credMessage');
-
-    form.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const email = $('#email').value.trim();
-      const pass  = $('#password').value.trim();
-      try{
-        const { user } = await signInWithEmailAndPassword(auth, email, pass);
-        localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
-
-        // ¿ya tiene credencial completa?
-        const cred = await getPublicCred(user.uid).catch(()=>null);
-        if (cred && cred.nombre && cred.foto_url){
-          window.location.href = "credenciales.html?view=carnet";
-        } else {
-          setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
-          credBox.style.display="";
-          $('#nombreCred').value = user.displayName || (user.email||"").split("@")[0];
-        }
-      }catch(err){
-        console.error(err);
-        setMsg(msg,"❌ "+(err.message||err),"error");
-      }
+  // -------- RPC helpers --------
+  async function getPublicCred(uid){
+    const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+    if (error) throw error;
+    return (Array.isArray(data) ? data[0] : data) || null; // una sola fila
+  }
+  async function upsertCred(uid, p_email, p_nombre, p_foto = null){
+    const { data, error } = await supabase.rpc("upsert_mi_credencial", {
+      uid, p_email, p_nombre, p_rol: "Voluntario Cáritas CNC", p_foto
     });
+    if (error) throw error;
+    return data;
+  }
 
-    regBtn.addEventListener("click", async ()=>{
-      const email = $('#email').value.trim();
-      const pass  = $('#password').value.trim();
-      if(!email||!pass) return setMsg(msg,"Completa correo y contraseña","error");
-      try{
-        const { user } = await createUserWithEmailAndPassword(auth, email, pass);
-        localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
-        setMsg(msg,"✅ Cuenta creada, completa tu credencial","success");
+  // -------- Login / Registro --------
+  const form     = $('#loginForm');
+  const msg      = $('#loginMessage');
+  const regBtn   = $('#registerBtn');
+  const resetBtn = $('#resetPassBtn');
+
+  const credBox  = $('#credForm');
+  const credForm = $('#credencialForm');
+  const credMsg  = $('#credMessage');
+
+  // Ingresar
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const email = $('#email').value.trim();
+    const pass  = $('#password').value.trim();
+    try{
+      const { user } = await signInWithEmailAndPassword(auth, email, pass); // <-- 'user' SOLO aquí
+      localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
+
+      const cred = await getPublicCred(user.uid).catch(()=>null);
+      if (cred && cred.nombre && cred.foto_url){
+        location.href = "credenciales.html?view=carnet";
+      } else {
+        setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
         credBox.style.display="";
-        $('#nombreCred').value = (user.email||"").split("@")[0];
-      }catch(err){
-        console.error(err);
-        setMsg(msg,"❌ "+(err.message||err),"error");
+        $('#nombreCred').value = user.displayName || (user.email||"").split("@")[0];
       }
-    });
+    }catch(err){
+      console.error(err);
+      setMsg(msg,"❌ "+(err.message||err),"error");
+    }
+  });
 
-    resetBtn.addEventListener("click", async ()=>{
-      const email = prompt("Ingresa tu correo para restablecer:");
-      if(!email) return;
-      try{
-        await sendPasswordResetEmail(auth, email);
-        setMsg(msg,"📩 Revisa tu correo","success");
-      }catch(e){
-        setMsg(msg,"❌ "+(e.message||e),"error");
-      }
-    });
+  // Registrar
+  regBtn.addEventListener("click", async ()=>{
+    const email = $('#email').value.trim();
+    const pass  = $('#password').value.trim();
+    if(!email||!pass) return setMsg(msg,"Completa correo y contraseña","error");
+    try{
+      const { user } = await createUserWithEmailAndPassword(auth, email, pass);
+      localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
+      setMsg(msg,"✅ Cuenta creada, completa tu credencial","success");
+      credBox.style.display="";
+      $('#nombreCred').value = (user.email||"").split("@")[0];
+    }catch(err){
+      console.error(err);
+      setMsg(msg,"❌ "+(err.message||err),"error");
+    }
+  });
 
-    // ------------- Credencial -------------
-  
+  // Reset password
+  resetBtn.addEventListener("click", async ()=>{
+    const email = prompt("Ingresa tu correo para restablecer:");
+    if(!email) return;
+    try{
+      await sendPasswordResetEmail(auth, email);
+      setMsg(msg,"📩 Revisa tu correo","success");
+    }catch(e){
+      setMsg(msg,"❌ "+(e.message||e),"error");
+    }
+  });
+
+  // -------- Guardar credencial --------
   credForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
     try{
-      const user = auth.currentUser;
+      const user = auth.currentUser;                  // 👈 evita "user is not defined"
       if(!user) throw new Error("No hay usuario autenticado");
 
-      const nombre   = document.querySelector('#nombreCred').value.trim();
-      const file     = document.querySelector('#fotoCred').files[0];
+      const nombre = $('#nombreCred').value.trim();
+      const file   = $('#fotoCred').files[0];
       if(!nombre) throw new Error("Completa el nombre");
       if(!file)   throw new Error("Sube una foto");
 
       const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
       const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
 
-      // Subida
       const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
       if (up.error) {
-        const msg = up.error?.message || "Error subiendo la foto";
-        if (/Bucket not found/i.test(msg)) throw new Error("Bucket 'fotos' no existe");
-        if (/new row violates row-level security policy|not allowed/i.test(msg)) throw new Error("Política de Storage no permite subir desde el cliente");
+        const m = up.error?.message || "";
+        if (/Bucket not found/i.test(m)) throw new Error("Bucket 'fotos' no existe");
+        if (/row-level security|not allowed/i.test(m)) throw new Error("Política de Storage no permite subir desde el cliente");
         throw up.error;
       }
 
@@ -223,7 +220,7 @@ if (row && row.nombre && row.foto_url){
 
       await upsertCred(user.uid, user.email, nombre, foto_url);
       setMsg(credMsg,"✅ Credencial guardada","success");
-      setTimeout(()=> window.location.href="credenciales.html?view=carnet", 900);
+      setTimeout(()=> location.href="credenciales.html?view=carnet", 800);
     }catch(err){
       console.error(err);
       setMsg(credMsg,"❌ "+(err.message||err),"error");

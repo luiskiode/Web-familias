@@ -141,6 +141,34 @@ input:required, select:required {
   background: #ff1a1a;
 }
 
+/* ====== Credenciales Cáritas CNC (scoped) ====== */
+
+/* Controles */
+.wrap{display:grid;gap:18px;place-items:center;padding:24px}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Lámina con 2 caras */
+.sheet{display:flex;gap:18px;flex-wrap:wrap}
+
+/* OJO: anula padding/margin de la .card genérica aquí */
+.sheet .card{
+  position:relative;
+  width:85.6mm; height:54mm;
+  margin:0; padding:0;                /* 👈 anula la genérica */
+  border-radius:6mm;
+  background:linear-gradient(135deg,#0b0b0f,#17171c);
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+  overflow:hidden; isolation:isolate;
+}
+
+/* Marca de agua tenue */
+.sheet .wm{position:absolute;inset:0;opacity:.08;z-index:0}
+
+/* Franjas rojas */
+.sheet .stripes{position:absolute;right:6mm;top:16mm;display:grid;gap:4mm;z-index:1}
+.sheet .stripes span{width:10mm;height:4mm;background:var(--red,#b91c1c);border-radius:2mm}
+
+/* Foto circular con calibración */
 :root{
   --red:#b91c1c; --bg:#0b0b0f; --text:#fff;
   /* 📏 Calibración foto (mm) */
@@ -148,12 +176,36 @@ input:required, select:required {
   --cy: 23mm;  /* centro Y */
   --d : 30mm;  /* diámetro */
 }
-.card{position:relative;width:85.6mm;height:54mm;border-radius:6mm;background:linear-gradient(135deg,#0b0b0f,#17171c);box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;isolation:isolate}
 .front .photo{
-  position:absolute;z-index:2;border-radius:50%;overflow:hidden;background:#000;
+  position:absolute; z-index:2; border-radius:50%; overflow:hidden; background:#000;
   left: calc(var(--cx) - var(--d)/2);
   top:  calc(var(--cy) - var(--d)/2);
   width: var(--d); height: var(--d);
   box-shadow: 0 0 0 2mm #fff, 0 0 0 2.4mm rgba(0,0,0,.6);
 }
 .front .photo img{width:100%;height:100%;object-fit:cover}
+
+/* Marca / nombre */
+.brand-row{position:absolute;left:40mm;top:10mm;display:flex;align-items:center;gap:6mm;z-index:2}
+.logo{width:12mm;height:12mm;display:grid;place-items:center;color:#fff}
+.name{font-weight:800;font-size:6mm;line-height:1;color:#fff}
+.role{position:absolute;left:40mm;top:24mm;font-weight:600;font-size:3.6mm;color:#fff}
+
+/* Banda roja inferior */
+.band{position:absolute;left:0;right:0;bottom:0;background:var(--red,#b91c1c);color:#fff;
+  padding:4mm 6mm;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:4mm;z-index:2}
+
+/* Reverso */
+.back .scan{position:absolute;left:0;right:0;top:8mm;text-align:center;font-weight:800;font-size:7mm;letter-spacing:.5px;color:#fff}
+.back .qr-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-36%);padding:3mm;border-radius:3mm;background:#fff}
+.back #qr{width:26mm;height:26mm}
+.back .footer{position:absolute;left:0;right:0;bottom:4mm;text-align:center;font-weight:700;letter-spacing:.6px;color:#fff}
+
+@media print{
+  body{background:#fff}
+  .controls{display:none}
+  .wrap{padding:0}
+  .sheet{gap:8mm;justify-content:flex-start}
+  .sheet .card{box-shadow:none}
+  @page{size:auto;margin:10mm}
+  }
