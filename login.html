@@ -117,19 +117,22 @@
     const $ = (s) => document.querySelector(s);
     const setMsg = (el, text, type) => { el.textContent = text || ""; el.className = type || ""; };
 
-    // RPC helpers (Supabase)
-    async function getPublicCred(uid){
-      const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-      if (error) throw error;
-      return data;
-    }
-    async function upsertCred(uid, email, nombre, foto_url=null){
-      const { data, error } = await supabase.rpc("upsert_mi_credencial", {
-        uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
-      });
-      if (error) throw error;
-      return data;
-    }
+   // Reemplaza esta función:
+async function getPublicCred(uid){
+  const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) || null; // <- fila única
+}
+
+// En el submit de login, cambia este bloque:
+const row = await getPublicCred(user.uid).catch(()=>null);
+if (row && row.nombre && row.foto_url){
+  window.location.href = "credenciales.html?view=carnet";
+} else {
+  setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
+  credBox.style.display="";
+  $('#nombreCred').value = user.displayName || (user.email||"").split("@")[0];
+}
 
     // ------------- Login / Registro -------------
     const form     = $('#loginForm');
