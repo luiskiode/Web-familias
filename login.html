@@ -190,36 +190,42 @@
       }
     });
 
-    // ------------- Guardar credencial -------------
-    credForm.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      try{
-        const user = auth.currentUser;
-        if(!user) throw new Error("No hay usuario autenticado");
+    // ------------- Credencial -------------
+  
+  credForm.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    try{
+      const user = auth.currentUser;
+      if(!user) throw new Error("No hay usuario autenticado");
 
-        const nombre   = $('#nombreCred').value.trim();
-        const fotoFile = $('#fotoCred').files[0];
-        if(!nombre)   throw new Error("Completa el nombre");
-        if(!fotoFile) throw new Error("Sube una foto");
+      const nombre   = document.querySelector('#nombreCred').value.trim();
+      const file     = document.querySelector('#fotoCred').files[0];
+      if(!nombre) throw new Error("Completa el nombre");
+      if(!file)   throw new Error("Sube una foto");
 
-        const ext  = (fotoFile.name.split(".").pop() || "jpg").toLowerCase();
-        const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
+      const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
 
-        // Sube a bucket 'fotos' (políticas insert habilitadas en SQL)
-        const { error: upErr } = await supabase.storage.from("fotos").upload(path, fotoFile, { upsert:true });
-        if (upErr) throw upErr;
-
-        const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
-        const foto_url = pub.publicUrl;
-
-        await upsertCred(user.uid, user.email, nombre, foto_url);
-        setMsg(credMsg,"✅ Credencial guardada","success");
-        setTimeout(()=> window.location.href="credenciales.html?view=carnet", 1200);
-      }catch(err){
-        console.error(err);
-        setMsg(credMsg,"❌ "+(err.message||err),"error");
+      // Subida
+      const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
+      if (up.error) {
+        const msg = up.error?.message || "Error subiendo la foto";
+        if (/Bucket not found/i.test(msg)) throw new Error("Bucket 'fotos' no existe");
+        if (/new row violates row-level security policy|not allowed/i.test(msg)) throw new Error("Política de Storage no permite subir desde el cliente");
+        throw up.error;
       }
-    });
-  </script>
+
+      const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
+      const foto_url = pub.publicUrl;
+
+      await upsertCred(user.uid, user.email, nombre, foto_url);
+      setMsg(credMsg,"✅ Credencial guardada","success");
+      setTimeout(()=> window.location.href="credenciales.html?view=carnet", 900);
+    }catch(err){
+      console.error(err);
+      setMsg(credMsg,"❌ "+(err.message||err),"error");
+    }
+  });
+</script>
 </body>
 </html>
