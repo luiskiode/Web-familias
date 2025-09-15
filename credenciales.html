@@ -2,165 +2,54 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎫 Credenciales — Cáritas CNC</title>
- 
+  <link rel="stylesheet" href="styles-caritas.css" />
+
+  <!-- 🔌 Supabase bootstrap -->
   <script type="module">
-  import * as QR from "https://esm.sh/qrcode@1.5.3";
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  // Evitar doble inicialización si el HTML se vuelve a evaluar
-  if (window.__CRED_INIT__) {
-    console.debug("CRED: módulo ya inicializado, se omite duplicado.");
-  } else {
-    window.__CRED_INIT__ = true;
+    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
 
-    // ===== Helpers =====
-    const esc = (s = "") =>
-      String(s).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
-
-    // Esperas Firebase (ya lo inicializas en el <head>)
-    function waitForAuth(timeout=12000){
-      if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
-      const t0=performance.now();
-      return new Promise((resolve,reject)=>{
-        const onReady=()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
-        document.addEventListener('firebase:ready:caritas', onReady);
-        const iv=setInterval(()=>{
-          if (window.CARITAS?.auth){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); }
-          if (performance.now()-t0>timeout){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); reject(new Error("Firebase no inicializado")); }
-        },50);
-      });
+    window.CARITAS = window.CARITAS || {};
+    if (!window.CARITAS.supabase) {
+      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.dispatchEvent(new Event("supabase:ready:caritas"));
     }
-    async function waitForUser(){
-      const auth = await waitForAuth();
-      return auth?.currentUser || await new Promise(r=>auth?.onAuthStateChanged?.(u=>r(u||null)));
-    }
+  </script>
 
-    // Supabase (lo expusiste en el bloque del <head>)
-    const supabase = window.CARITAS?.supabase;
+  <!-- 🔐 Firebase bootstrap -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-    // ===== RPC helpers =====
-    async function getPublicCred(uid){
-      const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-      if (error) throw error;
-      return (Array.isArray(data) ? data[0] : data) || null; // <- fila única
-    }
-    async function upsertCred(uid, email, nombre, foto_url=null){
-      const { data, error } = await supabase.rpc("upsert_mi_credencial", {
-        uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
-      });
-      if (error) throw error;
-      return data;
-    }
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
+      authDomain: "web-familias.firebaseapp.com",
+      projectId: "web-familias",
+      storageBucket: "web-familias.appspot.com",
+      messagingSenderId: "261699620792",
+      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
+    };
 
-    // ===== Render carnet (frente + reverso) =====
-    async function drawCarnet(user){
-      const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
+    const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
-      // 1) Leer
-      let data = await getPublicCred(user.uid).catch(()=>null);
-      // 2) Si no existe, crear sin pisar foto
-      if (!data){
-        await upsertCred(user.uid, user.email, nombreBase, null);
-        data = await getPublicCred(user.uid).catch(()=>null);
-      }
-      if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
+    window.CARITAS = window.CARITAS || {};
+    window.CARITAS.auth = auth;
 
-      const nombre = data.nombre || nombreBase;
+    document.dispatchEvent(new Event("firebase:ready:caritas"));
+    onAuthStateChanged(auth, () => document.dispatchEvent(new Event("firebase:ready:caritas")));
+  </script>
 
-      // Frente
-      document.getElementById("nombre").textContent = esc(nombre);
-      document.getElementById("rol").textContent    = esc(data.rol || "Voluntario Cáritas CNC");
-      document.getElementById("foto").src = data.foto_url
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-
-      // Reverso (QR apunta a la vista pública)
-      const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await QR.toCanvas(document.getElementById("qr"), qrUrl, { width:260, margin:1 });
-    }
-
-    // ===== Descargar PNG (ambas caras) =====
-    document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
-      const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
-      const node = document.getElementById("sheet");
-      const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
-      const link = document.createElement('a');
-      link.download = `credencial-cnc_${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
-
-    // ===== Router (view=carnet / public) =====
-    const params = new URLSearchParams(location.search);
-    const view = params.get("view");
-    if (view === "public"){
-      const uid = params.get("id");
-      const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
-      if(!data){ alert("❌ No se pudo cargar la credencial pública"); }
-      const nombre = data?.nombre || "Voluntario";
-      document.getElementById("nombre").textContent = esc(nombre);
-      document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
-      document.getElementById("foto").src = data?.foto_url
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-      await QR.toCanvas(document.getElementById("qr"), urlFromBase(`credenciales.html?view=public&id=${uid}`), { width:260, margin:1 });
-    } else {
-      const user = await waitForUser();
-      if (!user) { location.href="login.html"; }
-      else { await drawCarnet(user); }  // <- nuevo nombre
-    }
-
-    // ===== Calibración: teclas + guardado =====
-    (function(){
-      const root = document.documentElement;
-      function loadLayout(){
-        try{
-          const cfg = JSON.parse(localStorage.getItem("cred:layout")||"{}");
-          ["--cx","--cy","--d"].forEach(k=> cfg[k] && root.style.setProperty(k, cfg[k]));
-        }catch{}
-      }
-      function saveLayout(){
-        const cs = getComputedStyle(root);
-        const cfg = {
-          "--cx": cs.getPropertyValue("--cx").trim(),
-          "--cy": cs.getPropertyValue("--cy").trim(),
-          "--d" : cs.getPropertyValue("--d").trim()
-        };
-        localStorage.setItem("cred:layout", JSON.stringify(cfg));
-        alert("📏 Layout guardado");
-      }
-      loadLayout();
-      document.addEventListener("keydown",(e)=>{
-        if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
-        const cs = getComputedStyle(root);
-        const num = v => parseFloat(String(v).replace("mm",""))||0;
-        let cx = num(cs.getPropertyValue("--cx"));
-        let cy = num(cs.getPropertyValue("--cy"));
-        let d  = num(cs.getPropertyValue("--d"));
-        const step = e.shiftKey ? 1 : .5;
-        let used=false;
-        switch(e.key){
-          case "ArrowLeft":  cx -= step; used=true; break;
-          case "ArrowRight": cx += step; used=true; break;
-          case "ArrowUp":    cy -= step; used=true; break;
-          case "ArrowDown":  cy += step; used=true; break;
-          case "+": case "=": case "NumpadAdd": d += step; used=true; break;
-          case "-": case "NumpadSubtract": d -= step; used=true; break;
-        }
-        if (!used) return;
-        e.preventDefault();
-        root.style.setProperty("--cx", cx+"mm");
-        root.style.setProperty("--cy", cy+"mm");
-        root.style.setProperty("--d" , Math.max(10, d)+"mm");
-      });
-      document.getElementById("btn-save-layout")?.addEventListener("click", saveLayout);
-    })();
-
-  }
-</script>
+  <!-- ❌ Desactiva cualquier self-heal/health en esta página para evitar dobles inyecciones -->
+  <!-- <script type="module" src="api.js/self-heal-caritas.js"></script> -->
+  <!-- <script type="module" src="api.js/health-caritas.js"></script> -->
+  <!-- <script defer src="api.js/error-overlay.js"></script> -->
 </head>
 <body>
   <div class="wrap">
@@ -204,182 +93,170 @@
   </svg>
 
   <!-- Lógica: ESM, QR + Supabase + Firebase -->
-  <script type="module">
-    import * as QR from "https://esm.sh/qrcode@1.5.3"; // ✅ ESM real
+ <script type="module">
+  import * as QR from "https://esm.sh/qrcode@1.5.3";
 
-    // Helpers
- async function getPublicCred(uid){
-  const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-  if (error) throw error;
-  return (Array.isArray(data) ? data[0] : data) || null;
-}
-      const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
+  // Evita doble ejecución si el HTML se evalúa otra vez
+  if (window.__CRED_INIT__) {
+    console.debug("CRED: ya inicializado");
+  } else {
+    window.__CRED_INIT__ = true;
 
-    // Esperas
+    // ========== Helpers ==========
+    const esc = (s="") =>
+      String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
+
+    // Esperas Firebase (debe estar bootstrapped en <head>)
     function waitForAuth(timeout=12000){
       if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
-      const t0=performance.now();
+      const t0 = performance.now();
       return new Promise((resolve,reject)=>{
-        const onReady=()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
+        const onReady = ()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
         document.addEventListener('firebase:ready:caritas', onReady);
         const iv=setInterval(()=>{
           if (window.CARITAS?.auth){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); }
           if (performance.now()-t0>timeout){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); reject(new Error("Firebase no inicializado")); }
-        }, 50);
+        },50);
       });
     }
-    async function waitForUser(){ const auth = await waitForAuth().catch(()=>null); return auth?.currentUser || new Promise(r=>{ auth?.onAuthStateChanged?.(u=>r(u||null)); }); }
+    async function waitForUser(){
+      const auth = await waitForAuth().catch(()=>null);
+      return auth?.currentUser || await new Promise(r=>auth?.onAuthStateChanged?.(u=>r(u||null)));
+    }
 
-    // Supabase (ya se expone en <head>)
+    // Supabase (expuesto en <head>)
     const supabase = window.CARITAS?.supabase;
 
-    // RPC helpers (iguales a los que usas)
+    // ========== RPC ==========
     async function getPublicCred(uid){
-  const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-  if (error) throw error;
-  return (Array.isArray(data) ? data[0] : data) || null;
-  }
+      const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+      if (error) throw error;
+      return (Array.isArray(data) ? data[0] : data) || null;
+    }
     async function upsertCred(uid, email, nombre, foto_url=null){
       const { data, error } = await supabase.rpc("upsert_mi_credencial", {
         uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
       });
-      if (error) throw error; return data;
+      if (error) throw error;
+      return data;
     }
 
-    // Render credencial (frente+reverso)
-      window.renderCarnet ??= async function renderCarnet(user){
+    // ========== Render (frente + reverso) ==========
+    async function renderCarnet(user){
       const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
-      try { await upsertCred(user.uid, user.email, nombreBase, null); } catch {}
 
-      let data = null;
-      try { data = await getPublicCred(user.uid); } catch {}
+      // Leer; si no existe, crear sin pisar foto y volver a leer
+      let data = await getPublicCred(user.uid).catch(()=>null);
+      if (!data){
+        await upsertCred(user.uid, user.email, nombreBase, null);
+        data = await getPublicCred(user.uid).catch(()=>null);
+      }
       if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
 
       const nombre = data.nombre || nombreBase;
-      const email  = data.email  || user.email || "";
 
       // Frente
       document.getElementById("nombre").textContent = esc(nombre);
       document.getElementById("rol").textContent    = esc(data.rol || "Voluntario Cáritas CNC");
-      document.getElementById("foto").src = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
+      document.getElementById("foto").src = data.foto_url
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
 
-      // Reverso (QR solo atrás)
+      // Reverso (QR a vista pública)
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
       await QR.toCanvas(document.getElementById("qr"), qrUrl, { width:260, margin:1 });
     }
 
-    // Descargar PNG (ambas caras)
+    // ========== Descargar PNG (ESM/UMD robusto) ==========
     document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
-  let html2canvas;
-  try {
-    // ESM oficial
-    const mod = await import("https://esm.sh/html2canvas@1.4.1");
-    html2canvas = mod.default || mod;
-  } catch (e) {
-    // Fallback UMD -> usa window.html2canvas
-    await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
-    html2canvas = window.html2canvas;
-  }
-  const node = document.getElementById("sheet");
-  const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
-  const link = document.createElement('a');
-  link.download = `credencial-cnc_${Date.now()}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-});
+      let html2canvas;
+      try {
+        const mod = await import("https://esm.sh/html2canvas@1.4.1");
+        html2canvas = (mod && (mod.default||mod));
+      } catch {
+        await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+        html2canvas = window.html2canvas;
+      }
+      if (typeof html2canvas !== "function") {
+        alert("No se pudo cargar html2canvas"); return;
+      }
+      const node = document.getElementById("sheet");
+      const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
+      const link = document.createElement('a');
+      link.download = `credencial-cnc_${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
 
-    // Router simple (view=carnet / public)
+    // ========== Router ==========
     const params = new URLSearchParams(location.search);
     const view = params.get("view");
     if (view === "public"){
       const uid = params.get("id");
       const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
-      if (!data) { alert("❌ Credencial no encontrada"); location.href="index.html"; }
-      document.getElementById("nombre").textContent = esc(data.nombre||"—");
-      document.getElementById("rol").textContent    = esc(data.rol||"Voluntario Cáritas CNC");
-      document.getElementById("foto").src           = data.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre||"CNC")}&background=111&color=fff`;
-      // Reverso: QR a esta vista pública
-      await QR.toCanvas(document.getElementById("qr"), urlFromBase(`credenciales.html?view=public&id=${uid}`), { width:260, margin:1 });
+      if (!data) {
+        alert("❌ Credencial no encontrada"); location.href="index.html";
+      } else {
+        const nombre = data?.nombre || "Voluntario";
+        document.getElementById("nombre").textContent = esc(nombre);
+        document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
+        document.getElementById("foto").src           = data?.foto_url
+          || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
+        await QR.toCanvas(document.getElementById("qr"), urlFromBase(`credenciales.html?view=public&id=${uid}`), { width:260, margin:1 });
+      }
     } else {
-      const user = await waitForUser();
+      const user = await waitForUser().catch(()=>null);
       if (!user) { location.href="login.html"; }
       else { await renderCarnet(user); }
     }
-    // ====== Calibración: teclas y persistencia local ======
-(function(){
-  const root = document.documentElement;
 
-  function loadLayout(){
-    try{
-      const cfg = JSON.parse(localStorage.getItem("cred:layout")||"{}");
-      ["--cx","--cy","--d"].forEach(k=> cfg[k] && root.style.setProperty(k, cfg[k]));
-    }catch{}
-  }
-  function saveLayout(){
-    const cs = getComputedStyle(root);
-    const cfg = {
-      "--cx": cs.getPropertyValue("--cx").trim(),
-      "--cy": cs.getPropertyValue("--cy").trim(),
-      "--d" : cs.getPropertyValue("--d").trim()
-    };
-    localStorage.setItem("cred:layout", JSON.stringify(cfg));
-    alert("📏 Layout guardado");
-  }
-  loadLayout();
+    // ========== Calibración (flechas y +/-) ==========
+    (function(){
+      const root = document.documentElement;
+      function loadLayout(){
+        try{
+          const cfg = JSON.parse(localStorage.getItem("cred:layout")||"{}");
+          ["--cx","--cy","--d"].forEach(k=> cfg[k] && root.style.setProperty(k, cfg[k]));
+        }catch{}
+      }
+      function saveLayout(){
+        const cs = getComputedStyle(root);
+        const cfg = {
+          "--cx": cs.getPropertyValue("--cx").trim(),
+          "--cy": cs.getPropertyValue("--cy").trim(),
+          "--d" : cs.getPropertyValue("--d").trim()
+        };
+        localStorage.setItem("cred:layout", JSON.stringify(cfg));
+        alert("📏 Layout guardado");
+      }
+      loadLayout();
+      document.addEventListener("keydown",(e)=>{
+        if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
+        const cs = getComputedStyle(root);
+        const num = v => parseFloat(String(v).replace("mm",""))||0;
+        let cx = num(cs.getPropertyValue("--cx"));
+        let cy = num(cs.getPropertyValue("--cy"));
+        let d  = num(cs.getPropertyValue("--d"));
+        const step = e.shiftKey ? 1 : .5;
+        let used=false;
+        switch(e.key){
+          case "ArrowLeft":  cx -= step; used=true; break;
+          case "ArrowRight": cx += step; used=true; break;
+          case "ArrowUp":    cy -= step; used=true; break;
+          case "ArrowDown":  cy += step; used=true; break;
+          case "+": case "=": d += step; used=true; break;
+          case "-":           d -= step; used=true; break;
+        }
+        if (!used) return;
+        e.preventDefault();
+        root.style.setProperty("--cx", cx+"mm");
+        root.style.setProperty("--cy", cy+"mm");
+        root.style.setProperty("--d" , Math.max(10, d)+"mm");
+      });
+      document.getElementById("btn-save-layout")?.addEventListener("click", saveLayout);
+    })();
 
-  // Atajos: flechas mueven, +/- cambia diámetro (Shift = paso grande)
-  document.addEventListener("keydown",(e)=>{
-    // No estorbar inputs
-    if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
-
-    const cs = getComputedStyle(root);
-    const toNum = (v) => parseFloat(String(v).replace("mm",""))||0;
-    let cx = toNum(cs.getPropertyValue("--cx"));
-    let cy = toNum(cs.getPropertyValue("--cy"));
-    let d  = toNum(cs.getPropertyValue("--d"));
-    const step = e.shiftKey ? 1 : .5; // mm
-
-    let used=false;
-    switch(e.key){
-      case "ArrowLeft":  cx -= step; used=true; break;
-      case "ArrowRight": cx += step; used=true; break;
-      case "ArrowUp":    cy -= step; used=true; break;
-      case "ArrowDown":  cy += step; used=true; break;
-      case "+": case "=": case "NumpadAdd": d += step; used=true; break;
-      case "-": case "NumpadSubtract": d -= step; used=true; break;
-    }
-    if (!used) return;
-    e.preventDefault();
-    root.style.setProperty("--cx", cx+"mm");
-    root.style.setProperty("--cy", cy+"mm");
-    root.style.setProperty("--d" ,  Math.max(10, d)+"mm");
-  });
-
-  document.getElementById("btn-save-layout")?.addEventListener("click", saveLayout);
-})();
-
-async function renderCarnet(user){
-  const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
-
-  // 1) Intentar leer
-  let data = await getPublicCred(user.uid).catch(()=>null);
-
-  // 2) Si no existe, crear sin foto (no pisa foto existente) y volver a leer
-  if (!data){
-    await upsertCred(user.uid, user.email, nombreBase, null);
-    data = await getPublicCred(user.uid).catch(()=>null);
-  }
-  if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
-
-  const nombre = data.nombre || nombreBase;
-  document.getElementById("nombre").textContent = esc(nombre);
-  document.getElementById("rol").textContent    = esc(data.rol || "Voluntario Cáritas CNC");
-  document.getElementById("foto").src = data.foto_url
-    || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-
-  const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-  await QR.toCanvas(document.getElementById("qr"), qrUrl, { width:260, margin:1 });
-}
-  </script>
+  } // __CRED_INIT__
+</script>
 </body>
 </html>

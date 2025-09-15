@@ -141,3 +141,19 @@ input:required, select:required {
   background: #ff1a1a;
 }
 
+:root{
+  --red:#b91c1c; --bg:#0b0b0f; --text:#fff;
+  /* 📏 Calibración foto (mm) */
+  --cx: 21mm;  /* centro X */
+  --cy: 23mm;  /* centro Y */
+  --d : 30mm;  /* diámetro */
+}
+.card{position:relative;width:85.6mm;height:54mm;border-radius:6mm;background:linear-gradient(135deg,#0b0b0f,#17171c);box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;isolation:isolate}
+.front .photo{
+  position:absolute;z-index:2;border-radius:50%;overflow:hidden;background:#000;
+  left: calc(var(--cx) - var(--d)/2);
+  top:  calc(var(--cy) - var(--d)/2);
+  width: var(--d); height: var(--d);
+  box-shadow: 0 0 0 2mm #fff, 0 0 0 2.4mm rgba(0,0,0,.6);
+}
+.front .photo img{width:100%;height:100%;object-fit:cover}
