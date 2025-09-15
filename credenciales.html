@@ -5,11 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎫 Credenciales — Cáritas CNC</title>
-  
-
-  <!-- <script type="module" src="api.js/self-heal-caritas.js"></script> -->
-<!-- <script type="module" src="api.js/health-caritas.js"></script> -->
-<!-- <script defer src="api.js/error-overlay.js"></script> -->
  
   <script type="module">
   import * as QR from "https://esm.sh/qrcode@1.5.3";
@@ -213,14 +208,11 @@
     import * as QR from "https://esm.sh/qrcode@1.5.3"; // ✅ ESM real
 
     // Helpers
-  const esc = (s = "") =>
-  String(s).replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[m]));
+ async function getPublicCred(uid){
+  const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) || null;
+}
       const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
 
     // Esperas
@@ -255,7 +247,7 @@
     }
 
     // Render credencial (frente+reverso)
-    async function renderCarnet(user){
+      window.renderCarnet ??= async function renderCarnet(user){
       const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
       try { await upsertCred(user.uid, user.email, nombreBase, null); } catch {}
 
@@ -278,14 +270,23 @@
 
     // Descargar PNG (ambas caras)
     document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
-      const { default: html2canvas } = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
-      const node = document.getElementById("sheet");
-      const canvas = await html2canvas(node, {backgroundColor: null, scale: 3, useCORS: true});
-      const link = document.createElement('a');
-      link.download = `credencial-cnc_${(Date.now())}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
+  let html2canvas;
+  try {
+    // ESM oficial
+    const mod = await import("https://esm.sh/html2canvas@1.4.1");
+    html2canvas = mod.default || mod;
+  } catch (e) {
+    // Fallback UMD -> usa window.html2canvas
+    await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+    html2canvas = window.html2canvas;
+  }
+  const node = document.getElementById("sheet");
+  const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
+  const link = document.createElement('a');
+  link.download = `credencial-cnc_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
 
     // Router simple (view=carnet / public)
     const params = new URLSearchParams(location.search);
