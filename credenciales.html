@@ -528,6 +528,114 @@ document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
     ()=> alert(url) // fallback simple si Clipboard falla
   );
 });
+// ========= Persistencia: plantilla + orientación + tamaño =========
+// Guarda en localStorage y restaura en todas las vistas (carnet / pública / admin)
+(function(){
+  const DESIGN_KEY = "cred:design";
+
+  const frontImg = document.getElementById("tpl-img-front");
+  const backImg  = document.getElementById("tpl-img-back");
+  const sel      = document.getElementById("card-orient");
+  const rng      = document.getElementById("card-size");
+  const cardF    = document.getElementById("card-front");
+  const cardB    = document.getElementById("card-back");
+
+  // ---- helpers de estado ----
+  function saveDesign(partial={}){
+    const prev = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
+    const design = { ...prev, ...partial };
+    localStorage.setItem(DESIGN_KEY, JSON.stringify(design));
+    return design;
+  }
+  function applyOrientValue(orient="landscape", pct=1){
+    const isPortrait = orient === "portrait";
+    cardF?.classList.toggle("gafete", isPortrait);
+    cardB?.classList.toggle("gafete", isPortrait);
+
+    const baseW = 85.6, baseH = 54; // mm CR80
+    const w = (isPortrait ? baseH : baseW) * pct;
+    const h = (isPortrait ? baseW : baseH) * pct;
+    document.documentElement.style.setProperty("--card-w", w + "mm");
+    document.documentElement.style.setProperty("--card-h", h + "mm");
+  }
+  function applyDesign(design={}){
+    const orient = design.orient || "landscape";
+    const size   = Number(design.size || 100);      // %
+    sel && (sel.value = orient);
+    rng && (rng.value = size);
+    applyOrientValue(orient, size/100);
+
+    if (design.tplFront && frontImg) frontImg.src = design.tplFront;
+    if (design.tplBack  && backImg)  backImg.src  = design.tplBack;
+  }
+  function loadDesign(){
+    const design = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
+    applyDesign(design);
+  }
+
+  // ---- carga inicial (todas las vistas) ----
+  loadDesign();
+
+  // ---- UI listeners ----
+  sel?.addEventListener("change", ()=>{
+    const design = saveDesign({ orient: sel.value });
+    applyDesign(design);
+  });
+
+  rng?.addEventListener("input", ()=>{
+    const size = Number(rng.value || 100);
+    const design = saveDesign({ size });
+    applyDesign(design);
+  });
+
+  // Convertir archivo a DataURL y reducir tamaño para caber en localStorage
+  async function fileToDataURL(file, max=1400){
+    const raw = await new Promise((res, rej)=>{
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = rej;
+      fr.readAsDataURL(file);
+    });
+    // Downscale en canvas (reduce peso, mantiene aspecto)
+    return await new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const w = img.width, h = img.height;
+        const scale = Math.min(1, max / Math.max(w,h));
+        const cw = Math.round(w * scale), ch = Math.round(h * scale);
+        const c = document.createElement("canvas");
+        c.width = cw; c.height = ch;
+        c.getContext("2d").drawImage(img, 0, 0, cw, ch);
+        resolve(c.toDataURL("image/jpeg", 0.9));
+      };
+      img.src = raw;
+    });
+  }
+
+  document.getElementById("tpl-front")?.addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0]; if (!f) return;
+    const dataURL = await fileToDataURL(f, 1600);
+    if (frontImg) frontImg.src = dataURL;
+    saveDesign({ tplFront: dataURL });
+  });
+
+  document.getElementById("tpl-back")?.addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0]; if (!f) return;
+    const dataURL = await fileToDataURL(f, 1600);
+    if (backImg) backImg.src = dataURL;
+    saveDesign({ tplBack: dataURL });
+  });
+
+  // Integramos con tu botón existente "📏 Guardar layout"
+  document.getElementById("btn-save-layout")?.addEventListener("click", ()=>{
+    saveDesign({
+      orient: sel?.value || "landscape",
+      size: Number(rng?.value || 100)
+      // Las plantillas ya se guardan cuando las eliges
+    });
+    // Tu alerta de "Layout guardado" ya se muestra en tu handler actual
+  }, { capture:true });
+})();
 </script>
 </body>
 </html>

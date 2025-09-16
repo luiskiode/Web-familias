@@ -346,13 +346,12 @@ input:required, select:required {
 
 /* ===== Plantilla + tamaño + orientación ===== */
 :root{
-  --card-w: 85.6mm;  /* ancho base CR80 */
-  --card-h: 54mm;    /* alto base CR80  */
-  --qr: 34mm;        /* tamaño QR (sigue funcionando tu drawQR) */
+  --card-w: 85.6mm;
+  --card-h: 54mm;
+  --qr: 34mm;
 }
-
-/* Dimensiones desde variables (sobre-escriben definiciones previas) */
 .sheet .card{ width:var(--card-w); height:var(--card-h); }
+.card.gafete{ width:var(--card-h); height:var(--card-w); }
 
 /* Capa de plantilla de imagen (debajo de todo el contenido) */
 .tpl{
