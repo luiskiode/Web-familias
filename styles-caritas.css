@@ -263,3 +263,83 @@ input:required, select:required {
   max-width:42mm; text-align:center; z-index:2;
   padding:0 6mm;            /* evita que invada la zona de franjas */
    }
+
+/* === Polish pack Cáritas CNC === */
+:root{
+  --brand:#b91c1c;           /* rojo marca */
+  --ink:#ffffff;             /* texto principal */
+  --muted:#c9c9c9;           /* texto suave */
+  --bg-1:#0b0b0f; --bg-2:#17171c;
+  --qr: 34mm;                /* tamaño QR (ajústalo aquí) */
+}
+
+/* Fondo con gradiente suave + grano ligero */
+.sheet .card{
+  background:
+    radial-gradient(120% 90% at 10% 0%, #111 0%, transparent 60%),
+    radial-gradient(120% 90% at 100% 100%, #0f0f13 0%, transparent 55%),
+    linear-gradient(135deg,var(--bg-1),var(--bg-2));
+}
+
+/* Foto con aro doble y leve relieve */
+.front .photo{
+  box-shadow:
+    0 0 0 2.2mm #fff,
+    0 0 0 2.6mm rgba(0,0,0,.55),
+    0 10px 18px rgba(0,0,0,.45),
+    inset 0 0 0 0.6mm rgba(255,255,255,.12);
+}
+.front .photo img{ filter: contrast(1.06) saturate(1.05); }
+
+/* Marca y Nombre centrados, más legibles */
+.brand-row{
+  position:absolute; left:50%; top:10mm; transform:translateX(-50%);
+  display:grid; grid-auto-flow:column; align-items:center; gap:6mm; z-index:2;
+}
+.logo{ width:11mm; height:11mm; object-fit:contain; display:block; }
+.name{
+  font-weight:800; font-size:5.8mm; line-height:1;
+  color:var(--ink); max-width:42mm; text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  text-shadow:0 1px 1px rgba(0,0,0,.45);
+}
+
+/* Rol en formato “pill” y por encima de las franjas */
+.role{
+  position:absolute; left:50%; top:24mm; transform:translateX(-50%);
+  display:inline-block; padding:1.5mm 4mm; border-radius:8mm;
+  background:rgba(0,0,0,.35); color:var(--ink); font-weight:700; font-size:3.5mm;
+  letter-spacing:.1px; z-index:2; max-width:48mm; text-align:center;
+}
+
+/* Franjas a la derecha sin tapar texto */
+.sheet .stripes{ position:absolute; right:6mm; top:16mm; display:grid; gap:4mm; z-index:1 }
+.sheet .stripes span{ width:10mm; height:4mm; background:var(--brand); border-radius:2mm }
+
+/* Banda inferior */
+.band{ background:var(--brand); color:#fff; font-weight:800; letter-spacing:.5px }
+
+/* Watermark más sutil (ambas caras) */
+.sheet .wm{ opacity:.06; filter:grayscale(1); }
+
+/* Reverso: “SCAN ME” mejor ubicado y QR card con sombra */
+.back .scan{
+  position:absolute; left:50%; top:8mm; transform:translateX(-50%);
+  font-weight:900; font-size:6.2mm; letter-spacing:.4px; color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.back .qr-box{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-38%);
+  width:var(--qr); height:var(--qr);
+  background:#fff; border-radius:4mm; padding:3.2mm;
+  box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
+}
+.back #qr{ width:100%; height:100%; display:block }
+
+/* Botones con micro-interacción */
+.btn{
+  transition:transform .12s ease, box-shadow .12s ease, background-color .2s;
+  box-shadow:0 6px 14px rgba(185,28,28,.25);
+}
+.btn:hover{ transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); box-shadow:0 3px 8px rgba(0,0,0,.35) }

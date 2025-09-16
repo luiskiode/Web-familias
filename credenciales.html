@@ -247,12 +247,26 @@ async function saveNombreAuto(user, nombre){
     lastCred = { ...(lastCred||{}), nombre };
     hint.textContent = "✅ Guardado";
     await renderCarnet(user);
+function fitText(el, max=5.8, min=4.6){ // tamaños en mm
+  const toPx = mm => mm * 3.7795;
+  let size = max;
+  el.style.fontSize = max+'mm';
+  const w = el.parentElement.clientWidth || 160;
+  while (el.scrollWidth > w && size > min){
+    size -= .2; el.style.fontSize = size+'mm';
+  }
+}
+// después de setear el nombre:
+fitText(document.getElementById("nombre"));
+
   }catch(e){
     console.error(e); hint.textContent = "❌ Error al guardar";
   }finally{
     setTimeout(()=>{ if(hint.textContent.startsWith("✅")) hint.textContent="Se guarda automáticamente"; }, 1200);
   }
 }
+
+
 
 // Subir foto SIN perder nombre
 async function saveFoto(user, file){
