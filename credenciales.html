@@ -64,10 +64,10 @@
     <div class="sheet" id="sheet">
       <!-- FRENTE -->
       <section class="card front" id="card-front" aria-label="Credencial frente">
-        <svg class="wm" viewBox="0 0 100 100" aria-hidden="true"><use href="#logo-caritas"></use></svg>
+        <img class="wm" src="assets/logo-caritas.png" alt="">
         <div class="photo"><img id="foto" alt="Foto"></div>
         <div class="brand-row">
-          <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><use href="#logo-caritas"></use></svg>
+        <img class="logo" src="assets/logo-caritas.png" alt="Cáritas" />
           <div class="name" id="nombre">—</div>
         </div>
         <div class="role" id="rol">Voluntario Cáritas CNC</div>
@@ -77,7 +77,7 @@
 
       <!-- REVERSO -->
       <section class="card back" id="card-back" aria-label="Credencial reverso">
-        <svg class="wm" viewBox="0 0 100 100" aria-hidden="true"><use href="#logo-caritas"></use></svg>
+        <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
         <div class="scan">SCAN ME</div>
         <div class="qr-box"><canvas id="qr"></canvas></div>
         <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -108,7 +108,14 @@
     const esc = (s="") =>
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
-
+    // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
+async function drawQR(canvasId, url){
+  const el = document.getElementById(canvasId);
+  const box = el.parentElement;                       // .qr-box
+  const scale = Math.max(2, Math.round(window.devicePixelRatio || 2));
+  const px = Math.round(box.clientWidth * scale);
+  await QR.toCanvas(el, url, { width: px, margin: 1 });
+}
     // Esperas Firebase (debe estar bootstrapped en <head>)
     function waitForAuth(timeout=12000){
       if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
@@ -166,7 +173,7 @@
 
       // Reverso (QR a vista pública)
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await QR.toCanvas(document.getElementById("qr"), qrUrl, { width:260, margin:1 });
+      await drawQR("qr", qrUrl);
     }
 
     // ========== Descargar PNG (ESM/UMD robusto) ==========
@@ -204,7 +211,7 @@
         document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
         document.getElementById("foto").src           = data?.foto_url
           || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-        await QR.toCanvas(document.getElementById("qr"), urlFromBase(`credenciales.html?view=public&id=${uid}`), { width:260, margin:1 });
+        await drawQR("qr", urlFromBase(`credenciales.html?view=public&id=${uid}`));
       }
     } else {
       const user = await waitForUser().catch(()=>null);
