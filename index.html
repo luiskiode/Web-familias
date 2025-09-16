@@ -72,11 +72,12 @@
 
   <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
     <!-- Carnet personal (requiere login Firebase) -->
-    <a class="btn" href="credenciales.html?view=carnet">🎫 Mi Carnet</a>
+    <a class="btn" href="credenciales.html?view=carnet">🪪 Mi Carnet</a>
 
    <!-- Ver mi credencial pública (usa mi UID real) -->
 <a class="btn" id="btn-ver-publica">👤 Ver mi credencial</a>
 <script type="module">
+  // "Ver mi credencial" con tu UID real
   document.getElementById("btn-ver-publica").addEventListener("click", ()=>{
     const u = window.CARITAS?.auth?.currentUser;
     if (!u) return (location.href = "login.html");
@@ -85,7 +86,7 @@
 </script>
 
     <!-- Solo administradores -->
-    <a class="btn" href="credenciales.html?view=admin">🪪 Administrar Credenciales</a>
+    <a class="btn" href="credenciales.html?view=admin">🗂️Administrar Credenciales</a>
   </div>
 </section>
   

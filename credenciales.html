@@ -60,7 +60,19 @@
 
       <a class="btn" href="index.html">← Volver</a>
     </div>
-
+    <!-- Editor (solo en view=carnet) -->
+<div id="editor" class="editor" style="display:none">
+  <div class="row">
+    <label>Nombre</label>
+    <input id="edit-nombre" type="text" placeholder="Tu nombre" />
+    <small id="edit-nombre-hint" class="muted">Se guarda automáticamente</small>
+  </div>
+  <div class="row">
+    <label>Foto de perfil</label>
+    <input id="edit-foto" type="file" accept="image/*" />
+    <small class="muted">JPG/PNG recomendados</small>
+  </div>
+</div>
     <div class="sheet" id="sheet">
       <!-- FRENTE -->
       <section class="card front" id="card-front" aria-label="Credencial frente">
@@ -85,6 +97,30 @@
       </section>
     </div>
   </div>
+  <!-- Vista Admin -->
+<section id="admin" style="display:none; width:100%; max-width:980px">
+  <div class="controls" style="justify-content:space-between">
+    <div>
+      <input id="adm-q" type="search" placeholder="Buscar por nombre, email, UID o código" style="padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;width:340px">
+      <button class="btn" id="adm-reload">Buscar</button>
+    </div>
+    <div class="muted">Solo usuarios con rol que comience por <b>Admin</b></div>
+  </div>
+  <div style="overflow:auto;border:1px solid #2a2a2a;border-radius:12px">
+    <table id="adm-table" style="width:100%; border-collapse:collapse">
+      <thead>
+        <tr style="background:#16161a">
+          <th style="padding:10px;text-align:left">Nombre</th>
+          <th style="padding:10px;text-align:left">Email</th>
+          <th style="padding:10px;text-align:left">Rol</th>
+          <th style="padding:10px;text-align:left">Código</th>
+          <th style="padding:10px">Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
 
   <!-- Logo Cáritas simple (SVG) -->
   <svg width="0" height="0" style="position:absolute">
@@ -175,7 +211,63 @@ async function drawQR(canvasId, url){
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
       await drawQR("qr", qrUrl);
     }
+    // ---------- util ----------
+const toast = (t)=> alert(t);
 
+// ---------- edición: auto-guardar nombre ----------
+let saveNameTimer = null;
+async function saveNombreAuto(user, nombre){
+  const hint = document.getElementById("edit-nombre-hint");
+  try{
+    hint.textContent = "Guardando…";
+    await upsertCred(user.uid, user.email, nombre, null);
+    hint.textContent = "✅ Guardado";
+    await renderCarnet(user);
+  }catch(e){
+    console.error(e);
+    hint.textContent = "❌ Error al guardar";
+  }finally{
+    setTimeout(()=>{ if(hint.textContent.startsWith("✅")) hint.textContent="Se guarda automáticamente"; }, 1200);
+  }
+}
+
+// ---------- edición: subir foto ----------
+async function saveFoto(user, file){
+  const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
+  const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
+  if (up.error) throw up.error;
+  const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
+  const foto_url = pub.publicUrl;
+  await upsertCred(user.uid, user.email, null, foto_url);
+  await renderCarnet(user);
+  toast("✅ Foto actualizada");
+}
+
+// ---------- ADMIN ----------
+async function isAdmin(uid){
+  const { data, error } = await supabase.rpc("is_admin", { uid });
+  if (error) return false;
+  return !!data;
+}
+async function loadAdmin(q=""){
+  const { data, error } = await supabase.rpc("admin_list_credenciales", { p_search: q, p_limit: 100, p_offset: 0 });
+  if (error) throw error;
+  const tbody = document.querySelector("#adm-table tbody");
+  tbody.innerHTML = "";
+  (data||[]).forEach(row=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="padding:10px">${row.nombre||"—"}</td>
+      <td style="padding:10px">${row.email||"—"}</td>
+      <td style="padding:10px">${row.rol||"—"}</td>
+      <td style="padding:10px;font-family:monospace">${row.codigo||"—"}</td>
+      <td style="padding:10px;text-align:center">
+        <a class="btn" href="credenciales.html?view=public&id=${row.user_id}">Ver</a>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
     // ========== Descargar PNG (ESM/UMD robusto) ==========
     document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
       let html2canvas;
@@ -197,28 +289,75 @@ async function drawQR(canvasId, url){
       link.click();
     });
 
-    // ========== Router ==========
-    const params = new URLSearchParams(location.search);
-    const view = params.get("view");
-    if (view === "public"){
-      const uid = params.get("id");
-      const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
-      if (!data) {
-        alert("❌ Credencial no encontrada"); location.href="index.html";
-      } else {
-        const nombre = data?.nombre || "Voluntario";
-        document.getElementById("nombre").textContent = esc(nombre);
-        document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
-        document.getElementById("foto").src           = data?.foto_url
-          || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-        await drawQR("qr", urlFromBase(`credenciales.html?view=public&id=${uid}`));
-      }
-    } else {
-      const user = await waitForUser().catch(()=>null);
-      if (!user) { location.href="login.html"; }
-      else { await renderCarnet(user); }
+    // ---------- ROUTER ----------
+const params = new URLSearchParams(location.search);
+const view = params.get("view");
+
+if (view === "public"){
+  const uid = params.get("id");
+  const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
+  if(!data){ alert("❌ Credencial no encontrada"); location.href="index.html"; }
+  else{
+    const nombre = data?.nombre || "Voluntario";
+    document.getElementById("nombre").textContent = esc(nombre);
+    document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
+    document.getElementById("foto").src = data?.foto_url
+      || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
+    await drawQR("qr", new URL(`credenciales.html?view=public&id=${uid}`, document.baseURI).href);
+    // Oculta editor
+    document.getElementById("editor")?.style.setProperty("display","none");
+    document.getElementById("admin")?.style.setProperty("display","none");
+  }
+
+} else if (view === "admin"){
+  const user = await waitForUser();
+  if (!user) { location.href="login.html"; }
+  else if (!await isAdmin(user.uid)) { alert("Acceso solo para Admin"); location.href="index.html"; }
+  else {
+    // mostrar tabla y ocultar tarjeta/editor
+    document.getElementById("sheet")?.style.setProperty("display","none");
+    document.getElementById("editor")?.style.setProperty("display","none");
+    document.getElementById("admin")?.style.setProperty("display","");
+    await loadAdmin();
+
+    document.getElementById("adm-reload").addEventListener("click", ()=> {
+      const q = document.getElementById("adm-q").value.trim();
+      loadAdmin(q);
+    });
+  }
+
+} else { // view=carnet (por defecto)
+  const user = await waitForUser();
+  if (!user) { location.href="login.html"; }
+  else {
+    await renderCarnet(user);
+    // mostrar editor
+    const ed = document.getElementById("editor");
+    ed && (ed.style.display = "");
+
+    // auto-guardar nombre
+    const inputNombre = document.getElementById("edit-nombre");
+    if (inputNombre){
+      inputNombre.value = document.getElementById("nombre").textContent.trim();
+      inputNombre.addEventListener("input", ()=>{
+        clearTimeout(saveNameTimer);
+        const nombre = inputNombre.value.trim();
+        saveNameTimer = setTimeout(()=> saveNombreAuto(user, nombre), 500);
+      });
     }
 
+    // subir foto
+    const inputFoto = document.getElementById("edit-foto");
+    inputFoto?.addEventListener("change", async (e)=>{
+      const f = e.target.files?.[0];
+      if (!f) return;
+      try { await saveFoto(user, f); }
+      catch(err){ console.error(err); alert("❌ No se pudo subir la foto"); }
+      finally { e.target.value = ""; }
+    });
+  }
+}
+    
     // ========== Calibración (flechas y +/-) ==========
     (function(){
       const root = document.documentElement;
