@@ -95,24 +95,26 @@
   };
   const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+
+  // Página de retorno
   const next = new URLSearchParams(location.search).get("next") || "credenciales.html?view=carnet";
-  location.href = next;
-  
+
   // 🔌 Inicializar
   const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   await setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
+  // Exponer en window para el resto del sitio
   window.CARITAS = window.CARITAS || {};
   window.CARITAS.auth = auth;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.CARITAS.supabase = supabase;
 
-  // 🔔 Compat con otros módulos
+  // Eventos “ready”
   document.dispatchEvent(new Event("firebase:ready:caritas"));
   document.dispatchEvent(new Event("supabase:ready:caritas"));
-  onAuthStateChanged(auth, ()=> document.dispatchEvent(new Event("firebase:ready:caritas")));
+  onAuthStateChanged(auth, (u)=>{ if (u) location.replace(next); });
 
   // -------- Helpers UI --------
   const $ = (s) => document.querySelector(s);
@@ -122,7 +124,7 @@
   async function getPublicCred(uid){
     const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
     if (error) throw error;
-    return (Array.isArray(data) ? data[0] : data) || null; // una sola fila
+    return (Array.isArray(data) ? data[0] : data) || null;
   }
   async function upsertCred(uid, p_email, p_nombre, p_foto = null){
     const { data, error } = await supabase.rpc("upsert_mi_credencial", {
@@ -148,12 +150,12 @@
     const email = $('#email').value.trim();
     const pass  = $('#password').value.trim();
     try{
-      const { user } = await signInWithEmailAndPassword(auth, email, pass); // <-- 'user' SOLO aquí
+      const { user } = await signInWithEmailAndPassword(auth, email, pass);
       localStorage.setItem("caritasUser", JSON.stringify({uid:user.uid,email:user.email}));
 
       const cred = await getPublicCred(user.uid).catch(()=>null);
       if (cred && cred.nombre && cred.foto_url){
-        location.href = "credenciales.html?view=carnet";
+        location.href = next;
       } else {
         setMsg(msg,"✅ Sesión iniciada. Completa tu credencial abajo.","success");
         credBox.style.display="";
@@ -194,11 +196,11 @@
     }
   });
 
-  // -------- Guardar credencial --------
+  // Guardar credencial completa
   credForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
     try{
-      const user = auth.currentUser;                  // 👈 evita "user is not defined"
+      const user = auth.currentUser;
       if(!user) throw new Error("No hay usuario autenticado");
 
       const nombre = $('#nombreCred').value.trim();
@@ -210,19 +212,14 @@
       const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
 
       const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
-      if (up.error) {
-        const m = up.error?.message || "";
-        if (/Bucket not found/i.test(m)) throw new Error("Bucket 'fotos' no existe");
-        if (/row-level security|not allowed/i.test(m)) throw new Error("Política de Storage no permite subir desde el cliente");
-        throw up.error;
-      }
+      if (up.error) throw up.error;
 
       const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
       const foto_url = pub.publicUrl;
 
       await upsertCred(user.uid, user.email, nombre, foto_url);
       setMsg(credMsg,"✅ Credencial guardada","success");
-      setTimeout(()=> location.href="credenciales.html?view=carnet", 800);
+      setTimeout(()=> location.href = "credenciales.html?view=carnet", 800);
     }catch(err){
       console.error(err);
       setMsg(credMsg,"❌ "+(err.message||err),"error");

@@ -315,38 +315,40 @@ async function loadAdmin(q=""){
       link.click();
     });
 
-    // ---------- ROUTER ----------
+   // ---------- ROUTER ----------
 const params = new URLSearchParams(location.search);
 const view = params.get("view");
 
 if (view === "public"){
   const uid = params.get("id");
   const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
-  if(!data){ alert("❌ Credencial no encontrada"); location.href="index.html"; }
-  else{
+  if(!data){
+    alert("❌ Credencial no encontrada");
+    location.href = "index.html";
+  } else {
     const nombre = data?.nombre || "Voluntario";
     document.getElementById("nombre").textContent = esc(nombre);
     document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
     document.getElementById("foto").src = data?.foto_url
       || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
     await drawQR("qr", new URL(`credenciales.html?view=public&id=${uid}`, document.baseURI).href);
-    // Oculta editor
     document.getElementById("editor")?.style.setProperty("display","none");
     document.getElementById("admin")?.style.setProperty("display","none");
   }
 
 } else if (view === "admin"){
   const user = await waitForUser();
-  if (!user) { location.href="login.html"; }
-  else if (!await isAdmin(user.uid)) { alert("Acceso solo para Admin"); location.href="index.html"; }
-  else {
-    // mostrar tabla y ocultar tarjeta/editor
+  if (!user) {
+    location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
+  } else if (!await isAdmin(user.uid)) {
+    alert("Acceso solo para Admin");
+    location.href = "index.html";
+  } else {
     document.getElementById("sheet")?.style.setProperty("display","none");
     document.getElementById("editor")?.style.setProperty("display","none");
     document.getElementById("admin")?.style.setProperty("display","");
     await loadAdmin();
-
-    document.getElementById("adm-reload").addEventListener("click", ()=> {
+    document.getElementById("adm-reload").addEventListener("click", ()=>{
       const q = document.getElementById("adm-q").value.trim();
       loadAdmin(q);
     });
@@ -354,14 +356,16 @@ if (view === "public"){
 
 } else { // view=carnet (por defecto)
   const user = await waitForUser();
-  if (!user) { location.href="login.html"; }
-  else {
+  if (!user) {
+    location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
+  } else {
     await renderCarnet(user);
+
     // mostrar editor
     const ed = document.getElementById("editor");
     ed && (ed.style.display = "");
 
-    // auto-guardar nombre
+    // auto-guardar nombre (debounce)
     const inputNombre = document.getElementById("edit-nombre");
     if (inputNombre){
       inputNombre.value = document.getElementById("nombre").textContent.trim();
