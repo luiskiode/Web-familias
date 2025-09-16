@@ -343,3 +343,33 @@ input:required, select:required {
 }
 .btn:hover{ transform:translateY(-1px); }
 .btn:active{ transform:translateY(0); box-shadow:0 3px 8px rgba(0,0,0,.35) }
+
+/* ===== Plantilla + tamaño + orientación ===== */
+:root{
+  --card-w: 85.6mm;  /* ancho base CR80 */
+  --card-h: 54mm;    /* alto base CR80  */
+  --qr: 34mm;        /* tamaño QR (sigue funcionando tu drawQR) */
+}
+
+/* Dimensiones desde variables (sobre-escriben definiciones previas) */
+.sheet .card{ width:var(--card-w); height:var(--card-h); }
+
+/* Capa de plantilla de imagen (debajo de todo el contenido) */
+.tpl{
+  position:absolute; inset:0; z-index:0;
+  object-fit:cover; object-position:center;
+  opacity:1; filter:none;
+}
+
+/* Layout vertical tipo gafete */
+.card.gafete{ width:var(--card-h); height:var(--card-w); }
+
+/* Posiciones por defecto para gafete (ajústalas a gusto; se pueden calibrar con flechas) */
+.card.gafete.front{ --cx: 27mm; --cy: 25mm; --d: 30mm; }   /* foto */
+.card.gafete .brand-row{ top: 40mm; }
+.card.gafete .role{ top: 48mm; }
+.card.gafete .stripes{ right: 4mm; top: 58mm; }
+.card.gafete .band{ bottom: 0; }
+
+/* Reverso gafete: QR un poco más arriba */
+.card.gafete.back .qr-box{ top: 46%; }

@@ -57,6 +57,23 @@
       <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
       <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
       <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
+      <label class="btn">
+    📄 Plantilla frente
+    <input type="file" id="tpl-front" accept="image/*" hidden>
+  </label>
+  <label class="btn">
+    📄 Plantilla reverso
+    <input type="file" id="tpl-back" accept="image/*" hidden>
+  </label>
+  <select id="card-orient" class="btn" style="cursor:pointer">
+    <option value="landscape">Horizontal</option>
+    <option value="portrait">Gafete (vertical)</option>
+  </select>
+  <label class="btn">
+    Tamaño
+    <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle">
+  </label>
+</div>
 
       <a class="btn" href="index.html">← Volver</a>
     </div>
@@ -75,6 +92,8 @@
 </div>
     <div class="sheet" id="sheet">
       <!-- FRENTE -->
+       <section class="card front" id="card-front" aria-label="Credencial frente">
+       <img class="tpl" id="tpl-img-front" alt="" />
       <section class="card front" id="card-front" aria-label="Credencial frente">
         <img class="wm" src="assets/logo-caritas.png" alt="">
         <div class="photo"><img id="foto" alt="Foto"></div>
@@ -88,6 +107,8 @@
       </section>
 
       <!-- REVERSO -->
+       <section class="card back" id="card-back" aria-label="Credencial reverso">
+      <img class="tpl" id="tpl-img-back" alt="" />
       <section class="card back" id="card-back" aria-label="Credencial reverso">
         <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
         <div class="scan">SCAN ME</div>
@@ -401,7 +422,54 @@ if (view === "public"){
     });
   }
 }
-    
+    // ========= Plantilla + orientación + tamaño (no altera tus funciones) =========
+(function(){
+  const frontImg = document.getElementById("tpl-img-front");
+  const backImg  = document.getElementById("tpl-img-back");
+  const sel      = document.getElementById("card-orient");
+  const rng      = document.getElementById("card-size");
+  const cardF    = document.getElementById("card-front");
+  const cardB    = document.getElementById("card-back");
+
+  // Cargar plantillas desde archivos (objeto URL)
+  document.getElementById("tpl-front")?.addEventListener("change", e=>{
+    const f = e.target.files?.[0]; if(!f) return;
+    frontImg.src = URL.createObjectURL(f);
+  });
+  document.getElementById("tpl-back")?.addEventListener("change", e=>{
+    const f = e.target.files?.[0]; if(!f) return;
+    backImg.src = URL.createObjectURL(f);
+  });
+
+  // Orientación: horizontal / gafete (vertical)
+  function applyOrient(v){
+    const isPortrait = v === "portrait";
+    cardF.classList.toggle("gafete", isPortrait);
+    cardB.classList.toggle("gafete", isPortrait);
+
+    // Ajustar dimensiones base
+    const baseW = 85.6, baseH = 54;
+    const pct   = Number(rng.value||100)/100;
+    const w = isPortrait ? baseH : baseW;
+    const h = isPortrait ? baseW : baseH;
+    document.documentElement.style.setProperty("--card-w", (w*pct)+"mm");
+    document.documentElement.style.setProperty("--card-h", (h*pct)+"mm");
+  }
+  sel?.addEventListener("change", ()=> applyOrient(sel.value));
+  applyOrient(sel?.value || "landscape");
+
+  // Tamaño: escala porcentual del estándar
+  rng?.addEventListener("input", ()=>{
+    const isPortrait = cardF.classList.contains("gafete");
+    const baseW = 85.6, baseH = 54;
+    const pct   = Number(rng.value||100)/100;
+    const w = isPortrait ? baseH : baseW;
+    const h = isPortrait ? baseW : baseH;
+    document.documentElement.style.setProperty("--card-w", (w*pct)+"mm");
+    document.documentElement.style.setProperty("--card-h", (h*pct)+"mm");
+  });
+})();
+
     // ========== Calibración (flechas y +/-) ==========
     (function(){
       const root = document.documentElement;
