@@ -253,3 +253,13 @@ input:required, select:required {
 /* Reduce fuente si el nombre se desborda */
 .name{ font-size:6mm; max-width:42mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 @container name (inline-size < 42mm){ .name{ font-size:5.2mm } }
+
+/* Evitar que las franjas "tapen" el rol/nombre */
+.sheet .stripes{ z-index:1; right:6mm; }
+.brand-row{ left:50%; transform:translateX(-50%); gap:6mm; z-index:2; }
+.name{ max-width:42mm; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.role{
+  left:50%; transform:translateX(-50%);
+  max-width:42mm; text-align:center; z-index:2;
+  padding:0 6mm;            /* evita que invada la zona de franjas */
+   }

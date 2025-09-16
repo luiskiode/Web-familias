@@ -139,18 +139,38 @@
     console.debug("CRED: ya inicializado");
   } else {
     window.__CRED_INIT__ = true;
-
+    let lastCred = null;  // cache de la fila actual
     // ========== Helpers ==========
     const esc = (s="") =>
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
     // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
+// QR robusto: respeta el tamaño de .qr-box, re-render en resize
 async function drawQR(canvasId, url){
-  const el = document.getElementById(canvasId);
-  const box = el.parentElement;                       // .qr-box
-  const scale = Math.max(2, Math.round(window.devicePixelRatio || 2));
-  const px = Math.round(box.clientWidth * scale);
-  await QR.toCanvas(el, url, { width: px, margin: 1 });
+  const el  = document.getElementById(canvasId);
+  const box = el?.parentElement;
+  if (!el || !box) return;
+
+  const dpr = Math.max(2, Math.round(window.devicePixelRatio || 2));
+
+  const render = () => {
+    let w = box.getBoundingClientRect().width;          // px visibles
+    if (!w) {
+      // Fallback: leer --qr en mm y convertir a px (96dpi ≈ 3.78 px/mm)
+      const qrVar = getComputedStyle(document.documentElement).getPropertyValue('--qr').trim(); // ej. "34mm"
+      const mm    = parseFloat(qrVar) || 34;
+      w = mm * 3.7795;
+    }
+    const px = Math.max(80, Math.round(w * dpr));       // mínimo 80px * dpr
+    QR.toCanvas(el, url, { width: px, margin: 1 });
+  };
+
+  // Espera a layout estable
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  render();
+
+  // Re-render si cambia el tamaño del contenedor
+  new ResizeObserver(() => render()).observe(box);
 }
     // Esperas Firebase (debe estar bootstrapped en <head>)
     function waitForAuth(timeout=12000){
@@ -200,6 +220,8 @@ async function drawQR(canvasId, url){
       if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
 
       const nombre = data.nombre || nombreBase;
+      lastCred = data;
+
 
       // Frente
       document.getElementById("nombre").textContent = esc(nombre);
@@ -214,24 +236,25 @@ async function drawQR(canvasId, url){
     // ---------- util ----------
 const toast = (t)=> alert(t);
 
-// ---------- edición: auto-guardar nombre ----------
+// Auto-guardar nombre SIN perder foto
 let saveNameTimer = null;
 async function saveNombreAuto(user, nombre){
   const hint = document.getElementById("edit-nombre-hint");
   try{
     hint.textContent = "Guardando…";
-    await upsertCred(user.uid, user.email, nombre, null);
+    const foto = lastCred?.foto_url || null;
+    await upsertCred(user.uid, user.email, nombre, foto); // enviamos nombre+foto actual
+    lastCred = { ...(lastCred||{}), nombre };
     hint.textContent = "✅ Guardado";
     await renderCarnet(user);
   }catch(e){
-    console.error(e);
-    hint.textContent = "❌ Error al guardar";
+    console.error(e); hint.textContent = "❌ Error al guardar";
   }finally{
     setTimeout(()=>{ if(hint.textContent.startsWith("✅")) hint.textContent="Se guarda automáticamente"; }, 1200);
   }
 }
 
-// ---------- edición: subir foto ----------
+// Subir foto SIN perder nombre
 async function saveFoto(user, file){
   const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
@@ -239,9 +262,12 @@ async function saveFoto(user, file){
   if (up.error) throw up.error;
   const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
   const foto_url = pub.publicUrl;
-  await upsertCred(user.uid, user.email, null, foto_url);
+
+  const nombre = (lastCred?.nombre || user.displayName || (user.email||"").split("@")[0] || "Usuario");
+  await upsertCred(user.uid, user.email, nombre, foto_url); // enviamos nombre+foto nueva
+  lastCred = { ...(lastCred||{}), foto_url, nombre };
   await renderCarnet(user);
-  toast("✅ Foto actualizada");
+  alert("✅ Foto actualizada");
 }
 
 // ---------- ADMIN ----------
