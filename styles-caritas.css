@@ -372,3 +372,28 @@ input:required, select:required {
 
 /* Reverso gafete: QR un poco más arriba */
 .card.gafete.back .qr-box{ top: 46%; }
+
+/* ===== Calibración de texto y logo ===== */
+:root{
+  --brand-dx: 0mm; /* offset X del bloque Nombre+Logo */
+  --brand-dy: 0mm; /* offset Y del bloque Nombre+Logo */
+  --logo-dx:  0mm; /* offset X del logo junto al nombre */
+  --logo-dy:  0mm; /* offset Y del logo junto al nombre */
+  --role-dx:  0mm; /* offset X del rol */
+  --role-dy:  0mm; /* offset Y del rol */
+}
+
+/* Mueve el bloque Nombre+Logo desde su centro */
+.brand-row{
+  left:50%; top:10mm;
+  transform: translateX(-50%) translate(var(--brand-dx), var(--brand-dy));
+}
+
+/* Mueve SOLO el loguito al costado del nombre (relativo al bloque) */
+.logo{ position:relative; transform: translate(var(--logo-dx), var(--logo-dy)); }
+
+/* Mueve el Rol (pill) desde su centro */
+.role{
+  left:50%; top:24mm;
+  transform: translateX(-50%) translate(var(--role-dx), var(--role-dy));
+}
