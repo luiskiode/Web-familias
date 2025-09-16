@@ -56,6 +56,8 @@
     <div class="controls">
       <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
       <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
+      <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
+
       <a class="btn" href="index.html">← Volver</a>
     </div>
 
@@ -257,6 +259,17 @@
     })();
 
   } // __CRED_INIT__
+
+  // Copiar mi enlace público (carnet)
+document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
+  const user = window.CARITAS?.auth?.currentUser;
+  if (!user) return alert("Debes iniciar sesión");
+  const url = new URL(`credenciales.html?view=public&id=${user.uid}`, document.baseURI).href;
+  navigator.clipboard.writeText(url).then(
+    ()=> alert("✅ Enlace copiado"),
+    ()=> alert(url) // fallback simple si Clipboard falla
+  );
+});
 </script>
 </body>
 </html>

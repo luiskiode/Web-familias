@@ -74,8 +74,15 @@
     <!-- Carnet personal (requiere login Firebase) -->
     <a class="btn" href="credenciales.html?view=carnet">🎫 Mi Carnet</a>
 
-    <!-- Ejemplo credencial pública (reemplaza UID_DE_EJEMPLO por un uid real) -->
-    <a class="btn" href="credenciales.html?view=public&id=UID_DE_EJEMPLO">👤 Ver Credencial</a>
+   <!-- Ver mi credencial pública (usa mi UID real) -->
+<a class="btn" id="btn-ver-publica">👤 Ver mi credencial</a>
+<script type="module">
+  document.getElementById("btn-ver-publica").addEventListener("click", ()=>{
+    const u = window.CARITAS?.auth?.currentUser;
+    if (!u) return (location.href = "login.html");
+    location.href = `credenciales.html?view=public&id=${u.uid}`;
+  });
+</script>
 
     <!-- Solo administradores -->
     <a class="btn" href="credenciales.html?view=admin">🪪 Administrar Credenciales</a>
