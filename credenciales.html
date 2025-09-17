@@ -52,22 +52,40 @@
   <!-- <script defer src="api.js/error-overlay.js"></script> -->
 </head>
 <body>
-  <div class="wrap">
-    <div class="controls">
-      <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
-      <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
-      <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
-      <div class="controls" style="gap:6px; flex-wrap:wrap">
-  <!-- Modo mover -->
-  <select id="move-target" class="btn" style="cursor:pointer">
-    <option value="brand">Mover: Nombre + Logo</option>
-    <option value="logo">Mover: Solo Logo</option>
-    <option value="role">Mover: Rol</option>
-  </select>
-  <button class="btn" id="mv-up">↑</button>
-  <button class="btn" id="mv-left">←</button>
-  <button class="btn" id="mv-right">→</button>
-  <button class="btn" id="mv-down">↓</button>
+  <div class="controls" style="gap:10px; flex-wrap:wrap; align-items:center">
+  <!-- Acciones principales -->
+  <div style="display:flex; gap:8px; flex-wrap:wrap">
+    <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
+    <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
+    <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
+    <a class="btn" href="index.html">← Volver</a>
+  </div>
+
+  <!-- Diseño -->
+  <div style="display:flex; gap:8px; flex-wrap:wrap">
+    <label class="btn">📄 Plantilla frente <input type="file" id="tpl-front" accept="image/*" hidden></label>
+    <label class="btn">📄 Plantilla reverso <input type="file" id="tpl-back"  accept="image/*" hidden></label>
+    <select id="card-orient" class="btn" style="cursor:pointer">
+      <option value="landscape">Horizontal</option>
+      <option value="portrait">Gafete (vertical)</option>
+    </select>
+    <label class="btn">Tamaño <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle"></label>
+  </div>
+
+  <!-- Mover solo lo elegido -->
+  <div style="display:flex; gap:8px; flex-wrap:wrap">
+    <select id="move-target" class="btn" style="cursor:pointer">
+      <option value="brand">Mover: Nombre + Logo</option>
+      <option value="logo">Mover: Solo Logo</option>
+      <option value="role">Mover: Rol</option>
+    </select>
+    <button class="btn" id="mv-up">↑</button>
+    <button class="btn" id="mv-left">←</button>
+    <button class="btn" id="mv-right">→</button>
+    <button class="btn" id="mv-down">↓</button>
+    <button class="btn" id="btn-save-cred">💾 Guardar credencial</button>
+  </div>
+</div>
 
   <!-- Guardar en BD (nombre/foto) -->
   <button class="btn" id="btn-save-cred">💾 Guardar credencial</button>
@@ -736,6 +754,125 @@ document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
     }catch(err){
       console.error(err);
       alert("❌ No se pudo guardar la credencial");
+    }
+  });
+})();
+// ====== Movimiento preciso (solo el target elegido) + Drag ======
+(function(){
+  const root = document.documentElement;
+  const $ = s => document.getElementById(s);
+
+  const targets = {
+    brand: { el: document.querySelector('.brand-row'), vx: '--brand-dx', vy: '--brand-dy' },
+    logo:  { el: document.querySelector('.brand-row .logo'), vx: '--logo-dx',  vy: '--logo-dy'  },
+    role:  { el: document.querySelector('.role'), vx: '--role-dx', vy: '--role-dy' },
+  };
+
+  const sel = $('#move-target');
+  const getT = () => targets[sel?.value || 'brand'];
+
+  const mmPerPx = () => {
+    // convierte desplazamiento en px a mm según ancho real de la tarjeta
+    const card = document.querySelector('.card.front');
+    const rect = card.getBoundingClientRect();
+    const wmm  = parseFloat(getComputedStyle(root).getPropertyValue('--card-w')) || 85.6;
+    return wmm / rect.width;
+  };
+
+  const toNum = v => parseFloat(String(v).replace('mm','')) || 0;
+  function nudge(dxmm, dymm){
+    const t = getT();
+    const cs = getComputedStyle(root);
+    root.style.setProperty(t.vx, (toNum(cs.getPropertyValue(t.vx)) + dxmm) + 'mm');
+    root.style.setProperty(t.vy, (toNum(cs.getPropertyValue(t.vy)) + dymm) + 'mm');
+  }
+
+  // Flechas con Alt (Shift = paso 1mm)
+  document.addEventListener('keydown', (e)=>{
+    if (!e.altKey) return;
+    if (e.target && (e.target.tagName==='INPUT' || e.target.isContentEditable)) return;
+    const step = e.shiftKey ? 1 : .5;
+    let used=false;
+    switch(e.key){
+      case 'ArrowUp':    nudge(0,-step); used=true; break;
+      case 'ArrowDown':  nudge(0, step); used=true; break;
+      case 'ArrowLeft':  nudge(-step,0); used=true; break;
+      case 'ArrowRight': nudge( step,0); used=true; break;
+    }
+    if (used) e.preventDefault();
+  });
+
+  // Botones
+  $('#mv-up')   ?.addEventListener('click', e=>{e.preventDefault(); nudge(0,-.5);});
+  $('#mv-down') ?.addEventListener('click', e=>{e.preventDefault(); nudge(0, .5);});
+  $('#mv-left') ?.addEventListener('click', e=>{e.preventDefault(); nudge(-.5,0);});
+  $('#mv-right')?.addEventListener('click', e=>{e.preventDefault(); nudge( .5,0);});
+
+  // Drag (solo el target seleccionado)
+  function makeDraggable(){
+    Object.values(targets).forEach(t => t.el?.classList.add('drag-ready'));
+    let dragging = null, startX=0, startY=0, startVX=0, startVY=0;
+
+    function onDown(e){
+      const t = getT();
+      if (!t.el || !t.el.contains(e.target)) return; // drag solo sobre el target activo
+      dragging = t;
+      const cs = getComputedStyle(root);
+      startVX = toNum(cs.getPropertyValue(t.vx));
+      startVY = toNum(cs.getPropertyValue(t.vy));
+      startX = e.clientX; startY = e.clientY;
+      t.el.classList.add('dragging');
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp, { once:true });
+      e.preventDefault();
+    }
+    function onMove(e){
+      if (!dragging) return;
+      const mul = mmPerPx();
+      const dxmm = (e.clientX-startX) * mul;
+      const dymm = (e.clientY-startY) * mul;
+      root.style.setProperty(dragging.vx, (startVX + dxmm) + 'mm');
+      root.style.setProperty(dragging.vy, (startVY + dymm) + 'mm');
+    }
+    function onUp(){
+      if (dragging?.el) dragging.el.classList.remove('dragging');
+      dragging = null;
+      window.removeEventListener('pointermove', onMove);
+    }
+    // Escuchamos el área de la tarjeta frontal para iniciar drag
+    document.getElementById('card-front')?.addEventListener('pointerdown', onDown);
+  }
+  makeDraggable();
+
+  // Guardar en layout (sumamos offsets al storage)
+  const LKEY = 'cred:layout';
+  function saveLayoutPlus(){
+    const cs = getComputedStyle(root);
+    const keys = ['--cx','--cy','--d','--brand-dx','--brand-dy','--logo-dx','--logo-dy','--role-dx','--role-dy'];
+    const cfg = {}; keys.forEach(k => cfg[k] = cs.getPropertyValue(k).trim());
+    try{
+      const prev = JSON.parse(localStorage.getItem(LKEY)||'{}');
+      localStorage.setItem(LKEY, JSON.stringify({ ...prev, ...cfg }));
+    }catch{}
+    alert('📏 Layout guardado (foto + nombre/logo/rol)');
+  }
+  document.getElementById('btn-save-layout')?.addEventListener('click', (e)=>{
+    e.stopImmediatePropagation?.();
+    saveLayoutPlus();
+  }, { capture:true });
+
+  // Guardar credencial (BD): nombre y foto actuales
+  document.getElementById('btn-save-cred')?.addEventListener('click', async ()=>{
+    try{
+      const user = await waitForUser();
+      if (!user) return location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
+      const nombre = document.getElementById('nombre')?.textContent?.trim() || '';
+      const foto   = document.getElementById('foto')?.src || null;
+      await upsertCred(user.uid, user.email, nombre || null, foto || null);
+      alert('✅ Credencial guardada');
+      await renderCarnet(user);
+    }catch(err){
+      console.error(err); alert('❌ No se pudo guardar la credencial');
     }
   });
 })();

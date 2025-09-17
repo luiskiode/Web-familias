@@ -397,3 +397,33 @@ input:required, select:required {
   left:50%; top:24mm;
   transform: translateX(-50%) translate(var(--role-dx), var(--role-dy));
 }
+/* ===== Gafete vertical (portrait) — presets finos ===== */
+.card.gafete.front{ --cx: 26mm; --cy: 21mm; --d: 30mm; }
+.card.gafete .brand-row{ top: 38mm; }
+.card.gafete .role{ top: 48mm; }
+.card.gafete .stripes{ right: 4mm; top: 58mm; }
+.card.gafete.back .qr-box{ top: 45%; }
+
+/* ===== Offsets movibles (nombre+logo / solo logo / rol) ===== */
+:root{
+  --brand-dx: 0mm; --brand-dy: 0mm;
+  --logo-dx:  0mm; --logo-dy:  0mm;
+  --role-dx:  0mm; --role-dy:  0mm;
+}
+
+.brand-row{
+  left:50%; top:10mm;
+  transform: translateX(-50%) translate(var(--brand-dx), var(--brand-dy));
+}
+.logo{
+  position:relative;
+  transform: translate(var(--logo-dx), var(--logo-dy));
+}
+.role{
+  left:50%; top:24mm;
+  transform: translateX(-50%) translate(var(--role-dx), var(--role-dy));
+}
+
+/* Señal visual al arrastrar */
+.drag-ready{ cursor:grab }
+.dragging{ cursor:grabbing; outline:2px dashed rgba(255,255,255,.35); outline-offset:2px; border-radius:8px }
