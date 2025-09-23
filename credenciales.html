@@ -3,6 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <base href="/Web-familias/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎫 Credenciales — Cáritas CNC</title>
   <link rel="stylesheet" href="styles-caritas.css" />
@@ -53,12 +54,13 @@
 </head>
 <body>
   <div class="controls" style="gap:10px; flex-wrap:wrap; align-items:center">
-  <!-- Acciones principales -->
+  <!-- Acciones -->
   <div style="display:flex; gap:8px; flex-wrap:wrap">
     <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
     <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
     <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
     <a class="btn" href="index.html">← Volver</a>
+    <a class="btn" id="btn-admin-local" style="display:none">🗂️ Administrar</a>
   </div>
 
   <!-- Diseño -->
@@ -69,7 +71,9 @@
       <option value="landscape">Horizontal</option>
       <option value="portrait">Gafete (vertical)</option>
     </select>
-    <label class="btn">Tamaño <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle"></label>
+    <label class="btn">Tamaño
+      <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle">
+    </label>
   </div>
 
   <!-- Mover solo lo elegido -->
@@ -83,34 +87,8 @@
     <button class="btn" id="mv-left">←</button>
     <button class="btn" id="mv-right">→</button>
     <button class="btn" id="mv-down">↓</button>
-    <button class="btn" id="btn-save-cred">💾 Guardar credencial</button>
   </div>
 </div>
-
-  <!-- Guardar en BD (nombre/foto) -->
-  <button class="btn" id="btn-save-cred">💾 Guardar credencial</button>
-</div>
-
-      <label class="btn">
-    📄 Plantilla frente
-    <input type="file" id="tpl-front" accept="image/*" hidden>
-  </label>
-  <label class="btn">
-    📄 Plantilla reverso
-    <input type="file" id="tpl-back" accept="image/*" hidden>
-  </label>
-  <select id="card-orient" class="btn" style="cursor:pointer">
-    <option value="landscape">Horizontal</option>
-    <option value="portrait">Gafete (vertical)</option>
-  </select>
-  <label class="btn">
-    Tamaño
-    <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle">
-  </label>
-</div>
-
-      <a class="btn" href="index.html">← Volver</a>
-    </div>
     <!-- Editor (solo en view=carnet) -->
 <div id="editor" class="editor" style="display:none">
   <div class="row">
@@ -124,33 +102,36 @@
     <small class="muted">JPG/PNG recomendados</small>
   </div>
 </div>
-    <div class="sheet" id="sheet">
-      <!-- FRENTE -->
-       <section class="card front" id="card-front" aria-label="Credencial frente">
-       <img class="tpl" id="tpl-img-front" alt="" />
-      <section class="card front" id="card-front" aria-label="Credencial frente">
-        <img class="wm" src="assets/logo-caritas.png" alt="">
-        <div class="photo"><img id="foto" alt="Foto"></div>
-        <div class="brand-row">
-        <img class="logo" src="assets/logo-caritas.png" alt="Cáritas" />
-          <div class="name" id="nombre">—</div>
-        </div>
-        <div class="role" id="rol">Voluntario Cáritas CNC</div>
-        <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-        <div class="band">CÁRITAS CNC</div>
-      </section>
+   <div class="sheet" id="sheet">
+  <!-- FRENTE -->
+  <section class="card front" id="card-front" aria-label="Credencial frente">
+    <img class="wm" src="assets/logo-caritas.png" alt="">
+    <img class="tpl" id="tpl-img-front" alt="" />
+    <div class="photo"><img id="foto" alt="Foto"></div>
 
-      <!-- REVERSO -->
-       <section class="card back" id="card-back" aria-label="Credencial reverso">
-      <img class="tpl" id="tpl-img-back" alt="" />
-      <section class="card back" id="card-back" aria-label="Credencial reverso">
-        <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
-        <div class="scan">SCAN ME</div>
-        <div class="qr-box"><canvas id="qr"></canvas></div>
-        <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-        <div class="footer">CÁRITAS CNC</div>
-      </section>
+    <div class="brand-row">
+      <img class="logo" src="assets/logo-caritas.png" alt="Cáritas" />
+      <div class="name" id="nombre">—</div>
     </div>
+
+    <div class="role" id="rol">Voluntario Cáritas CNC</div>
+    <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="band">CÁRITAS CNC</div>
+  </section>
+
+  <!-- REVERSO -->
+  <section class="card back" id="card-back" aria-label="Credencial reverso">
+    <img class="wm" src="assets/logo-caritas.png" alt="">
+    <img class="tpl" id="tpl-img-back" alt="" />
+    <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
+
+    <div class="scan">SCAN ME</div>
+    <div class="qr-box"><canvas id="qr"></canvas></div>
+
+    <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="footer">CÁRITAS CNC</div>
+  </section>
+</div>
   </div>
   <!-- Vista Admin -->
 <section id="admin" style="display:none; width:100%; max-width:980px">
@@ -290,6 +271,16 @@ async function drawQR(canvasId, url){
     }
     // ---------- util ----------
 const toast = (t)=> alert(t);
+function fitText(el, max=5.8, min=4.6){ // tamaños en mm
+  const toPx = mm => mm * 3.7795;
+  let size = max;
+  el.style.fontSize = max+'mm';
+  const w = el.parentElement?.clientWidth || 160;
+  while (el.scrollWidth > w && size > min){
+    size -= .2;
+    el.style.fontSize = size+'mm';
+  }
+}
 
 // Auto-guardar nombre SIN perder foto
 let saveNameTimer = null;
@@ -298,22 +289,12 @@ async function saveNombreAuto(user, nombre){
   try{
     hint.textContent = "Guardando…";
     const foto = lastCred?.foto_url || null;
-    await upsertCred(user.uid, user.email, nombre, foto); // enviamos nombre+foto actual
+    await upsertCred(user.uid, user.email, nombre, foto);
     lastCred = { ...(lastCred||{}), nombre };
     hint.textContent = "✅ Guardado";
     await renderCarnet(user);
-function fitText(el, max=5.8, min=4.6){ // tamaños en mm
-  const toPx = mm => mm * 3.7795;
-  let size = max;
-  el.style.fontSize = max+'mm';
-  const w = el.parentElement.clientWidth || 160;
-  while (el.scrollWidth > w && size > min){
-    size -= .2; el.style.fontSize = size+'mm';
-  }
-}
-// después de setear el nombre:
-fitText(document.getElementById("nombre"));
-
+    // Ajusta tamaño del nombre al ancho disponible
+    fitText(document.getElementById("nombre"));
   }catch(e){
     console.error(e); hint.textContent = "❌ Error al guardar";
   }finally{
