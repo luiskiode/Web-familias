@@ -134,16 +134,18 @@
 
       <!-- REVERSO -->
       <section class="card back" id="card-back" aria-label="Credencial reverso">
-        <img class="wm" src="assets/logo-caritas.png" alt="">
-        <img class="tpl" id="tpl-img-back" alt="">
-        <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
+  <img class="wm" src="assets/logo-caritas.png" alt="">
+  <img class="tpl" id="tpl-img-back" alt="">
+  <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
 
-        <div class="scan">SCAN ME</div>
-        <div class="qr-box"><canvas id="qr"></canvas></div>
+  <div class="scan">SCAN ME</div>
+  <div class="qr-wrap">
+    <canvas id="qr"></canvas>
+  </div>
 
-        <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-        <div class="footer">CÁRITAS CNC</div>
-      </section>
+  <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="footer">CÁRITAS CNC</div>
+</section>
     </div>
   </section>
 </main>
@@ -195,6 +197,34 @@
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
     // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
+
+
+    // === QR NÍTIDO con DPR ===
+async function renderQR(text){
+  const c = document.getElementById("qr");
+  if(!c) return;
+  const mmToPx = mm => mm * 3.7795275591;
+  const sizeCssPx = Math.round(mmToPx(30));   // coincide con .qr-wrap (30mm)
+  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+
+  // tamaño real del lienzo
+  c.width  = sizeCssPx * dpr;
+  c.height = sizeCssPx * dpr;
+  c.style.width  = sizeCssPx + "px";
+  c.style.height = sizeCssPx + "px";
+
+  // muchas libs de QR soportan toCanvas(canvas, texto, {width})
+  if (window.QRCode?.toCanvas) {
+    await QRCode.toCanvas(c, text, { width: sizeCssPx * dpr, margin: 0 });
+  } else if (window.QRCode) {
+    // fallback: algunas generan sobre un canvas interno → copiamos al nuestro
+    const tmp = document.createElement("canvas");
+    await QRCode.toCanvas(tmp, text, { width: sizeCssPx * dpr, margin: 0 });
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.drawImage(tmp, 0, 0);
+  }
+}
 // QR robusto: respeta el tamaño de .qr-box, re-render en resize
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);

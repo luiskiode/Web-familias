@@ -483,20 +483,11 @@ input:required, select:required {
 .card .role{
   transform: translate(var(--role-x,0px), var(--role-y,0px));
 }
-/* === Layout de credenciales: sidebar + preview === */
-.cred-layout{
-  display:grid;
-  grid-template-columns: 340px 1fr;
-  gap:16px;
-  align-items:start;
-}
-@media (max-width: 900px){
-  .cred-layout{ grid-template-columns: 1fr; }
-}
-.cred-sidebar{
-  position:sticky; top:12px;
-  display:flex; flex-direction:column; gap:14px;
-}
+/* === LAYOUT 2 COL === */
+.cred-layout{ display:grid; grid-template-columns: 340px 1fr; gap:20px; align-items:start; }
+@media (max-width: 980px){ .cred-layout{ grid-template-columns: 1fr; } }
+
+.cred-sidebar{ position:sticky; top:12px; display:flex; flex-direction:column; gap:16px; }
 .cred-sidebar .group{
   background: var(--surface);
   border:1px solid var(--border);
@@ -508,14 +499,38 @@ input:required, select:required {
 .cred-sidebar .muted{ color:var(--muted); }
 .cred-sidebar .w-full{ width:100%; }
 .cred-sidebar .input{
-  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333; border-radius:10px; padding:0 10px;
+  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333;
+  border-radius:10px; padding:0 10px;
 }
-.cred-sidebar .hint{ font-size:.85rem; color:#a2f3b2; margin:6px 0 8px; }
-.move-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; align-items:center; justify-items:center; }
+.cred-sidebar .range{ width:100%; accent-color: var(--primary); }
+
+.toolbar{
+  display:grid; gap:10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+.move-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
 
 .cred-preview .sheet{ display:flex; gap:24px; flex-wrap:wrap; }
 
-/* === Movimiento en mm con variables CSS === */
+/* === Movimiento por mm (usa tus vars) === */
 .brand-row{ transform: translate(var(--brand-dx,0mm), var(--brand-dy,0mm)); }
 .logo     { transform: translate(var(--logo-dx,0mm),  var(--logo-dy,0mm));  }
 .role     { transform: translate(var(--role-dx,0mm),  var(--role-dy,0mm));  }
+
+/* === QR wrap (limpio y nítido) === */
+.card.back .qr-wrap{
+  position:absolute; right:12mm; bottom:14mm;
+  width: 30mm; height: 30mm;
+  background:#fff; border-radius:5mm;
+  display:grid; place-items:center;
+  padding:2mm;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+.card.back .qr-wrap canvas{
+  width:100%; height:100%;
+  image-rendering: crisp-edges; image-rendering: pixelated;
+}
+.card.back .scan{
+  position:absolute; right:12mm; bottom:46mm;
+  font-weight:800; letter-spacing:.8px; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.6);
+}
