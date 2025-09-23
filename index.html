@@ -65,29 +65,11 @@
     <a class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
   </section>
 
-<!-- 🎫 Accesos a Credenciales -->
+<!-- 🎫 Credenciales (botón único) -->
 <section class="container card center">
   <h2>🎫 Credenciales Cáritas CNC</h2>
-  <p>Accede a tu carnet personal, comparte tu credencial o administra todas.</p>
-
-  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
-    <!-- Carnet personal (requiere login Firebase) -->
-    <a class="btn" href="credenciales.html?view=carnet">🪪 Mi Carnet</a>
-
-   <!-- Ver mi credencial pública (usa mi UID real) -->
-<a class="btn" id="btn-ver-publica">👤 Ver mi credencial</a>
-<script type="module">
-  // "Ver mi credencial" con tu UID real
-  document.getElementById("btn-ver-publica").addEventListener("click", ()=>{
-    const u = window.CARITAS?.auth?.currentUser;
-    if (!u) return (location.href = "login.html");
-    location.href = `credenciales.html?view=public&id=${u.uid}`;
-  });
-</script>
-
-    <!-- Solo administradores -->
-    <a class="btn" href="credenciales.html?view=admin">🗂️Administrar Credenciales</a>
-  </div>
+  <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
+  <a class="btn" href="credenciales.html">🪪 Abrir Credenciales</a>
 </section>
   
   <!-- 📋 Formulario Integral -->
