@@ -133,7 +133,7 @@
       </section>
 
       <!-- REVERSO -->
-      <section class="card back" id="card-back" aria-label="Credencial reverso">
+  <section class="card back" id="card-back" aria-label="Credencial reverso">
   <img class="wm" src="assets/logo-caritas.png" alt="">
   <img class="tpl" id="tpl-img-back" alt="">
   <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
@@ -142,6 +142,10 @@
   <div class="qr-wrap">
     <canvas id="qr"></canvas>
   </div>
+
+  <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="footer">CÁRITAS CNC</div>
+</section>
 
   <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="footer">CÁRITAS CNC</div>
@@ -196,7 +200,6 @@
     const esc = (s="") =>
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
-    // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
     // Dibuja el QR del tamaño del contenedor .qr-wrap respetando DPR
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);
@@ -206,21 +209,20 @@ async function drawQR(canvasId, url){
   const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
 
   const render = () => {
-    // ancho visible del contenedor (px)
-    let w = box.getBoundingClientRect().width;
+    let w = box.getBoundingClientRect().width;           // px visibles
     if (!w) {
-      // fallback: usa --qr (mm) → px
       const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr')) || 34;
-      w = mm * 3.7795;
+      w = mm * 3.7795;                                   // fallback mm→px
     }
     const px = Math.max(96, Math.round(w * dpr));
     el.width = el.height = px;
     el.style.width  = Math.round(w) + "px";
     el.style.height = Math.round(w) + "px";
+
+    // usa qrcode@1.5.x
     QR.toCanvas(el, url, { width: px, margin: 0 });
   };
 
-  // esperar a layout estable
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   render();
   new ResizeObserver(render).observe(box);
@@ -331,7 +333,8 @@ async function drawQR(canvasId, url){
 
       // Reverso (QR a vista pública)
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await drawQR("qr", qrUrl);
+      await drawQR("qr", urlPublica);
+
     }
     // ---------- util ----------
 const toast = (t)=> alert(t);
