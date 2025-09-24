@@ -589,3 +589,12 @@ input:required, select:required {
   image-rendering: crisp-edges; image-rendering: pixelated;
   display:block;
 }
+/* Sidebar: botones en columna, 100% de ancho y separación */
+.cred-sidebar .group .btn{ display:block; width:100%; margin-top:8px; }
+.cred-sidebar .group .btn:first-child{ margin-top:0; }
+
+/* Si usas una rejilla de herramientas */
+.toolbar{
+  display:grid; gap:10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+}
