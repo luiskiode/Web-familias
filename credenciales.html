@@ -53,86 +53,102 @@
   <!-- <script defer src="api.js/error-overlay.js"></script> -->
 </head>
 <body>
-  <div class="controls" style="gap:10px; flex-wrap:wrap; align-items:center">
-  <!-- Acciones -->
-  <div style="display:flex; gap:8px; flex-wrap:wrap">
-    <button class="btn" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
-    <button class="btn" id="btn-save-layout">📏 Guardar layout</button>
-    <button class="btn" id="btn-copy-link">🔗 Copiar enlace público</button>
-    <a class="btn" href="index.html">← Volver</a>
-    <a class="btn" id="btn-admin-local" style="display:none">🗂️ Administrar</a>
-  </div>
-
-  <!-- Diseño -->
-  <div style="display:flex; gap:8px; flex-wrap:wrap">
-    <label class="btn">📄 Plantilla frente <input type="file" id="tpl-front" accept="image/*" hidden></label>
-    <label class="btn">📄 Plantilla reverso <input type="file" id="tpl-back"  accept="image/*" hidden></label>
-    <select id="card-orient" class="btn" style="cursor:pointer">
-      <option value="landscape">Horizontal</option>
-      <option value="portrait">Gafete (vertical)</option>
-    </select>
-    <label class="btn">Tamaño
-      <input type="range" id="card-size" min="70" max="120" value="100" step="1" style="vertical-align:middle">
-    </label>
-  </div>
-
-  <!-- Mover solo lo elegido -->
-  <div style="display:flex; gap:8px; flex-wrap:wrap">
-    <select id="move-target" class="btn" style="cursor:pointer">
-      <option value="brand">Mover: Nombre + Logo</option>
-      <option value="logo">Mover: Solo Logo</option>
-      <option value="role">Mover: Rol</option>
-    </select>
-    <button class="btn" id="mv-up">↑</button>
-    <button class="btn" id="mv-left">←</button>
-    <button class="btn" id="mv-right">→</button>
-    <button class="btn" id="mv-down">↓</button>
-  </div>
-</div>
-    <!-- Editor (solo en view=carnet) -->
-<div id="editor" class="editor" style="display:none">
-  <div class="row">
-    <label>Nombre</label>
-    <input id="edit-nombre" type="text" placeholder="Tu nombre" />
-    <small id="edit-nombre-hint" class="muted">Se guarda automáticamente</small>
-  </div>
-  <div class="row">
-    <label>Foto de perfil</label>
-    <input id="edit-foto" type="file" accept="image/*" />
-    <small class="muted">JPG/PNG recomendados</small>
-  </div>
-</div>
-   <div class="sheet" id="sheet">
-  <!-- FRENTE -->
-  <section class="card front" id="card-front" aria-label="Credencial frente">
-    <img class="wm" src="assets/logo-caritas.png" alt="">
-    <img class="tpl" id="tpl-img-front" alt="" />
-    <div class="photo"><img id="foto" alt="Foto"></div>
-
-    <div class="brand-row">
-      <img class="logo" src="assets/logo-caritas.png" alt="Cáritas" />
-      <div class="name" id="nombre">—</div>
+ <!-- === LAYOUT 2 COL: SIDEBAR + PREVIEW === -->
+<main class="cred-layout">
+  <!-- Sidebar -->
+  <aside class="cred-sidebar">
+    <div class="group">
+      <h3>Acciones</h3>
+      <button class="btn w-full" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
+      <button class="btn w-full" id="btn-save-layout">📏 Guardar layout</button>
+      <button class="btn w-full" id="btn-copy-link">🔗 Copiar enlace público</button>
+      <a class="btn w-full" href="index.html">← Volver</a>
+      <a class="btn w-full" id="btn-admin-local" style="display:none">🗂️ Administrar</a>
     </div>
 
-    <div class="role" id="rol">Voluntario Cáritas CNC</div>
-    <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-    <div class="band">CÁRITAS CNC</div>
-  </section>
+    <div class="group">
+      <h3>Plantillas</h3>
+      <label class="btn w-full">📄 Plantilla frente
+        <input type="file" id="tpl-front" accept="image/*" hidden>
+      </label>
+      <label class="btn w-full">📄 Plantilla reverso
+        <input type="file" id="tpl-back" accept="image/*" hidden>
+      </label>
+      <label class="subtle">Orientación</label>
+      <select id="card-orient" class="btn w-full">
+        <option value="landscape">Horizontal</option>
+        <option value="portrait">Gafete (vertical)</option>
+      </select>
+      <label class="subtle">Tamaño</label>
+      <input type="range" id="card-size" min="70" max="120" value="100" step="1">
+    </div>
 
-  <!-- REVERSO -->
-  <section class="card back" id="card-back" aria-label="Credencial reverso">
-    <img class="wm" src="assets/logo-caritas.png" alt="">
-    <img class="tpl" id="tpl-img-back" alt="" />
-    <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
+    <div class="group">
+      <h3>Posicionar</h3>
+      <select id="move-target" class="btn w-full">
+        <option value="brand">Nombre + Logo</option>
+        <option value="logo">Solo Logo</option>
+        <option value="role">Rol</option>
+      </select>
+      <div class="move-grid">
+        <button class="btn" id="mv-up">↑</button>
+        <div></div>
+        <button class="btn" id="mv-right">→</button>
+        <button class="btn" id="mv-left">←</button>
+        <div></div>
+        <button class="btn" id="mv-down">↓</button>
+      </div>
+      <button class="btn w-full" id="btn-save-cred">💾 Guardar credencial</button>
+    </div>
 
-    <div class="scan">SCAN ME</div>
-    <div class="qr-box"><canvas id="qr"></canvas></div>
+    <div class="group">
+      <h3>Datos</h3>
+      <label class="subtle">Nombre</label>
+      <input class="input" id="input-nombre" placeholder="Tu nombre">
+      <div id="edit-nombre-hint" class="hint">Se guarda automáticamente</div>
 
-    <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-    <div class="footer">CÁRITAS CNC</div>
-  </section>
-</div>
+      <label class="subtle">Foto de perfil</label>
+      <input type="file" id="file-foto" accept="image/*" class="input">
+      <small class="muted">JPG/PNG recomendados</small>
+    </div>
+  </aside>
+
+  <!-- Preview / Editor -->
+  <section class="cred-preview">
+    <div class="sheet" id="sheet">
+      <!-- FRENTE -->
+      <section class="card front" id="card-front" aria-label="Credencial frente">
+        <img class="wm" src="assets/logo-caritas.png" alt="">
+        <img class="tpl" id="tpl-img-front" alt="">
+        <div class="photo"><img id="foto" alt="Foto"></div>
+
+        <div class="brand-row">
+          <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
+          <div class="name" id="nombre">—</div>
+        </div>
+
+        <div class="role" id="rol">Voluntario Cáritas CNC</div>
+        <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="band">CÁRITAS CNC</div>
+      </section>
+
+      <!-- REVERSO -->
+      <section class="card back" id="card-back" aria-label="Credencial reverso">
+  <img class="wm" src="assets/logo-caritas.png" alt="">
+  <img class="tpl" id="tpl-img-back" alt="">
+  <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
+
+  <div class="scan">SCAN ME</div>
+  <div class="qr-wrap">
+    <canvas id="qr"></canvas>
   </div>
+
+  <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="footer">CÁRITAS CNC</div>
+</section>
+    </div>
+  </section>
+</main>
   <!-- Vista Admin -->
 <section id="admin" style="display:none; width:100%; max-width:980px">
   <div class="controls" style="justify-content:space-between">
@@ -181,6 +197,26 @@
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
     // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
+
+
+  // tamaño real del lienzo
+  c.width  = sizeCssPx * dpr;
+  c.height = sizeCssPx * dpr;
+  c.style.width  = sizeCssPx + "px";
+  c.style.height = sizeCssPx + "px";
+
+  // muchas libs de QR soportan toCanvas(canvas, texto, {width})
+  if (window.QRCode?.toCanvas) {
+    await QRCode.toCanvas(c, text, { width: sizeCssPx * dpr, margin: 0 });
+  } else if (window.QRCode) {
+    // fallback: algunas generan sobre un canvas interno → copiamos al nuestro
+    const tmp = document.createElement("canvas");
+    await QRCode.toCanvas(tmp, text, { width: sizeCssPx * dpr, margin: 0 });
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.drawImage(tmp, 0, 0);
+  }
+}
 // QR robusto: respeta el tamaño de .qr-box, re-render en resize
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);
@@ -415,26 +451,26 @@ if (view === "public"){
     const ed = document.getElementById("editor");
     ed && (ed.style.display = "");
 
-    // auto-guardar nombre (debounce)
-    const inputNombre = document.getElementById("edit-nombre");
-    if (inputNombre){
-      inputNombre.value = document.getElementById("nombre").textContent.trim();
-      inputNombre.addEventListener("input", ()=>{
-        clearTimeout(saveNameTimer);
-        const nombre = inputNombre.value.trim();
-        saveNameTimer = setTimeout(()=> saveNombreAuto(user, nombre), 500);
-      });
-    }
+  // auto-guardar nombre (debounce)
+const inputNombre = document.getElementById("input-nombre");
+if (inputNombre){
+  inputNombre.value = document.getElementById("nombre").textContent.trim();
+  inputNombre.addEventListener("input", ()=>{
+    clearTimeout(saveNameTimer);
+    const nombre = inputNombre.value.trim();
+    saveNameTimer = setTimeout(()=> saveNombreAuto(user, nombre), 500);
+  });
+}
 
-    // subir foto
-    const inputFoto = document.getElementById("edit-foto");
-    inputFoto?.addEventListener("change", async (e)=>{
-      const f = e.target.files?.[0];
-      if (!f) return;
-      try { await saveFoto(user, f); }
-      catch(err){ console.error(err); alert("❌ No se pudo subir la foto"); }
-      finally { e.target.value = ""; }
-    });
+// subir foto
+const inputFoto = document.getElementById("file-foto");
+inputFoto?.addEventListener("change", async (e)=>{
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try { await saveFoto(user, f); }
+  catch(err){ console.error(err); alert("❌ No se pudo subir la foto"); }
+  finally { e.target.value = ""; }
+});
   }
 }
     // ========= Plantilla + orientación + tamaño (no altera tus funciones) =========
@@ -656,33 +692,47 @@ document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
   const root = document.documentElement;
   const $ = (id)=> document.getElementById(id);
 
+  // Variables CSS que ya estás usando (en mm)
   const targets = {
     brand: ["--brand-dx","--brand-dy"],
     logo:  ["--logo-dx","--logo-dy"],
     role:  ["--role-dx","--role-dy"]
   };
+
+  const LKEY = "cred-layout";               // clave en localStorage
+  const STEP_BTN  = 0.5;                    // mm por click
+  const STEP_KEYS = { base: 0.5, shift: 1 };// mm con teclado (ALT) / Shift = 1mm
+
   function num(v){ return parseFloat(String(v).replace("mm","")) || 0; }
+  function getVar(vname){
+    const cs = getComputedStyle(root);
+    return num(cs.getPropertyValue(vname));
+  }
+  function setVar(vname, valMm){
+    root.style.setProperty(vname, (valMm||0) + "mm");
+  }
+
+  // Nudge genérico en mm
   function nudge(dx, dy){
     const t = $("#move-target")?.value || "brand";
     const [vx, vy] = targets[t];
-    const cs = getComputedStyle(root);
-    const nx = num(cs.getPropertyValue(vx)) + dx;
-    const ny = num(cs.getPropertyValue(vy)) + dy;
-    root.style.setProperty(vx, nx+"mm");
-    root.style.setProperty(vy, ny+"mm");
+    const nx = getVar(vx) + dx;
+    const ny = getVar(vy) + dy;
+    setVar(vx, nx);
+    setVar(vy, ny);
   }
 
   // Botonera
-  $("#mv-up")?.addEventListener("click",  (e)=>{ e.preventDefault(); nudge(0,  -.5); });
-  $("#mv-down")?.addEventListener("click",(e)=>{ e.preventDefault(); nudge(0,   .5); });
-  $("#mv-left")?.addEventListener("click",(e)=>{ e.preventDefault(); nudge(-.5, 0 ); });
-  $("#mv-right")?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( .5, 0 ); });
+  $("#mv-up")   ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( 0, -STEP_BTN); });
+  $("#mv-down") ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( 0,  STEP_BTN); });
+  $("#mv-left") ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge(-STEP_BTN, 0);  });
+  $("#mv-right")?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( STEP_BTN, 0);  });
 
   // Teclado: mantener ALT para mover (flechas); Shift = paso 1 mm
   document.addEventListener("keydown",(e)=>{
-    if (!e.altKey) return;                             // solo cuando mantienes Alt
+    if (!e.altKey) return;                             // solo con ALT presionado
     if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
-    const step = e.shiftKey ? 1 : .5;
+    const step = e.shiftKey ? STEP_KEYS.shift : STEP_KEYS.base;
     let used=false;
     switch(e.key){
       case "ArrowUp":    nudge(0,-step); used=true; break;
@@ -692,6 +742,58 @@ document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
     }
     if (used) e.preventDefault();
   });
+
+  // ---------- Guardar / Cargar Layout ----------
+  function readLayout(){
+    // Lee las vars actuales (en mm) y devuelve objeto simple
+    return {
+      brandDx: getVar("--brand-dx"),
+      brandDy: getVar("--brand-dy"),
+      logoDx:  getVar("--logo-dx"),
+      logoDy:  getVar("--logo-dy"),
+      roleDx:  getVar("--role-dx"),
+      roleDy:  getVar("--role-dy"),
+    };
+  }
+
+  function applyLayout(v){
+    if (!v) return;
+    if ("brandDx" in v) setVar("--brand-dx", v.brandDx);
+    if ("brandDy" in v) setVar("--brand-dy", v.brandDy);
+    if ("logoDx"  in v) setVar("--logo-dx",  v.logoDx);
+    if ("logoDy"  in v) setVar("--logo-dy",  v.logoDy);
+    if ("roleDx"  in v) setVar("--role-dx",  v.roleDx);
+    if ("roleDy"  in v) setVar("--role-dy",  v.roleDy);
+  }
+
+  function saveLayout(){
+    try{
+      const prev = JSON.parse(localStorage.getItem(LKEY) || "{}");
+      const now  = readLayout();
+      localStorage.setItem(LKEY, JSON.stringify({ ...prev, ...now }));
+      alert("Layout guardado ✅");
+    }catch(err){
+      console.error(err);
+      alert("No se pudo guardar el layout");
+    }
+  }
+
+  // Hook al botón existente "Guardar layout"
+  $("#btn-save-layout")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    saveLayout();
+  });
+
+  // Aplica el layout guardado al cargar la vista
+  (function initFromStorage(){
+    try{
+      const saved = JSON.parse(localStorage.getItem(LKEY) || "{}");
+      applyLayout(saved);
+    }catch(err){
+      console.warn("Sin layout guardado");
+    }
+  })();
+})();
 
   // Integrar con "📏 Guardar layout": guardamos también estos offsets
   const LKEY = "cred:layout";
@@ -737,7 +839,7 @@ document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
       alert("❌ No se pudo guardar la credencial");
     }
   });
-})();
+
 // ====== Movimiento preciso (solo el target elegido) + Drag ======
 (function(){
   const root = document.documentElement;
