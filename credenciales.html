@@ -199,14 +199,6 @@
     // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
 
 
-    // === QR NÍTIDO con DPR ===
-async function renderQR(text){
-  const c = document.getElementById("qr");
-  if(!c) return;
-  const mmToPx = mm => mm * 3.7795275591;
-  const sizeCssPx = Math.round(mmToPx(30));   // coincide con .qr-wrap (30mm)
-  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-
   // tamaño real del lienzo
   c.width  = sizeCssPx * dpr;
   c.height = sizeCssPx * dpr;
