@@ -196,12 +196,18 @@
     const esc = (s="") =>
       String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
-    // Dibuja el QR del tamaño del contenedor .qr-box (2x para nitidez)
-    // Dibuja el QR del tamaño del contenedor .qr-wrap respetando DPR
-async function drawQR(canvasId, url){
+   // === QR NÍTIDO: respeta DPR y tamaño en mm (usa .qr-wrap) ===
+async function drawQR(canvasId, text){
   const el  = document.getElementById(canvasId);
   const box = el?.parentElement;
   if (!el || !box) return;
+
+  // Acepta cualquiera de las dos libs globales más comunes
+  const QRlib = window.QR || window.QRCode;
+  if (!QRlib || typeof QRlib.toCanvas !== "function"){
+    console.warn("⚠️ Librería de QR no encontrada (QR / QRCode).");
+    return;
+  }
 
   const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
 
@@ -209,23 +215,26 @@ async function drawQR(canvasId, url){
     // ancho visible del contenedor (px)
     let w = box.getBoundingClientRect().width;
     if (!w) {
-      // fallback: usa --qr (mm) → px
-      const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr')) || 34;
-      w = mm * 3.7795;
+      // fallback: usa variable --qr (mm) si el layout aún no midió
+      const mm = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--qr")
+      ) || 34;
+      w = mm * 3.7795275591; // mm -> px
     }
+
     const px = Math.max(96, Math.round(w * dpr));
-    el.width = el.height = px;
-    el.style.width  = Math.round(w) + "px";
+    el.width = el.height = px;       // tamaño real del canvas
+    el.style.width  = Math.round(w) + "px"; // tamaño CSS
     el.style.height = Math.round(w) + "px";
-    QR.toCanvas(el, url, { width: px, margin: 0 });
+
+    QRlib.toCanvas(el, text, { width: px, margin: 0 });
   };
 
-  // esperar a layout estable
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Espera a que se asiente el layout, renderiza y observa cambios de tamaño
+  await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
   render();
   new ResizeObserver(render).observe(box);
 }
-
 
   // tamaño real del lienzo
   c.width  = sizeCssPx * dpr;
@@ -331,7 +340,8 @@ async function drawQR(canvasId, url){
 
       // Reverso (QR a vista pública)
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await drawQR("qr", qrUrl);
+      await drawQR("qr", urlPublica);
+
     }
     // ---------- util ----------
 const toast = (t)=> alert(t);

@@ -598,3 +598,5 @@ input:required, select:required {
   display:grid; gap:10px;
   grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
 }
+.cred-sidebar .group .btn{ display:block; width:100%; margin-top:8px; }
+.cred-sidebar .group .btn:first-child{ margin-top:0; }
