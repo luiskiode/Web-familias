@@ -7,6 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎫 Credenciales — Cáritas CNC</title>
   <link rel="stylesheet" href="styles-caritas.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
 
   <!-- 🔌 Supabase bootstrap -->
   <script type="module">
@@ -225,39 +227,14 @@ async function drawQR(canvasId, url){
 
 
 }
-// QR robusto: respeta el tamaño del contenedor y DPR
-async function drawQR(canvasId, url){
-  const el  = document.getElementById(canvasId);
-  const box = el?.parentElement;
-  if (!el || !box) return;
 
-  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
 
-  const render = () => {
-    let w = box.getBoundingClientRect().width;
-    if (!w) {
-      const qrVar = getComputedStyle(document.documentElement).getPropertyValue('--qr').trim();
-      const mm    = parseFloat(qrVar) || 34;
-      w = mm * 3.7795; // mm → px
-    }
-    const px = Math.max(96, Math.round(w * dpr));
-    el.width = el.height = px;
-    el.style.width  = Math.round(w) + "px";
-    el.style.height = Math.round(w) + "px";
-    QR.toCanvas(el, url, { width: px, margin: 0 });
-  };
-
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  render();
-  new ResizeObserver(render).observe(box);
-}
 
   // Espera a layout estable
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  render();
+  
 
-  // Re-render si cambia el tamaño del contenedor
-  new ResizeObserver(() => render()).observe(box);
+
 
     // Esperas Firebase (debe estar bootstrapped en <head>)
     function waitForAuth(timeout=12000){
