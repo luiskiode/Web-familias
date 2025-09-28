@@ -1,600 +1,236 @@
-:root {
-  --primary: #b91c1c;   /* rojo */
-  --bg: #000;           /* negro */
-  --text: #fff;         /* blanco */
-  --border: #550000;
-  --muted: #aaa;
-  --surface: #1a0000;   /* fondo de tarjetas */
-  --surface-2: #2a0000;
+/* =========================
+   Cáritas CNC – Hoja única
+   ========================= */
+
+/* ---------- Variables globales ---------- */
+:root{
+  /* marca y tema */
+  --primary:#b91c1c;
+  --brand:#b91c1c;
+  --bg:#000;
+  --text:#fff;
+  --muted:#c9c9c9;
+  --border:#550000;
+  --surface:#1a0000;
+  --surface-2:#2a0000;
+
+  /* credenciales: tamaño y presets */
+  --card-w:85.6mm;
+  --card-h:54mm;
+  --qr:34mm;
+
+  /* Foto (mm) – calibrables */
+  --cx:21mm;  /* centro X */
+  --cy:23mm;  /* centro Y */
+  --d:30mm;   /* diámetro */
+
+  /* Offsets movibles (mm) */
+  --brand-dx:0mm; --brand-dy:0mm;
+  --logo-dx:0mm;  --logo-dy:0mm;
+  --role-dx:0mm;  --role-dy:0mm;
 }
 
-/* Reset */
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body {
-  font-family: 'Poppins', Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100%;
-}
-
-/* 🎥 Fondo */
-#video-fondo {
-  position: fixed; inset:0;
-  width:100%; height:100%;
-  object-fit:cover;
-  z-index:-2;
-  opacity:0.3;
-}
-
-
-/* Cards */
-.card {
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 1rem auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,.6);
-}
-
-/* Botones */
-.btn, .btn-ghost {
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor:pointer;
-  font-weight:600;
-}
-.btn {
-  background: var(--primary);
-  border:none;
-  color: var(--text);
-}
-.btn:hover {
-  background: #ff1a1a;
-}
-.btn-ghost {
-  border:1px solid var(--primary);
-  background: transparent;
-  color: var(--primary);
-}
-.btn-ghost:hover {
-  background: var(--primary);
-  color: var(--text);
-}
-
-/* Tablas */
-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:1rem;
-  background: var(--surface-2);
-}
-thead th {
-  background: var(--primary);
-  color:#fff;
-  padding: 10px;
-}
-tbody td {
-  padding: 8px;
-  border-bottom:1px solid var(--border);
-}
-tbody tr:hover {
-  background:#111;
-}
-
-/* Mensajes */
-.success { color:#22c55e; }
-.error { color:#ef4444; }
-.muted { color:var(--muted); }
-
-fieldset {
-  border:1px solid var(--primary);
-  border-radius:8px;
-  margin:1rem 0;
-  padding:1rem;
-}
-legend {
-  color: var(--primary);
-  font-weight:bold;
-  padding:0 8px;
-}
-.form-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-  gap:1rem;
-  margin-bottom:1rem;
-}
-label {
-  display:block;
-  font-size:0.9rem;
-  margin-bottom:0.5rem;
-}
-input, select, textarea {
-  width:100%;
-  padding:8px;
-  border:1px solid var(--border);
-  border-radius:6px;
-  background:#111;
+/* ---------- Reset & base ---------- */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  font-family:'Poppins',Arial,sans-serif;
+  background:var(--bg);
   color:var(--text);
-}
-input:required, select:required {
-  border-left:3px solid var(--primary);
-}
-.center { text-align:center; }
-
-/* Contenedor con scroll para la lista de familias */
-.table-wrapper {
-  max-height: 400px;   /* ajusta según tu preferencia */
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  min-height:100%;
 }
 
-.btn-del {
-  background: #b91c1c;
-  border: none;
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.btn-del:hover {
-  background: #ff1a1a;
+/* 🎥 Fondo de video */
+#video-fondo{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; opacity:.3; z-index:-2;
 }
 
-/* ====== Credenciales Cáritas CNC (scoped) ====== */
+/* ---------- UI genérico ---------- */
+.card{
+  background:var(--surface);
+  border-radius:12px;
+  padding:1rem;
+  margin:1rem auto;
+  box-shadow:0 4px 12px rgba(0,0,0,.6);
+}
 
-/* Controles */
-.wrap{display:grid;gap:18px;place-items:center;padding:24px}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
+.btn,.btn-ghost{
+  padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600
+}
+.btn{
+  background:var(--primary); color:var(--text); border:none;
+  transition:transform .12s ease, box-shadow .12s ease, background-color .2s;
+  box-shadow:0 6px 14px rgba(185,28,28,.25);
+}
+.btn:hover{background:#ff1a1a; transform:translateY(-1px)}
+.btn:active{transform:translateY(0); box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.btn-ghost{border:1px solid var(--primary); background:transparent; color:var(--primary)}
+.btn-ghost:hover{background:var(--primary); color:var(--text)}
 
-/* Lámina con 2 caras */
-.sheet{display:flex;gap:18px;flex-wrap:wrap}
+.success{color:#22c55e}
+.error{color:#ef4444}
+.muted{color:var(--muted); font-size:.9em}
 
-/* OJO: anula padding/margin de la .card genérica aquí */
+table{width:100%; border-collapse:collapse; margin-top:1rem; background:var(--surface-2)}
+thead th{background:var(--primary); color:#fff; padding:10px}
+tbody td{padding:8px; border-bottom:1px solid var(--border)}
+tbody tr:hover{background:#111}
+
+fieldset{border:1px solid var(--primary); border-radius:8px; margin:1rem 0; padding:1rem}
+legend{color:var(--primary); font-weight:bold; padding:0 8px}
+.form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1rem}
+label{display:block; font-size:.9rem; margin-bottom:.5rem}
+input,select,textarea{
+  width:100%; padding:8px; border:1px solid var(--border); border-radius:6px; background:#111; color:var(--text)
+}
+input:required,select:required{border-left:3px solid var(--primary)}
+.center{text-align:center}
+
+.table-wrapper{max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:8px}
+
+.btn-del{
+  background:#b91c1c; border:none; color:#fff; padding:4px 10px; border-radius:6px; cursor:pointer
+}
+.btn-del:hover{background:#ff1a1a}
+
+/* ---------- Credenciales (scoped) ---------- */
+
+/* Controles + lámina */
+.wrap{display:grid; gap:18px; place-items:center; padding:24px}
+.controls{display:flex; gap:8px; flex-wrap:wrap}
+.sheet{display:flex; gap:18px; flex-wrap:wrap}
+
+/* Tarjeta base (anula .card genérica) */
 .sheet .card{
-  position:relative;
-  width:85.6mm; height:54mm;
-  margin:0; padding:0;                /* 👈 anula la genérica */
-  border-radius:6mm;
-  background:linear-gradient(135deg,#0b0b0f,#17171c);
-  box-shadow:0 10px 30px rgba(0,0,0,.45);
-  overflow:hidden; isolation:isolate;
-}
-
-/* Marca de agua tenue */
-.sheet .wm{position:absolute;inset:0;opacity:.08;z-index:0}
-
-/* Franjas rojas */
-.sheet .stripes{position:absolute;right:6mm;top:16mm;display:grid;gap:4mm;z-index:1}
-.sheet .stripes span{width:10mm;height:4mm;background:var(--red,#b91c1c);border-radius:2mm}
-
-/* Foto circular con calibración */
-:root{
-  --red:#b91c1c; --bg:#0b0b0f; --text:#fff;
-  /* 📏 Calibración foto (mm) */
-  --cx: 21mm;  /* centro X */
-  --cy: 23mm;  /* centro Y */
-  --d : 30mm;  /* diámetro */
-}
-.front .photo{
-  position:absolute; z-index:2; border-radius:50%; overflow:hidden; background:#000;
-  left: calc(var(--cx) - var(--d)/2);
-  top:  calc(var(--cy) - var(--d)/2);
-  width: var(--d); height: var(--d);
-  box-shadow: 0 0 0 2mm #fff, 0 0 0 2.4mm rgba(0,0,0,.6);
-}
-.front .photo img{width:100%;height:100%;object-fit:cover}
-
-/* Marca / nombre */
-.brand-row{position:absolute;left:40mm;top:10mm;display:flex;align-items:center;gap:6mm;z-index:2}
-.logo{width:12mm;height:12mm;display:grid;place-items:center;color:#fff}
-.name{font-weight:800;font-size:6mm;line-height:1;color:#fff}
-.role{position:absolute;left:40mm;top:24mm;font-weight:600;font-size:3.6mm;color:#fff}
-
-/* Banda roja inferior */
-.band{position:absolute;left:0;right:0;bottom:0;background:var(--red,#b91c1c);color:#fff;
-  padding:4mm 6mm;font-weight:800;letter-spacing:.6px;display:flex;align-items:center;gap:4mm;z-index:2}
-
-/* Reverso */
-.back .scan{position:absolute;left:0;right:0;top:8mm;text-align:center;font-weight:800;font-size:7mm;letter-spacing:.5px;color:#fff}
-.back .qr-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-36%);padding:3mm;border-radius:3mm;background:#fff}
-.back #qr{width:26mm;height:26mm}
-.back .footer{position:absolute;left:0;right:0;bottom:4mm;text-align:center;font-weight:700;letter-spacing:.6px;color:#fff}
-
-@media print{
-  body{background:#fff}
-  .controls{display:none}
-  .wrap{padding:0}
-  .sheet{gap:8mm;justify-content:flex-start}
-  .sheet .card{box-shadow:none}
-  @page{size:auto;margin:10mm}
-  }
-  /* ===== Ajustes finos carnet ===== */
-
-/* 1) Marca/Nombre centrados */
-.brand-row{
-  position:absolute; left:50%; top:10mm; transform:translateX(-50%);
-  display:grid; grid-auto-flow:column; align-items:center; gap:6mm; z-index:2;
-}
-.logo{
-  width:12mm; height:12mm; object-fit:contain; display:block;
-}
-.name{
-  font-weight:800; font-size:6mm; line-height:1; color:#fff;
-  max-width:42mm; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.role{
-  position:absolute; left:50%; top:24mm; transform:translateX(-50%);
-  font-weight:600; font-size:3.6mm; color:#fff; text-align:center;
-}
-
-/* 2) QR centrado y responsive (tamaño variable) */
-:root{ --qr: 34mm; }                /* ← ajusta este valor si lo quieres más grande/pequeño */
-.back .qr-box{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-40%);
-  width:var(--qr); height:var(--qr); padding:3mm; border-radius:3mm; background:#fff;
-}
-.back #qr{ width:100%; height:100%; display:block }
-
-/* 3) Marca de agua con imagen (logo oficial) */
-.sheet .wm{
-  position:absolute; inset:0; z-index:0; opacity:.08;
-  width:100%; height:100%; object-fit:contain; filter:grayscale(100%);
-}
-
-/* Editor de carnet */
-.editor{display:grid; gap:10px; padding:12px 14px; border:1px solid #2a2a2a; border-radius:12px; background:#121216}
-.editor .row{display:grid; gap:6px}
-.editor label{font-weight:700}
-.editor input[type="text"]{padding:10px; background:#0e0e10; border:1px solid #2a2a2a; border-radius:10px; color:#fff}
-.editor input[type="file"]{padding:8px; background:#0e0e10; border:1px dashed #2a2a2a; border-radius:10px; color:#bbb}
-.muted{color:#bdbdbd; font-size:.9em}
-
-/* Reduce fuente si el nombre se desborda */
-.name{ font-size:6mm; max-width:42mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-@container name (inline-size < 42mm){ .name{ font-size:5.2mm } }
-
-/* Evitar que las franjas "tapen" el rol/nombre */
-.sheet .stripes{ z-index:1; right:6mm; }
-.brand-row{ left:50%; transform:translateX(-50%); gap:6mm; z-index:2; }
-.name{ max-width:42mm; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.role{
-  left:50%; transform:translateX(-50%);
-  max-width:42mm; text-align:center; z-index:2;
-  padding:0 6mm;            /* evita que invada la zona de franjas */
-   }
-
-/* === Polish pack Cáritas CNC === */
-:root{
-  --brand:#b91c1c;           /* rojo marca */
-  --ink:#ffffff;             /* texto principal */
-  --muted:#c9c9c9;           /* texto suave */
-  --bg-1:#0b0b0f; --bg-2:#17171c;
-  --qr: 34mm;                /* tamaño QR (ajústalo aquí) */
-}
-
-/* Fondo con gradiente suave + grano ligero */
-.sheet .card{
+  position:relative; width:var(--card-w); height:var(--card-h);
+  margin:0; padding:0; border-radius:6mm; overflow:hidden; isolation:isolate;
   background:
     radial-gradient(120% 90% at 10% 0%, #111 0%, transparent 60%),
     radial-gradient(120% 90% at 100% 100%, #0f0f13 0%, transparent 55%),
-    linear-gradient(135deg,var(--bg-1),var(--bg-2));
+    linear-gradient(135deg,#0b0b0f,#17171c);
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
 }
 
-/* Foto con aro doble y leve relieve */
+/* Marca de agua y franjas */
+.sheet .wm{position:absolute; inset:0; opacity:.06; z-index:0; filter:grayscale(1); object-fit:contain}
+.sheet .stripes{position:absolute; right:6mm; top:16mm; display:grid; gap:4mm; z-index:1}
+.sheet .stripes span{width:10mm; height:4mm; background:var(--brand); border-radius:2mm}
+
+/* Foto circular (calibrable por variables) */
 .front .photo{
+  position:absolute; z-index:2; border-radius:50%; overflow:hidden; background:#000;
+  left:calc(var(--cx) - var(--d)/2); top:calc(var(--cy) - var(--d)/2);
+  width:var(--d); height:var(--d);
   box-shadow:
     0 0 0 2.2mm #fff,
     0 0 0 2.6mm rgba(0,0,0,.55),
     0 10px 18px rgba(0,0,0,.45),
-    inset 0 0 0 0.6mm rgba(255,255,255,.12);
+    inset 0 0 0 .6mm rgba(255,255,255,.12);
 }
-.front .photo img{ filter: contrast(1.06) saturate(1.05); }
+.front .photo img{width:100%; height:100%; object-fit:cover; filter:contrast(1.06) saturate(1.05)}
 
-/* Marca y Nombre centrados, más legibles */
+/* Marca + nombre + rol */
 .brand-row{
   position:absolute; left:50%; top:10mm; transform:translateX(-50%);
   display:grid; grid-auto-flow:column; align-items:center; gap:6mm; z-index:2;
+
+  /* Activa container queries para el ajuste fino del nombre */
+  container-type:inline-size; container-name:name;
 }
-.logo{ width:11mm; height:11mm; object-fit:contain; display:block; }
+.logo{width:11mm; height:11mm; object-fit:contain; display:block; position:relative; transform:translate(var(--logo-dx),var(--logo-dy))}
 .name{
-  font-weight:800; font-size:5.8mm; line-height:1;
-  color:var(--ink); max-width:42mm; text-align:center;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-weight:800; font-size:5.8mm; line-height:1; color:var(--text);
+  max-width:42mm; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   text-shadow:0 1px 1px rgba(0,0,0,.45);
 }
+@container name (inline-size < 42mm){ .name{ font-size:5.2mm } }
 
-/* Rol en formato “pill” y por encima de las franjas */
 .role{
   position:absolute; left:50%; top:24mm; transform:translateX(-50%);
   display:inline-block; padding:1.5mm 4mm; border-radius:8mm;
-  background:rgba(0,0,0,.35); color:var(--ink); font-weight:700; font-size:3.5mm;
-  letter-spacing:.1px; z-index:2; max-width:48mm; text-align:center;
+  background:rgba(0,0,0,.35); color:#fff; font-weight:700; font-size:3.5mm; letter-spacing:.1px; z-index:2;
+  max-width:48mm; text-align:center;
 }
-
-/* Franjas a la derecha sin tapar texto */
-.sheet .stripes{ position:absolute; right:6mm; top:16mm; display:grid; gap:4mm; z-index:1 }
-.sheet .stripes span{ width:10mm; height:4mm; background:var(--brand); border-radius:2mm }
 
 /* Banda inferior */
-.band{ background:var(--brand); color:#fff; font-weight:800; letter-spacing:.5px }
+.band{
+  position:absolute; left:0; right:0; bottom:0; background:var(--brand); color:#fff;
+  padding:4mm 6mm; font-weight:800; letter-spacing:.5px; display:flex; align-items:center; gap:4mm; z-index:2
+}
 
-/* Watermark más sutil (ambas caras) */
-.sheet .wm{ opacity:.06; filter:grayscale(1); }
-
-/* Reverso: “SCAN ME” mejor ubicado y QR card con sombra */
+/* Reverso */
 .back .scan{
   position:absolute; left:50%; top:8mm; transform:translateX(-50%);
-  font-weight:900; font-size:6.2mm; letter-spacing:.4px; color:#fff;
-  text-shadow:0 2px 8px rgba(0,0,0,.4);
+  font-weight:900; font-size:6.2mm; letter-spacing:.4px; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.4)
 }
-.back .qr-box{
+/* Usar .qr-wrap en el HTML */
+.back .qr-wrap{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-38%);
   width:var(--qr); height:var(--qr);
   background:#fff; border-radius:4mm; padding:3.2mm;
   box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
+  display:grid; place-items:center;
 }
-.back #qr{ width:100%; height:100%; display:block }
+.back .qr-wrap canvas{width:100%; height:100%; image-rendering:crisp-edges; image-rendering:pixelated; display:block}
+.back .footer{position:absolute; left:0; right:0; bottom:4mm; text-align:center; font-weight:700; letter-spacing:.6px; color:#fff}
 
-/* Botones con micro-interacción */
-.btn{
-  transition:transform .12s ease, box-shadow .12s ease, background-color .2s;
-  box-shadow:0 6px 14px rgba(185,28,28,.25);
-}
-.btn:hover{ transform:translateY(-1px); }
-.btn:active{ transform:translateY(0); box-shadow:0 3px 8px rgba(0,0,0,.35) }
-
-/* ===== Plantilla + tamaño + orientación ===== */
-:root{
-  --card-w: 85.6mm;
-  --card-h: 54mm;
-  --qr: 34mm;
-}
-.sheet .card{ width:var(--card-w); height:var(--card-h); }
-.card.gafete{ width:var(--card-h); height:var(--card-w); }
-
-/* Capa de plantilla de imagen (debajo de todo el contenido) */
-.tpl{
-  position:absolute; inset:0; z-index:0;
-  object-fit:cover; object-position:center;
-  opacity:1; filter:none;
-}
+/* Plantilla de imagen (si usas PNG base) */
+.tpl{position:absolute; inset:0; z-index:0; object-fit:cover; object-position:center}
 
 /* Layout vertical tipo gafete */
-.card.gafete{ width:var(--card-h); height:var(--card-w); }
+.card.gafete{ width:var(--card-h); height:var(--card-w) }
+.card.gafete.front{ --cx:26mm; --cy:21mm; --d:30mm }
+.card.gafete .brand-row{ top:38mm }
+.card.gafete .role{ top:48mm }
+.card.gafete .stripes{ right:4mm; top:58mm }
+.card.gafete.back .qr-wrap{ top:45% }
 
-/* Posiciones por defecto para gafete (ajústalas a gusto; se pueden calibrar con flechas) */
-.card.gafete.front{ --cx: 27mm; --cy: 25mm; --d: 30mm; }   /* foto */
-.card.gafete .brand-row{ top: 40mm; }
-.card.gafete .role{ top: 48mm; }
-.card.gafete .stripes{ right: 4mm; top: 58mm; }
-.card.gafete .band{ bottom: 0; }
+/* Offsets movibles aplicados en la tarjeta (mm) */
+.card .brand-row{ transform:translateX(-50%) translate(var(--brand-dx),var(--brand-dy)) }
+.card .role     { transform:translateX(-50%) translate(var(--role-dx),var(--role-dy)) }
 
-/* Reverso gafete: QR un poco más arriba */
-.card.gafete.back .qr-box{ top: 46%; }
-
-/* ===== Calibración de texto y logo ===== */
-:root{
-  --brand-dx: 0mm; /* offset X del bloque Nombre+Logo */
-  --brand-dy: 0mm; /* offset Y del bloque Nombre+Logo */
-  --logo-dx:  0mm; /* offset X del logo junto al nombre */
-  --logo-dy:  0mm; /* offset Y del logo junto al nombre */
-  --role-dx:  0mm; /* offset X del rol */
-  --role-dy:  0mm; /* offset Y del rol */
-}
-
-/* Mueve el bloque Nombre+Logo desde su centro */
-.brand-row{
-  left:50%; top:10mm;
-  transform: translateX(-50%) translate(var(--brand-dx), var(--brand-dy));
-}
-
-/* Mueve SOLO el loguito al costado del nombre (relativo al bloque) */
-.logo{ position:relative; transform: translate(var(--logo-dx), var(--logo-dy)); }
-
-/* Mueve el Rol (pill) desde su centro */
-.role{
-  left:50%; top:24mm;
-  transform: translateX(-50%) translate(var(--role-dx), var(--role-dy));
-}
-/* ===== Gafete vertical (portrait) — presets finos ===== */
-.card.gafete.front{ --cx: 26mm; --cy: 21mm; --d: 30mm; }
-.card.gafete .brand-row{ top: 38mm; }
-.card.gafete .role{ top: 48mm; }
-.card.gafete .stripes{ right: 4mm; top: 58mm; }
-.card.gafete.back .qr-box{ top: 45%; }
-
-/* ===== Offsets movibles (nombre+logo / solo logo / rol) ===== */
-:root{
-  --brand-dx: 0mm; --brand-dy: 0mm;
-  --logo-dx:  0mm; --logo-dy:  0mm;
-  --role-dx:  0mm; --role-dy:  0mm;
-}
-
-.brand-row{
-  left:50%; top:10mm;
-  transform: translateX(-50%) translate(var(--brand-dx), var(--brand-dy));
-}
-.logo{
-  position:relative;
-  transform: translate(var(--logo-dx), var(--logo-dy));
-}
-.role{
-  left:50%; top:24mm;
-  transform: translateX(-50%) translate(var(--role-dx), var(--role-dy));
-}
-
-/* Señal visual al arrastrar */
-.drag-ready{ cursor:grab }
-.dragging{ cursor:grabbing; outline:2px dashed rgba(255,255,255,.35); outline-offset:2px; border-radius:8px }
-
-/* === Layout de credenciales: sidebar + preview === */
+/* ---------- Layout Editor (sidebar + preview) ---------- */
 .cred-layout{
-  display:grid;
-  grid-template-columns: 340px 1fr;
-  gap:16px;
-  align-items:start;
+  display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start
 }
-@media (max-width: 900px){
-  .cred-layout{ grid-template-columns: 1fr; }
-}
-
-.cred-sidebar{
-  position:sticky; top:12px;
-  display:flex; flex-direction:column; gap:14px;
-}
-.cred-sidebar .group{
-  background: var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px; padding:14px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.25);
-}
-.cred-sidebar h3{
-  font-size:1rem; margin-bottom:8px; color:#fff; font-weight:600;
-}
-.cred-sidebar .subtle{ font-size:.85rem; color:var(--muted); display:block; margin:6px 0 4px; }
-.cred-sidebar .muted{ color:var(--muted); }
-.cred-sidebar .w-full{ width:100%; }
-.cred-sidebar .input{
-  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333; border-radius:10px; padding:0 10px;
-}
-.cred-sidebar .hint{ font-size:.85rem; color:#a2f3b2; margin:6px 0 8px; }
-
-.move-grid{
-  display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; align-items:center; justify-items:center;
-}
-
-/* Preview */
-.cred-preview{
-  background: transparent;
-}
-.cred-preview .sheet{
-  display:flex; gap:24px; flex-wrap:wrap;
-  justify-content:flex-start; align-items:flex-start;
-}
-
-/* === Movimiento con variables CSS === */
-.card .brand-row{
-  transform: translate(var(--brand-x,0px), var(--brand-y,0px));
-}
-.card .logo{
-  transform: translate(var(--logo-x,0px), var(--logo-y,0px));
-}
-.card .role{
-  transform: translate(var(--role-x,0px), var(--role-y,0px));
-}
-/* === LAYOUT 2 COL === */
-.cred-layout{ display:grid; grid-template-columns: 340px 1fr; gap:20px; align-items:start; }
-@media (max-width: 980px){ .cred-layout{ grid-template-columns: 1fr; } }
-
-.cred-sidebar{ position:sticky; top:12px; display:flex; flex-direction:column; gap:16px; }
-.cred-sidebar .group{
-  background: var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px; padding:14px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.25);
-}
-.cred-sidebar h3{ font-size:1rem; margin-bottom:8px; color:#fff; font-weight:600; }
-.cred-sidebar .subtle{ font-size:.85rem; color:var(--muted); display:block; margin:6px 0 4px; }
-.cred-sidebar .muted{ color:var(--muted); }
-.cred-sidebar .w-full{ width:100%; }
-.cred-sidebar .input{
-  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333;
-  border-radius:10px; padding:0 10px;
-}
-.cred-sidebar .range{ width:100%; accent-color: var(--primary); }
-
-.toolbar{
-  display:grid; gap:10px;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-}
-.move-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
-
-.cred-preview .sheet{ display:flex; gap:24px; flex-wrap:wrap; }
-
-/* === Movimiento por mm (usa tus vars) === */
-.brand-row{ transform: translate(var(--brand-dx,0mm), var(--brand-dy,0mm)); }
-.logo     { transform: translate(var(--logo-dx,0mm),  var(--logo-dy,0mm));  }
-.role     { transform: translate(var(--role-dx,0mm),  var(--role-dy,0mm));  }
-
-/* === QR wrap (limpio y nítido) === */
-.card.back .qr-wrap{
-  position:absolute; right:12mm; bottom:14mm;
-  width: 30mm; height: 30mm;
-  background:#fff; border-radius:5mm;
-  display:grid; place-items:center;
-  padding:2mm;
-  box-shadow: 0 6px 18px rgba(0,0,0,.35);
-}
-.card.back .qr-wrap canvas{
-  width:100%; height:100%;
-  image-rendering: crisp-edges; image-rendering: pixelated;
-}
-.card.back .scan{
-  position:absolute; right:12mm; bottom:46mm;
-  font-weight:800; letter-spacing:.8px; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.6);
-}
-/* === Layout 2 columnas (sidebar + preview) === */
-.cred-layout{
-  display:grid;
-  grid-template-columns: 340px 1fr;
-  gap:20px;
-  align-items:start;
-}
-@media (max-width: 980px){
-  .cred-layout{ grid-template-columns: 1fr; }
-}
+@media (max-width:980px){ .cred-layout{ grid-template-columns:1fr } }
 
 .cred-sidebar{
   position:sticky; top:12px;
   display:flex; flex-direction:column; gap:16px;
 }
 .cred-sidebar .group{
-  background: var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px; padding:14px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.25);
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:14px; box-shadow:0 6px 24px rgba(0,0,0,.25)
 }
-.cred-sidebar h3{ font-size:1rem; margin-bottom:8px; color:#fff; font-weight:600; }
-.cred-sidebar .subtle{ font-size:.85rem; color:var(--muted); display:block; margin:6px 0 4px; }
-.cred-sidebar .muted{ color:var(--muted); }
-.cred-sidebar .w-full{ width:100%; }
+.cred-sidebar h3{font-size:1rem; margin-bottom:8px; color:#fff; font-weight:600}
+.cred-sidebar .subtle{font-size:.85rem; color:var(--muted); display:block; margin:6px 0 4px}
+.cred-sidebar .muted{color:var(--muted)}
+.cred-sidebar .w-full{width:100%}
 .cred-sidebar .input{
-  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333;
-  border-radius:10px; padding:0 10px;
+  width:100%; height:38px; background:#111; color:#eee; border:1px solid #333; border-radius:10px; padding:0 10px
 }
-.cred-sidebar .range{ width:100%; accent-color: var(--primary); }
-.toolbar{
-  display:grid; gap:10px;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-}
-.move-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+.cred-sidebar .range{width:100%; accent-color:var(--primary)}
+.cred-sidebar .group .btn{display:block; width:100%; margin-top:8px}
+.cred-sidebar .group .btn:first-child{margin-top:0}
 
-.cred-preview .sheet{ display:flex; gap:24px; flex-wrap:wrap; }
+.toolbar{display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.move-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
 
-/* === Movimiento en mm (coincide con tu JS/vars) === */
-.brand-row{ transform: translate(var(--brand-dx,0mm), var(--brand-dy,0mm)); }
-.logo     { transform: translate(var(--logo-dx,0mm),  var(--logo-dy,0mm));  }
-.role     { transform: translate(var(--role-dx,0mm),  var(--role-dy,0mm));  }
+.cred-preview{background:transparent}
+.cred-preview .sheet{display:flex; gap:24px; flex-wrap:wrap; justify-content:flex-start; align-items:flex-start}
 
-/* === QR nítido (usa .qr-wrap en el HTML actual) === */
-.back .qr-wrap{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-38%);
-  width: var(--qr, 34mm); height: var(--qr, 34mm);
-  background:#fff; border-radius:4mm; padding:3.2mm;
-  box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
-}
-.back .qr-wrap canvas{
-  width:100%; height:100%;
-  image-rendering: crisp-edges; image-rendering: pixelated;
-  display:block;
-}
-/* Sidebar: botones en columna, 100% de ancho y separación */
-.cred-sidebar .group .btn{ display:block; width:100%; margin-top:8px; }
-.cred-sidebar .group .btn:first-child{ margin-top:0; }
+/* Señal visual al arrastrar */
+.drag-ready{cursor:grab}
+.dragging{cursor:grabbing; outline:2px dashed rgba(255,255,255,.35); outline-offset:2px; border-radius:8px}
 
-/* Si usas una rejilla de herramientas */
-.toolbar{
-  display:grid; gap:10px;
-  grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+/* ---------- Print ---------- */
+@media print{
+  body{background:#fff}
+  .controls,.cred-sidebar{display:none}
+  .wrap{padding:0}
+  .sheet{gap:8mm; justify-content:flex-start}
+  .sheet .card{box-shadow:none}
+  @page{size:auto; margin:10mm}
 }

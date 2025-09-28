@@ -197,34 +197,36 @@
   });
 
   // Guardar credencial completa
+
   credForm.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    try{
-      const user = auth.currentUser;
-      if(!user) throw new Error("No hay usuario autenticado");
+  e.preventDefault();
+  try{
+    const user = auth.currentUser;
+    if(!user) throw new Error("No hay usuario autenticado");
 
-      const nombre = $('#nombreCred').value.trim();
-      const file   = $('#fotoCred').files[0];
-      if(!nombre) throw new Error("Completa el nombre");
-      if(!file)   throw new Error("Sube una foto");
+    const nombre = $('#nombreCred').value.trim();
+    const file   = $('#fotoCred').files[0];
+    if(!nombre) throw new Error("Completa el nombre");
+    if(!file)   throw new Error("Sube una foto");
 
-      const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
+    const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
 
-      const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
-      if (up.error) throw up.error;
+    const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
+    if (up.error) throw up.error;
 
-      const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
-      const foto_url = pub.publicUrl;
+    const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
+    const foto_url = pub.publicUrl;
 
-      await upsertCred(user.uid, user.email, nombre, foto_url);
-      setMsg(credMsg,"✅ Credencial guardada","success");
-      setTimeout(()=> location.href = "credenciales.html?view=carnet", 800);
-    }catch(err){
-      console.error(err);
-      setMsg(credMsg,"❌ "+(err.message||err),"error");
-    }
-  });
+    await upsertCred(user.uid, user.email, nombre, foto_url);
+    setMsg(credMsg,"✅ Credencial guardada","success");
+    setTimeout(()=> location.href = "credenciales.html?view=carnet", 800);
+  }catch(err){
+    console.error(err);
+    setMsg(credMsg,"❌ "+(err.message||err),"error");
+  }
+});
 </script>
+
 </body>
 </html>

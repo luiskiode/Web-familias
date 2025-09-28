@@ -56,7 +56,8 @@
  <!-- === LAYOUT 2 COL: SIDEBAR + PREVIEW === -->
 <main class="cred-layout">
   <!-- Sidebar -->
-  <aside class="cred-sidebar">
+  <aside id="editor" class="cred-sidebar">
+
     <div class="group">
       <h3>Acciones</h3>
       <button class="btn w-full" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
@@ -143,15 +144,9 @@
     <canvas id="qr"></canvas>
   </div>
 
-  <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="footer">CÁRITAS CNC</div>
-</section>
-
-  <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-  <div class="footer">CÁRITAS CNC</div>
-</section>
-    </div>
-  </section>
+</section></div>          <!-- cierra .sheet -->
+</section>   
 </main>
   <!-- Vista Admin -->
 <section id="admin" style="display:none; width:100%; max-width:980px">
@@ -229,43 +224,33 @@ async function drawQR(canvasId, url){
 }
 
 
-  // tamaño real del lienzo
-  c.width  = sizeCssPx * dpr;
-  c.height = sizeCssPx * dpr;
-  c.style.width  = sizeCssPx + "px";
-  c.style.height = sizeCssPx + "px";
-
-  // muchas libs de QR soportan toCanvas(canvas, texto, {width})
-  if (window.QRCode?.toCanvas) {
-    await QRCode.toCanvas(c, text, { width: sizeCssPx * dpr, margin: 0 });
-  } else if (window.QRCode) {
-    // fallback: algunas generan sobre un canvas interno → copiamos al nuestro
-    const tmp = document.createElement("canvas");
-    await QRCode.toCanvas(tmp, text, { width: sizeCssPx * dpr, margin: 0 });
-    const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.drawImage(tmp, 0, 0);
-  }
 }
-// QR robusto: respeta el tamaño de .qr-box, re-render en resize
+// QR robusto: respeta el tamaño del contenedor y DPR
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);
   const box = el?.parentElement;
   if (!el || !box) return;
 
-  const dpr = Math.max(2, Math.round(window.devicePixelRatio || 2));
+  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
 
   const render = () => {
-    let w = box.getBoundingClientRect().width;          // px visibles
+    let w = box.getBoundingClientRect().width;
     if (!w) {
-      // Fallback: leer --qr en mm y convertir a px (96dpi ≈ 3.78 px/mm)
-      const qrVar = getComputedStyle(document.documentElement).getPropertyValue('--qr').trim(); // ej. "34mm"
+      const qrVar = getComputedStyle(document.documentElement).getPropertyValue('--qr').trim();
       const mm    = parseFloat(qrVar) || 34;
-      w = mm * 3.7795;
+      w = mm * 3.7795; // mm → px
     }
-    const px = Math.max(80, Math.round(w * dpr));       // mínimo 80px * dpr
-    QR.toCanvas(el, url, { width: px, margin: 1 });
+    const px = Math.max(96, Math.round(w * dpr));
+    el.width = el.height = px;
+    el.style.width  = Math.round(w) + "px";
+    el.style.height = Math.round(w) + "px";
+    QR.toCanvas(el, url, { width: px, margin: 0 });
   };
+
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  render();
+  new ResizeObserver(render).observe(box);
+}
 
   // Espera a layout estable
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -273,7 +258,7 @@ async function drawQR(canvasId, url){
 
   // Re-render si cambia el tamaño del contenedor
   new ResizeObserver(() => render()).observe(box);
-}
+
     // Esperas Firebase (debe estar bootstrapped en <head>)
     function waitForAuth(timeout=12000){
       if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
@@ -333,7 +318,7 @@ async function drawQR(canvasId, url){
 
       // Reverso (QR a vista pública)
       const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await drawQR("qr", urlPublica);
+      await drawQR("qr", qrUrl);
 
     }
     // ---------- util ----------
