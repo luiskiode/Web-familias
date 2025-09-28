@@ -46,7 +46,11 @@
     window.CARITAS.auth = auth;
 
     document.dispatchEvent(new Event("firebase:ready:caritas"));
-    onAuthStateChanged(auth, () => document.dispatchEvent(new Event("firebase:ready:caritas")));
+    onAuthStateChanged(auth, async (user)=>{
+  if(!user){ /* redirige a login o muestra aviso */ return; }
+  await ensureLastCred(user);
+  await renderCarnet();
+});
   </script>
 
   <!-- ❌ Desactiva cualquier self-heal/health en esta página para evitar dobles inyecciones -->
@@ -182,11 +186,28 @@
       <circle cx="20" cy="20" r="6"/><circle cx="80" cy="20" r="6"/><circle cx="20" cy="80" r="6"/><circle cx="80" cy="80" r="6"/>
     </symbol>
   </svg>
-
+  
   <!-- Lógica: ESM, QR + Supabase + Firebase -->
  <script type="module">
-  import * as QR from "https://esm.sh/qrcode@1.5.3";
+    import * as QR from "https://esm.sh/qrcode@1.5.3";
+  // --- STATE: credencial del usuario ---
+let lastCred = null;
 
+// Carga (o crea) la credencial y llena lastCred
+async function ensureLastCred(user){
+  const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
+  // intenta obtener la pública
+  const data = await getPublicCred(user.uid);
+  if (data) { 
+    lastCred = data; 
+    return data; 
+  }
+  // si no existe, crea un registro mínimo
+  await upsertCred(user.uid, user.email, nombreBase, null);
+  const fresh = await getPublicCred(user.uid);
+  lastCred = fresh || { uid:user.uid, email:user.email, nombre:nombreBase, foto_url:null, rol:"Voluntario Cáritas CNC" };
+  return lastCred;
+}
   // Evita doble ejecución si el HTML se evalúa otra vez
   if (window.__CRED_INIT__) {
     console.debug("CRED: ya inicializado");
@@ -271,33 +292,35 @@ async function drawQR(canvasId, url){
       return data;
     }
 
-    // ========== Render (frente + reverso) ==========
-    async function renderCarnet(user){
-      const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Usuario";
+    async function renderCarnet(){
+  const user = auth.currentUser;
+  if(!user) return;
 
-      // Leer; si no existe, crear sin pisar foto y volver a leer
-      let data = await getPublicCred(user.uid).catch(()=>null);
-      if (!data){
-        await upsertCred(user.uid, user.email, nombreBase, null);
-        data = await getPublicCred(user.uid).catch(()=>null);
-      }
-      if(!data){ alert("❌ No se pudo cargar el carnet"); return; }
+  // asegúrate de tener datos en memoria
+  if (!lastCred) await ensureLastCred(user);
+  const c = lastCred || {};
+  
+  // fallbacks
+  const nombreSafe = c.nombre || user.displayName || (user.email||"").split("@")[0] || "Voluntario";
+  const emailSafe  = c.email  || user.email || "";
+  const rolSafe    = c.rol    || "Voluntario Cáritas CNC";
+  const codSafe    = c.codigo_verificacion || "";
 
-      const nombre = data.nombre || nombreBase;
-      lastCred = data;
+  // DOM
+  document.getElementById("nombreCarnet").textContent = esc(nombreSafe);
+  document.getElementById("emailCarnet").textContent  = esc(emailSafe);
+  document.getElementById("rolCarnet").textContent    = esc(rolSafe);
+  document.getElementById("codigoCarnet").textContent = esc(codSafe);
 
+  const foto = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
+  const img  = document.getElementById("fotoCarnet");
+  if (img) img.src = foto;
 
-      // Frente
-      document.getElementById("nombre").textContent = esc(nombre);
-      document.getElementById("rol").textContent    = esc(data.rol || "Voluntario Cáritas CNC");
-      document.getElementById("foto").src = data.foto_url
-        || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-
-      // Reverso (QR a vista pública)
-      const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
-      await drawQR("qr", qrUrl);
-
-    }
+  // QR
+  const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
+  await drawQR("qr", qrUrl);
+}
+    
     // ---------- util ----------
 const toast = (t)=> alert(t);
 function fitText(el, max=5.8, min=4.6){ // tamaños en mm
@@ -344,8 +367,9 @@ async function saveFoto(user, file){
 
   const nombre = (lastCred?.nombre || user.displayName || (user.email||"").split("@")[0] || "Usuario");
   await upsertCred(user.uid, user.email, nombre, foto_url); // enviamos nombre+foto nueva
-  lastCred = { ...(lastCred||{}), foto_url, nombre };
-  await renderCarnet(user);
+  // después de upsert/save
+  lastCred = { ...(lastCred||{}), nombre, foto_url };   // usa las variables reales que tengas
+  await renderCarnet();
   alert("✅ Foto actualizada");
 }
 
