@@ -14,20 +14,23 @@
   --surface:#1a0000;
   --surface-2:#2a0000;
 
-  /* credenciales: tamaño y presets */
-  --card-w:85.6mm;
-  --card-h:54mm;
-  --qr:34mm;
+  /* Tamaño CR80 vertical */
+  --card-w: 54mm;
+  --card-h: 85.6mm;
 
-  /* Foto (mm) – calibrables */
-  --cx:21mm;  /* centro X */
-  --cy:23mm;  /* centro Y */
-  --d:30mm;   /* diámetro */
+  /* Círculo de foto (se ajusta por diseño desde JS) */
+  --cx: 26mm;     /* centro X */
+  --cy: 21mm;     /* centro Y */
+  --d:  30mm;     /* diámetro */
 
-  /* Offsets movibles (mm) */
-  --brand-dx:0mm; --brand-dy:0mm;
-  --logo-dx:0mm;  --logo-dy:0mm;
-  --role-dx:0mm;  --role-dy:0mm;
+  /* Texto / medidas */
+  --name-size: 14px;
+  --role-size: 11px;
+
+  /* QR (se ajusta por diseño desde JS) */
+  --qr-size: 18mm;
+  --qr-x: 6mm;    /* separación al borde derecho */
+  --qr-y: 7mm;    /* separación al borde inferior */
 }
 
 /* ---------- Reset & base ---------- */
@@ -130,13 +133,11 @@ input:required,select:required{border-left:3px solid var(--primary)}
 }
 .front .photo img{width:100%; height:100%; object-fit:cover; filter:contrast(1.06) saturate(1.05)}
 
-/* Marca + nombre + rol */
+/* Fila marca + nombre + rol */
 .brand-row{
   position:absolute; left:50%; top:10mm; transform:translateX(-50%);
   display:grid; grid-auto-flow:column; align-items:center; gap:6mm; z-index:2;
-
-  /* Activa container queries para el ajuste fino del nombre */
-  container-type:inline-size; container-name:name;
+  container-type:inline-size; container-name:name; /* container queries */
 }
 .logo{width:11mm; height:11mm; object-fit:contain; display:block; position:relative; transform:translate(var(--logo-dx),var(--logo-dy))}
 .name{
@@ -164,15 +165,21 @@ input:required,select:required{border-left:3px solid var(--primary)}
   position:absolute; left:50%; top:8mm; transform:translateX(-50%);
   font-weight:900; font-size:6.2mm; letter-spacing:.4px; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.4)
 }
-/* Usar .qr-wrap en el HTML */
-.back .qr-wrap{
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-38%);
-  width:var(--qr); height:var(--qr);
-  background:#fff; border-radius:4mm; padding:3.2mm;
-  box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
-  display:grid; place-items:center;
+
+.qr-wrap{
+  position:absolute;
+  right:var(--qr-x);
+  bottom:var(--qr-y);
+  width:var(--qr-size);
+  height:var(--qr-size);
+  z-index:3;
+  background:transparent;
+  border-radius:6px;
+  display:grid;
+  place-items:center;
 }
-.back .qr-wrap canvas{width:100%; height:100%; image-rendering:crisp-edges; image-rendering:pixelated; display:block}
+.qr-wrap canvas{width:100%;height:100%}
+
 .back .footer{position:absolute; left:0; right:0; bottom:4mm; text-align:center; font-weight:700; letter-spacing:.6px; color:#fff}
 
 /* Plantilla de imagen (si usas PNG base) */
@@ -233,4 +240,23 @@ input:required,select:required{border-left:3px solid var(--primary)}
   .sheet{gap:8mm; justify-content:flex-start}
   .sheet .card{box-shadow:none}
   @page{size:auto; margin:10mm}
+}
+
+/* Foto (para la versión simple con .photo-wrap/.photo) */
+.photo-wrap{
+  position:absolute;
+  left:calc(var(--cx) - var(--d)/2);
+  top: calc(var(--cy) - var(--d)/2);
+  width:var(--d); height:var(--d);
+  border-radius:50%;
+  overflow:hidden;
+  display:grid;place-items:center;
+  z-index:2;
+}
+.photo{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
 }

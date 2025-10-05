@@ -11,15 +11,19 @@
     --card-w: 54mm;
     --card-h: 85.6mm;
 
-    /* Círculo de foto (preset centrado para tus plantillas) */
-    --cx: 26mm;       /* centro X */
-    --cy: 21mm;       /* centro Y */
-    --d:  30mm;       /* diámetro */
+    /* Círculo de foto (se ajusta por diseño desde JS) */
+    --cx: 26mm;     /* centro X */
+    --cy: 21mm;     /* centro Y */
+    --d:  30mm;     /* diámetro */
 
-    /* Tipografías y medidas */
+    /* Texto / medidas */
     --name-size: 14px;
     --role-size: 11px;
-    --qr: 34mm;
+
+    /* QR (se ajusta por diseño desde JS) */
+    --qr-size: 18mm;
+    --qr-x: 6mm;    /* separación al borde derecho */
+    --qr-y: 7mm;    /* separación al borde inferior */
   }
 
   *{box-sizing:border-box}
@@ -28,7 +32,7 @@
   main{max-width:1100px;margin:12px auto;padding:12px;display:grid;grid-template-columns:380px 1fr;gap:16px}
   @media(max-width:900px){main{grid-template-columns:1fr}}
 
-  /* Panel izquierdo (editor simple) */
+  /* Panel izquierdo */
   #side{
     background:rgba(255,255,255,.03);
     border:1px solid rgba(255,255,255,.08);
@@ -46,7 +50,7 @@
   #selector-diseno{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .75rem 0}
   #selector-diseno label{cursor:pointer}
 
-  /* Lienzo (frente+reverso) */
+  /* Lienzo */
   #sheet{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
   .card{
     position:relative;
@@ -64,7 +68,7 @@
     pointer-events:none;user-select:none;
   }
 
-  /* Foto circular */
+  /* Foto circular que LLENA el círculo */
   .photo-wrap{
     position:absolute;
     left:calc(var(--cx) - var(--d)/2);
@@ -75,7 +79,13 @@
     display:grid;place-items:center;
     z-index:2;
   }
-  .photo{width:100%;height:100%;object-fit:cover}
+  .photo{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+    display:block;
+  }
 
   /* Fila de marca (logo + nombre + rol) */
   .brand-row{
@@ -96,10 +106,18 @@
   body.tema-blanco .brand-row .name,
   body.tema-blanco .brand-row .role{color:#b10202}
 
-  /* QR (frente esquina inferior derecha sobre la franja) */
+  /* QR en su lugar (usa variables) */
   .qr-wrap{
-    position:absolute;right:4mm;bottom:4mm;width:var(--qr);height:var(--qr);z-index:3;
-    background:transparent;border-radius:6px;display:grid;place-items:center;
+    position:absolute;
+    right:var(--qr-x);
+    bottom:var(--qr-y);
+    width:var(--qr-size);
+    height:var(--qr-size);
+    z-index:3;
+    background:transparent;
+    border-radius:6px;
+    display:grid;
+    place-items:center;
   }
   .qr-wrap canvas{width:100%;height:100%}
 
@@ -112,14 +130,13 @@
   .btn.ghost{background:#fff;color:#111;border:1px solid #ccc}
   body.tema-blanco .btn.ghost{background:#111;color:#fff;border:1px solid #222}
 
-  /* Arrastre de elementos (nombre/rol/logo) */
   .draggable{cursor:move}
 </style>
 </head>
 
 <body class="tema-negro">
 <main>
-  <!-- === PANEL IZQUIERDO (MODO SIMPLE) === -->
+  <!-- PANEL IZQUIERDO -->
   <section id="side">
     <h2>Credencial – Modo Simple</h2>
 
@@ -132,19 +149,11 @@
     </div>
 
     <!-- Datos -->
-    <div class="row">
-      <label for="input-nombre"><strong>Nombre</strong></label>
-    </div>
-    <div class="row">
-      <input id="input-nombre" type="text" placeholder="Nombre y Apellido" autocomplete="name" />
-    </div>
+    <div class="row"><label for="input-nombre"><strong>Nombre</strong></label></div>
+    <div class="row"><input id="input-nombre" type="text" placeholder="Nombre y Apellido" autocomplete="name" /></div>
 
-    <div class="row">
-      <label for="input-foto"><strong>Foto</strong></label>
-    </div>
-    <div class="row">
-      <input id="input-foto" type="file" accept="image/*" />
-    </div>
+    <div class="row"><label for="input-foto"><strong>Foto</strong></label></div>
+    <div class="row"><input id="input-foto" type="file" accept="image/*" /></div>
 
     <div class="actions">
       <button id="btn-guardar-layout" class="btn ghost">📏 Guardar layout</button>
@@ -153,7 +162,7 @@
     <p class="muted">Arrastra el bloque del nombre (o usa <kbd>ALT</kbd> + flechas) para ajuste fino.</p>
   </section>
 
-  <!-- === LIENZO (FRENTE + REVERSO) === -->
+  <!-- LIENZO (FRENTE + REVERSO) -->
   <section id="canvas">
     <div id="sheet">
       <!-- Frente -->
@@ -170,7 +179,7 @@
         <div class="qr-wrap"><canvas id="qr"></canvas></div>
       </article>
 
-      <!-- Reverso (opcional; si no hay plantilla, quedará vacío) -->
+      <!-- Reverso (opcional) -->
       <article id="card-back" class="card gafete">
         <img id="tpl-img-back" class="template" alt="plantilla reverso" src="assets/plantillas/cred-reverso.png" />
       </article>
@@ -178,46 +187,33 @@
   </section>
 </main>
 
-<!-- === CÓDIGO PRINCIPAL === -->
+<!-- CÓDIGO PRINCIPAL -->
 <script type="module">
-/* Librerías ESM */
+/* Libs ESM */
 import QR from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
 import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 /* Estado */
-let lastCred = null;              // cache de datos de la credencial
+let lastCred = null;
 const LS = window.localStorage;
 const $  = (q,root=document)=>root.querySelector(q);
 
-/* Utilidad: set CSS var en :root */
-function setVar(name, val){
-  document.documentElement.style.setProperty(name, val);
-}
+/* Utils */
+function setVar(name, val){ document.documentElement.style.setProperty(name, val); }
 
-/* ======================
-   BACKEND (opcional)
-   Intenta usar tus funciones si existen; si no, no rompe.
-====================== */
+/* Backend (fallbacks seguros) */
 async function upsertCred(uid, email, nombre, fotoUrl){
-  try{
-    if (window.upsertCred) return await window.upsertCred(uid,email,nombre,fotoUrl);
-  }catch(e){}
-  // fallback local
+  try{ if (window.upsertCred) return await window.upsertCred(uid,email,nombre,fotoUrl); }catch(e){}
   lastCred = { uid, email, nombre, foto_url: fotoUrl, rol:"Voluntario Cáritas CNC" };
   return lastCred;
 }
 async function getPublicCred(uid){
-  try{
-    if (window.getPublicCred) return await window.getPublicCred(uid);
-  }catch(e){}
-  // fallback local
+  try{ if (window.getPublicCred) return await window.getPublicCred(uid); }catch(e){}
   return lastCred;
 }
 
-/* ======================
-   LÓGICA DE RENDER
-====================== */
+/* Render */
 async function ensureLastCred(user){
   if (lastCred && lastCred.uid===user.uid) return lastCred;
   const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
@@ -225,7 +221,6 @@ async function ensureLastCred(user){
   lastCred = await getPublicCred(user?.uid) || lastCred || { nombre:nombreBase, rol:"Voluntario Cáritas CNC" };
   return lastCred;
 }
-
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);
   const box = el?.parentElement;
@@ -235,7 +230,7 @@ async function drawQR(canvasId, url){
   const render = () => {
     let w = box.getBoundingClientRect().width;
     if (!w) {
-      const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr')) || 34;
+      const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr-size')) || 18;
       w = mm * 3.7795; // mm → px
     }
     const px = Math.max(96, Math.round(w * dpr));
@@ -247,9 +242,9 @@ async function drawQR(canvasId, url){
 
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   render();
-  new ResizeObserver(render).observe(box);
+  if (window.ResizeObserver) new ResizeObserver(render).observe(box);
+  else window.addEventListener("resize", render);
 }
-
 async function renderCarnet(){
   const auth = window.CARITAS?.auth;
   const user = auth?.currentUser || null;
@@ -260,35 +255,19 @@ async function renderCarnet(){
   const nombreSafe = c.nombre || user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
   const rolSafe    = c.rol    || "Voluntario Cáritas CNC";
 
-  const elNombre = $("#nombre");
-  const elRol    = $("#rol");
-  const elFoto   = $("#foto");
-
-  if (elNombre) elNombre.textContent = nombreSafe;
-  if (elRol)    elRol.textContent    = rolSafe;
-
-  if (elFoto) {
-    elFoto.src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
-  }
+  $("#nombre").textContent = nombreSafe;
+  $("#rol").textContent    = rolSafe;
+  $("#foto").src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
 
   const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
   await drawQR("qr", qrUrl);
 }
 
-/* ======================
-   CONMUTADOR BLANCO/NEGRO
-====================== */
+/* Conmutador BLANCO/NEGRO con presets */
 const TPLS = {
-  blanco: {
-    front: "assets/plantillas/cred-frente-blanco.png",
-    back:  "assets/plantillas/cred-reverso.png" // opcional
-  },
-  negro:  {
-    front: "assets/plantillas/cred-frente-negro.png",
-    back:  "assets/plantillas/cred-reverso.png" // opcional
-  }
+  blanco: { front: "assets/plantillas/cred-frente-blanco.png", back: "assets/plantillas/cred-reverso.png" },
+  negro:  { front: "assets/plantillas/cred-frente-negro.png",  back: "assets/plantillas/cred-reverso.png" }
 };
-
 function setDiseno(key){
   const tpl = TPLS[key] || TPLS.blanco;
   const frontImg = $("#tpl-img-front");
@@ -296,11 +275,33 @@ function setDiseno(key){
   if (frontImg) frontImg.src = tpl.front;
   if (backImg)  backImg.src  = tpl.back || "";
 
+  // Tema UI
   document.body.classList.toggle("tema-negro",  key==="negro");
   document.body.classList.toggle("tema-blanco", key==="blanco");
+
+  // ====== PRESETS por diseño ======
+  if (key === "negro"){
+    /* Plantilla negra */
+    setVar("--cx", "27.3mm");
+    setVar("--cy", "18.2mm");
+    setVar("--d",  "33.8mm");   // un poco + grande para cubrir el borde del círculo
+
+    setVar("--qr-size", "18.5mm");
+    setVar("--qr-x",    "6mm"); // separaciones al borde
+    setVar("--qr-y",    "7mm");
+  } else {
+    /* Plantilla blanca */
+    setVar("--cx", "28.0mm");
+    setVar("--cy", "22.0mm");
+    setVar("--d",  "33.0mm");
+
+    setVar("--qr-size", "19mm");
+    setVar("--qr-x",    "7mm");
+    setVar("--qr-y",    "8mm");
+  }
+  // =================================
   LS.setItem("cred_diseno", key);
 }
-
 function initDiseno(){
   const radios = [...document.querySelectorAll('input[name="diseno"]')];
   const params = new URLSearchParams(location.search);
@@ -314,7 +315,6 @@ function initDiseno(){
   radios.forEach(r => r.addEventListener("change", e => {
     if (e.target.checked) setDiseno(e.target.value);
   }));
-
   window.addEventListener("keydown", (ev) => {
     if (ev.key.toLowerCase() !== "t") return;
     const cur = LS.getItem("cred_diseno") || "negro";
@@ -325,42 +325,38 @@ function initDiseno(){
   });
 }
 
-/* ======================
-   ENTRADAS (nombre + foto)
-====================== */
+/* Entradas */
 function initInputs(){
   const inNombre = $("#input-nombre");
-  const elNombre = $("#nombre");
   inNombre?.addEventListener("input", () => {
     const v = inNombre.value.trim() || "—";
-    if (elNombre) elNombre.textContent = v;
+    $("#nombre").textContent = v;
     if (lastCred) lastCred.nombre = v;
   });
 
   const inFoto = $("#input-foto");
-  inFoto?.addEventListener("change", async (e) => {
+  let lastBlobUrl = null;
+  inFoto?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    $("#foto").src = url;
-    if (lastCred) lastCred.foto_url = url;
+    if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+    lastBlobUrl = URL.createObjectURL(file);
+    $("#foto").src = lastBlobUrl;
+    if (lastCred) lastCred.foto_url = lastBlobUrl;
   });
 }
 
-/* ======================
-   MOVER (drag + ALT+flechas) y GUARDAR LAYOUT
-====================== */
+/* Movimiento fino + Guardar layout */
 function px(n){ return Number(n.toFixed(2)); }
 function initMove(){
   const brand = $("#brand-front");
   brand?.classList.add("draggable");
 
   // Drag
-  let dragging=false, dx=0, dy=0, startX=0, startY=0;
+  let dragging=false, dx=0, dy=0;
   brand?.addEventListener("pointerdown",(e)=>{
     dragging=true;brand.setPointerCapture(e.pointerId);
-    const r = brand.getBoundingClientRect();
-    startX=r.left; startY=r.top; dx=e.clientX; dy=e.clientY;
+    dx=e.clientX; dy=e.clientY;
   });
   brand?.addEventListener("pointermove",(e)=>{
     if(!dragging) return;
@@ -370,12 +366,11 @@ function initMove(){
   });
   const endDrag = (e)=>{
     if(!dragging) return; dragging=false; brand.releasePointerCapture?.(e.pointerId);
-    // Persistimos como offset css variables? Simple: dejamos transform aplicado.
   };
   brand?.addEventListener("pointerup", endDrag);
   brand?.addEventListener("pointercancel", endDrag);
 
-  // ALT + flechas (ajuste fino del contenedor brand)
+  // ALT + flechas
   window.addEventListener("keydown",(e)=>{
     if(!e.altKey) return;
     const st = getComputedStyle(brand);
@@ -395,10 +390,10 @@ function initMove(){
     brand.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
   });
 
-  // Guardar layout (vars globales + transform del brand)
+  // Guardar layout
   $("#btn-guardar-layout")?.addEventListener("click", ()=>{
     const root = getComputedStyle(document.documentElement);
-    const vars = ["--cx","--cy","--d","--card-w","--card-h","--qr"];
+    const vars = ["--cx","--cy","--d","--card-w","--card-h","--qr-size","--qr-x","--qr-y"];
     const obj = Object.fromEntries(vars.map(v => [v, root.getPropertyValue(v).trim()]));
     obj.brandTransform = getComputedStyle(brand).transform;
     LS.setItem("cred_layout", JSON.stringify(obj));
@@ -418,9 +413,7 @@ function initMove(){
   }catch(e){}
 }
 
-/* ======================
-   DESCARGA PNG (frente+reverso)
-====================== */
+/* Descarga PNG */
 async function descargarPNG(){
   const node = document.getElementById("sheet");
   const scale = Math.max(2, Math.round(window.devicePixelRatio||1));
@@ -436,11 +429,8 @@ async function descargarPNG(){
   a.click();
 }
 
-/* ======================
-   INICIALIZACIÓN
-====================== */
+/* Init */
 function initAuthBinding(){
-  // Cuando Firebase avise que está listo en window.CARITAS
   document.addEventListener("firebase:ready:caritas", () => {
     const auth = window.CARITAS?.auth;
     if (!auth) return;
@@ -451,14 +441,12 @@ function initAuthBinding(){
     });
   });
 }
-
 function init(){
   initDiseno();
   initInputs();
   initMove();
   initAuthBinding();
   renderCarnet();
-
   $("#btn-descargar")?.addEventListener("click", descargarPNG);
 }
 init();
