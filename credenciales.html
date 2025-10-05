@@ -47,7 +47,7 @@
   .muted{opacity:.7;font-size:.88rem}
 
   /* Selector blanco/negro */
-  #selector-diseno{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .75rem 0}
+  #selector-diseno{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .5rem 0}
   #selector-diseno label{cursor:pointer}
 
   /* Lienzo */
@@ -87,21 +87,16 @@
     display:block;
   }
 
-  /* Fila de marca (logo + nombre + rol) */
+  /* Fila de nombre + rol (sin logo) */
   .brand-row{
     position:absolute;left:8mm;top:52mm;right:14mm;
-    display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;z-index:3;
-  }
-  .brand-row .logo{
-    width:16mm;aspect-ratio:1;border-radius:4px;
-    background:#b10202;display:grid;place-items:center;
-    color:#fff;font-weight:800;font-size:12px;user-select:none;
+    display:flex;flex-direction:column;gap:2px;align-items:flex-start;z-index:3;
   }
   .brand-row .name{
     margin:0;font-weight:800;font-size:var(--name-size);line-height:1.15;color:#fff;
   }
   .brand-row .role{
-    margin:.15rem 0 0 0;font-weight:600;font-size:var(--role-size);opacity:.9;color:#fff
+    margin:0;font-weight:600;font-size:var(--role-size);opacity:.9;color:#fff
   }
   body.tema-blanco .brand-row .name,
   body.tema-blanco .brand-row .role{color:#b10202}
@@ -119,6 +114,7 @@
     display:grid;
     place-items:center;
   }
+  .qr-wrap.hidden{display:none}
   .qr-wrap canvas{width:100%;height:100%}
 
   /* Botonera */
@@ -148,6 +144,11 @@
       <span class="muted">(atajo: tecla “T”)</span>
     </div>
 
+    <!-- Mostrar/ocultar QR trasero -->
+    <div class="row" style="gap:10px">
+      <label><input id="toggle-qr" type="checkbox" checked> Mostrar QR atrás</label>
+    </div>
+
     <!-- Datos -->
     <div class="row"><label for="input-nombre"><strong>Nombre</strong></label></div>
     <div class="row"><input id="input-nombre" type="text" placeholder="Nombre y Apellido" autocomplete="name" /></div>
@@ -160,8 +161,9 @@
       <button id="btn-descargar" class="btn primary">⬇️ Descargar PNG</button>
     </div>
     <p class="muted">
-      Arrastra el bloque del nombre (o usa <kbd>ALT</kbd> + flechas) para moverlo.
-      Para la <strong>FOTO</strong>: <kbd>Ctrl</kbd> + Flechas (mover), <kbd>Ctrl</kbd> + <kbd>=</kbd>/<kbd>-</kbd> (zoom).
+      <strong>Nombre</strong>: arrastra o usa <kbd>ALT</kbd> + flechas.
+      <br><strong>Foto</strong>: <kbd>Ctrl</kbd> + Flechas (mover), <kbd>Ctrl</kbd> + <kbd>=</kbd>/<kbd>-</kbd> (zoom).
+      <br><strong>QR atrás</strong>: arrastra o <kbd>ALT</kbd> + flechas (cuando está visible).
     </p>
   </section>
 
@@ -173,18 +175,15 @@
         <img id="tpl-img-front" class="template" alt="plantilla frente" src="assets/plantillas/cred-frente-negro.png" />
         <div class="photo-wrap"><img id="foto" class="photo" alt="foto" src="" /></div>
         <div id="brand-front" class="brand-row draggable">
-          <div class="logo">✚</div>
-          <div>
-            <h3 id="nombre" class="name">Voluntario</h3>
-            <p id="rol" class="role">Voluntario Cáritas CNC</p>
-          </div>
+          <h3 id="nombre" class="name">Voluntario</h3>
+          <p id="rol" class="role">Voluntario Cáritas CNC</p>
         </div>
       </article>
 
-      <!-- Reverso (CON QR) -->
+      <!-- Reverso (QR opcional y movible) -->
       <article id="card-back" class="card gafete">
         <img id="tpl-img-back" class="template" alt="plantilla reverso" src="assets/plantillas/cred-reverso.png" />
-        <div class="qr-wrap"><canvas id="qr-back"></canvas></div>
+        <div id="qr-wrap" class="qr-wrap draggable"><canvas id="qr-back"></canvas></div>
       </article>
     </div>
   </section>
@@ -264,9 +263,14 @@ async function renderCarnet(){
   $("#rol").textContent    = rolSafe;
   $("#foto").src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
 
-  // QR SOLO EN EL REVERSO
-  const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
-  await drawQR("qr-back", qrUrl);
+  const qrWrap = $("#qr-wrap");
+  const showQR = $("#toggle-qr")?.checked;
+  qrWrap?.classList.toggle("hidden", !showQR);
+
+  if (showQR){
+    const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
+    await drawQR("qr-back", qrUrl);
+  }
 }
 
 /* Conmutador BLANCO/NEGRO con presets (foto + QR trasero) */
@@ -288,7 +292,7 @@ function setDiseno(key){
   if (key === "negro"){
     setVar("--cx", "27.6mm");
     setVar("--cy", "18.3mm");
-    setVar("--d",  "34.2mm");   // un toque mayor para cubrir el borde interno
+    setVar("--d",  "34.2mm");
 
     setVar("--qr-size", "18.5mm");
     setVar("--qr-x",    "6mm");
@@ -315,7 +319,7 @@ function initDiseno(){
   setDiseno(initial);
 
   radios.forEach(r => r.addEventListener("change", e => {
-    if (e.target.checked) setDiseno(e.target.value);
+    if (e.target.checked) setDiseno(e.target.value), renderCarnet();
   }));
   window.addEventListener("keydown", (ev) => {
     if (ev.key.toLowerCase() !== "t") return;
@@ -324,6 +328,7 @@ function initDiseno(){
     const radio = radios.find(r => r.value===next);
     if (radio) radio.checked = true;
     setDiseno(next);
+    renderCarnet();
   });
 }
 
@@ -335,6 +340,8 @@ function initInputs(){
     $("#nombre").textContent = v;
     if (lastCred) lastCred.nombre = v;
   });
+
+  $("#toggle-qr")?.addEventListener("change", () => renderCarnet());
 
   const inFoto = $("#input-foto");
   let lastBlobUrl = null;
@@ -348,52 +355,59 @@ function initInputs(){
   });
 }
 
-/* Movimiento fino (brand) + Foto por teclado + Guardar layout */
+/* Movimiento fino (brand y QR) + Foto por teclado + Guardar layout */
 function px(n){ return Number(n.toFixed(2)); }
 function initMove(){
   const brand = $("#brand-front");
+  const qrBox = $("#qr-wrap");
   brand?.classList.add("draggable");
+  qrBox?.classList.add("draggable");
 
-  // Drag brand
-  let dragging=false, dx=0, dy=0;
-  brand?.addEventListener("pointerdown",(e)=>{
-    dragging=true;brand.setPointerCapture(e.pointerId);
-    dx=e.clientX; dy=e.clientY;
-  });
-  brand?.addEventListener("pointermove",(e)=>{
-    if(!dragging) return;
-    const diffX = e.clientX - dx;
-    const diffY = e.clientY - dy;
-    brand.style.transform = `translate(${px(diffX)}px, ${px(diffY)}px)`;
-  });
-  const endDrag = (e)=>{
-    if(!dragging) return; dragging=false; brand.releasePointerCapture?.(e.pointerId);
+  // Drag genérico
+  const makeDrag = (el)=>{
+    if (!el) return;
+    let dragging=false, dx=0, dy=0;
+    el.addEventListener("pointerdown",(e)=>{
+      dragging=true;el.setPointerCapture(e.pointerId);
+      dx=e.clientX; dy=e.clientY;
+    });
+    el.addEventListener("pointermove",(e)=>{
+      if(!dragging) return;
+      const diffX = e.clientX - dx;
+      const diffY = e.clientY - dy;
+      el.style.transform = `translate(${px(diffX)}px, ${px(diffY)}px)`;
+    });
+    const endDrag = (e)=>{
+      if(!dragging) return; dragging=false; el.releasePointerCapture?.(e.pointerId);
+    };
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
   };
-  brand?.addEventListener("pointerup", endDrag);
-  brand?.addEventListener("pointercancel", endDrag);
+  makeDrag(brand);
+  makeDrag(qrBox);
 
-  // ALT + flechas: mover brand
+  // ALT + flechas: mover brand o QR si está visible (prioriza QR si visible y el puntero está sobre él)
   window.addEventListener("keydown",(e)=>{
-    if(e.altKey){
-      const st = getComputedStyle(brand);
-      const m = st.transform.match(/matrix\(([^)]+)\)/);
-      let tx=0, ty=0;
-      if(m){
-        const arr = m[1].split(",").map(Number);
-        tx = arr[4]||0; ty = arr[5]||0;
-      }
-      const step = e.shiftKey ? 2 : 0.5;
-      if(e.key==="ArrowLeft"){ tx-=step; }
-      else if(e.key==="ArrowRight"){ tx+=step; }
-      else if(e.key==="ArrowUp"){ ty-=step; }
-      else if(e.key==="ArrowDown"){ ty+=step; }
-      else return;
-      e.preventDefault();
-      brand.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
+    if(!e.altKey) return;
+    const target = (!qrBox?.classList.contains("hidden")) ? qrBox : brand;
+    const st = getComputedStyle(target);
+    const m = st.transform.match(/matrix\(([^)]+)\)/);
+    let tx=0, ty=0;
+    if(m){
+      const arr = m[1].split(",").map(Number);
+      tx = arr[4]||0; ty = arr[5]||0;
     }
+    const step = e.shiftKey ? 2 : 0.5;
+    if(e.key==="ArrowLeft"){ tx-=step; }
+    else if(e.key==="ArrowRight"){ tx+=step; }
+    else if(e.key==="ArrowUp"){ ty-=step; }
+    else if(e.key==="ArrowDown"){ ty+=step; }
+    else return;
+    e.preventDefault();
+    target.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
   });
 
-  // CTRL + flechas: mover centro de FOTO (—cx, cy—)
+  // CTRL + flechas: mover centro de FOTO (—cx, cy—) y zoom
   window.addEventListener("keydown",(e)=>{
     if(!e.ctrlKey) return;
     const step = e.shiftKey ? 2 : 0.5; // mm
@@ -423,6 +437,8 @@ function initMove(){
     const vars = ["--cx","--cy","--d","--card-w","--card-h","--qr-size","--qr-x","--qr-y"];
     const obj = Object.fromEntries(vars.map(v => [v, root.getPropertyValue(v).trim()]));
     obj.brandTransform = getComputedStyle(brand).transform;
+    obj.qrTransform    = getComputedStyle(qrBox).transform;
+    obj.qrVisible      = !qrBox.classList.contains("hidden");
     LS.setItem("cred_layout", JSON.stringify(obj));
     alert("Layout guardado.");
   });
@@ -434,6 +450,8 @@ function initMove(){
       const obj = JSON.parse(raw);
       Object.entries(obj).forEach(([k,v])=>{
         if(k==="brandTransform"){ brand.style.transform = v || "none"; }
+        else if(k==="qrTransform"){ qrBox.style.transform = v || "none"; }
+        else if(k==="qrVisible"){ $("#toggle-qr").checked = !!v; qrBox.classList.toggle("hidden", !v); }
         else if(k.startsWith("--")) setVar(k, v);
       });
     }
