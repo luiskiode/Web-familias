@@ -11,7 +11,7 @@
     --card-w: 54mm;
     --card-h: 85.6mm;
 
-    /* Círculo de foto (se ajusta por diseño desde JS) */
+    /* Círculo de foto (se ajusta por diseño) */
     --cx: 26mm;     /* centro X */
     --cy: 21mm;     /* centro Y */
     --d:  30mm;     /* diámetro */
@@ -51,21 +51,22 @@
   .selectors .line{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
   .selectors label{cursor:pointer}
 
+  /* Botones */
+  .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+  .btn{appearance:none;border:0;border-radius:12px;padding:.6rem .9rem;font-weight:700;cursor:pointer}
+  .btn.primary{background:#b10202;color:#fff}
+  .btn.ghost{background:#fff;color:#111;border:1px solid #ccc}
+  body.tema-blanco .btn.ghost{background:#111;color:#fff;border:1px solid #222}
+
   /* Lienzo */
   #sheet{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
   .card{
-    position:relative;
-    width:var(--card-w);
-    height:var(--card-h);
-    border-radius:12px;
-    overflow:hidden;
-    box-shadow:0 8px 30px rgba(0,0,0,.35);
-    background:#111;
-    isolation:isolate;
+    position:relative;width:var(--card-w);height:var(--card-h);
+    border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35);
+    background:#111;isolation:isolate;
   }
   .card img.template{
-    position:absolute;inset:0;
-    width:100%;height:100%;object-fit:cover;z-index:0;
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
     pointer-events:none;user-select:none;
   }
 
@@ -74,58 +75,28 @@
     position:absolute;
     left:calc(var(--cx) - var(--d)/2);
     top: calc(var(--cy) - var(--d)/2);
-    width:var(--d); height:var(--d);
-    border-radius:50%;
-    overflow:hidden;
-    display:grid;place-items:center;
-    z-index:2;
+    width:var(--d);height:var(--d);
+    border-radius:50%;overflow:hidden;display:grid;place-items:center;z-index:2;
   }
-  .photo{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    object-position:center;
-    display:block;
-  }
+  .photo{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 
-  /* Fila de nombre + rol (sin logo) */
+  /* Fila de nombre + rol */
   .brand-row{
     position:absolute;left:8mm;top:52mm;right:14mm;
     display:flex;flex-direction:column;gap:2px;align-items:flex-start;z-index:3;
   }
-  .brand-row .name{
-    margin:0;font-weight:800;font-size:var(--name-size);line-height:1.15;color:#fff;
-  }
-  .brand-row .role{
-    margin:0;font-weight:600;font-size:var(--role-size);opacity:.9;color:#fff
-  }
-  body.tema-blanco .brand-row .name,
-  body.tema-blanco .brand-row .role{color:#b10202}
+  .brand-row .name{margin:0;font-weight:800;font-size:var(--name-size);line-height:1.15;color:#fff}
+  .brand-row .role{margin:0;font-weight:600;font-size:var(--role-size);opacity:.9;color:#fff}
+  body.tema-blanco .brand-row .name, body.tema-blanco .brand-row .role{color:#b10202}
 
   /* QR (SOLO REVERSO) */
   .qr-wrap{
-    position:absolute;
-    right:var(--qr-x);
-    bottom:var(--qr-y);
-    width:var(--qr-size);
-    height:var(--qr-size);
-    z-index:3;
-    background:transparent;
-    border-radius:6px;
-    display:grid;
-    place-items:center;
+    position:absolute;right:var(--qr-x);bottom:var(--qr-y);
+    width:var(--qr-size);height:var(--qr-size);z-index:3;
+    background:transparent;border-radius:6px;display:grid;place-items:center;
   }
   .qr-wrap.hidden{display:none}
   .qr-wrap canvas{width:100%;height:100%}
-
-  /* Botonera */
-  .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
-  .btn{
-    appearance:none;border:0;border-radius:12px;padding:.6rem .9rem;font-weight:700;cursor:pointer;
-  }
-  .btn.primary{background:#b10202;color:#fff}
-  .btn.ghost{background:#fff;color:#111;border:1px solid #ccc}
-  body.tema-blanco .btn.ghost{background:#111;color:#fff;border:1px solid #222}
 
   .draggable{cursor:move}
 </style>
@@ -170,11 +141,14 @@
     <div class="actions">
       <button id="btn-guardar-layout" class="btn ghost">📏 Guardar layout</button>
       <button id="btn-descargar" class="btn primary">⬇️ Descargar PNG</button>
+      <button id="btn-logout" class="btn ghost" style="margin-left:auto;display:none">Cerrar sesión</button>
     </div>
+
     <p class="muted">
       <strong>Nombre</strong>: arrastra o usa <kbd>ALT</kbd> + flechas.
       <br><strong>Foto</strong>: <kbd>Ctrl</kbd> + Flechas (mover), <kbd>Ctrl</kbd> + <kbd>=</kbd>/<kbd>-</kbd> (zoom).
       <br><strong>QR atrás</strong>: arrastra o <kbd>ALT</kbd> + flechas (cuando está visible).
+      <br>Todo queda guardado automáticamente (local).
     </p>
   </section>
 
@@ -191,7 +165,7 @@
         </div>
       </article>
 
-      <!-- Reverso (QR opcional y movible) -->
+      <!-- Reverso -->
       <article id="card-back" class="card gafete">
         <img id="tpl-img-back" class="template" alt="plantilla reverso" src="assets/plantillas/cred-reverso.png" />
         <div id="qr-wrap" class="qr-wrap draggable"><canvas id="qr-back"></canvas></div>
@@ -205,19 +179,67 @@
 /* Libs ESM */
 import QR from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
 import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
-/* Estado */
+/* Estado y utilidades */
 let lastCred = null;
 const LS = window.localStorage;
+const STORAGE_KEY = "cred_data";     // nombre, rol, foto, toggles, diseños
+const LAYOUT_KEY  = "cred_layout";   // css vars y transforms
 const $  = (q,root=document)=>root.querySelector(q);
-
-/* Utils */
-function setVar(name, val){ document.documentElement.style.setProperty(name, val); }
+const setVar = (n,v)=>document.documentElement.style.setProperty(n,v);
 const mm = (v)=>parseFloat(String(v).replace("mm","")) || 0;
-function setVarMM(name, val){ setVar(name, `${val.toFixed(2)}mm`); }
+const setVarMM=(n,val)=>setVar(n, `${val.toFixed(2)}mm`);
 
-/* Backend (fallbacks seguros) */
+/* ====== PERSISTENCIA LOCAL ====== */
+function loadLocal(){
+  try{ return JSON.parse(LS.getItem(STORAGE_KEY)||"{}"); }catch{ return {}; }
+}
+function saveLocal(patch){
+  const now = loadLocal();
+  const next = {...now, ...patch};
+  try{ LS.setItem(STORAGE_KEY, JSON.stringify(next)); }catch(e){ console.warn("localStorage lleno", e); }
+}
+function restoreFromLocal(){
+  const d = loadLocal();
+  // datos
+  if (d.nombre) $("#nombre").textContent = d.nombre, $("#input-nombre").value = d.nombre;
+  if (d.rol)    $("#rol").textContent    = d.rol;
+  if (d.fotoDataUrl) $("#foto").src = d.fotoDataUrl;
+  // toggles
+  if (typeof d.showQR === "boolean") $("#toggle-qr").checked = d.showQR;
+  // plantillas
+  if (d.frontDesign) setDisenoFrente(d.frontDesign);
+  if (d.backDesign)  setDisenoReverso(d.backDesign);
+}
+
+/* Comprime imagen a DataURL (para guardar en LS sin pasarte de 5MB) */
+function fileToDataURL(file, maxSize=800){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        const ctx = c.getContext("2d");
+        const minSide = Math.min(img.width, img.height);
+        // recorte cuadrado centrado
+        const sx = (img.width  - minSide)/2;
+        const sy = (img.height - minSide)/2;
+        const out = Math.min(maxSize, minSide);
+        c.width = c.height = out;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, out, out);
+        resolve(c.toDataURL("image/jpeg", 0.86));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ====== BACKEND (fallbacks seguros) ====== */
 async function upsertCred(uid, email, nombre, fotoUrl){
   try{ if (window.upsertCred) return await window.upsertCred(uid,email,nombre,fotoUrl); }catch(e){}
   lastCred = { uid, email, nombre, foto_url: fotoUrl, rol:"Voluntario Cáritas CNC" };
@@ -228,9 +250,9 @@ async function getPublicCred(uid){
   return lastCred;
 }
 
-/* Render */
+/* ====== RENDER ====== */
 async function ensureLastCred(user){
-  if (lastCred && lastCred.uid===user.uid) return lastCred;
+  if (lastCred && lastCred.uid===user?.uid) return lastCred;
   const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
   await upsertCred(user?.uid, user?.email, nombreBase, null);
   lastCred = await getPublicCred(user?.uid) || lastCred || { nombre:nombreBase, rol:"Voluntario Cáritas CNC" };
@@ -264,27 +286,39 @@ async function renderCarnet(){
   const auth = window.CARITAS?.auth;
   const user = auth?.currentUser || null;
 
+  // backend (si existe) + local
   if (user && !lastCred) await ensureLastCred(user);
-  const c = lastCred || {};
 
-  const nombreSafe = c.nombre || user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
-  const rolSafe    = c.rol    || "Voluntario Cáritas CNC";
+  // primero restaurar LS (tiene prioridad visual)
+  restoreFromLocal();
+  const d = loadLocal();
 
-  $("#nombre").textContent = nombreSafe;
-  $("#rol").textContent    = rolSafe;
-  $("#foto").src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
+  // nombre/rol fallback
+  if (!d.nombre){
+    const n = lastCred?.nombre || user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
+    $("#nombre").textContent = n;
+    $("#input-nombre").value = n;
+    saveLocal({nombre:n});
+  }
+  if (!d.rol && lastCred?.rol){
+    $("#rol").textContent = lastCred.rol;
+    saveLocal({rol:lastCred.rol});
+  }
+  if (!d.fotoDataUrl && lastCred?.foto_url){
+    $("#foto").src = lastCred.foto_url;
+  }
 
+  // QR sólo reverso
   const qrWrap = $("#qr-wrap");
   const showQR = $("#toggle-qr")?.checked;
   qrWrap?.classList.toggle("hidden", !showQR);
-
   if (showQR){
     const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
     await drawQR("qr-back", qrUrl);
   }
 }
 
-/* Conmutadores de plantillas */
+/* ====== CONMUTADORES (frente y reverso) ====== */
 const FRONT_TPLS = {
   blanco: "assets/plantillas/cred-frente-blanco.png",
   negro:  "assets/plantillas/cred-frente-negro.png",
@@ -295,165 +329,125 @@ const BACK_TPLS = {
 };
 
 function setDisenoFrente(key){
-  const src = FRONT_TPLS[key] || FRONT_TPLS.blanco;
   const frontImg = $("#tpl-img-front");
-  if (frontImg) frontImg.src = src;
+  if (frontImg) frontImg.src = FRONT_TPLS[key] || FRONT_TPLS.blanco;
 
   document.body.classList.toggle("tema-negro",  key==="negro");
   document.body.classList.toggle("tema-blanco", key==="blanco");
 
-  /* PRESETS por diseño (foto) */
+  // Presets de foto por diseño
   if (key === "negro"){
-    setVar("--cx", "27.6mm");
-    setVar("--cy", "18.3mm");
-    setVar("--d",  "34.2mm");
+    setVar("--cx", "27.6mm"); setVar("--cy", "18.3mm"); setVar("--d",  "34.2mm");
   } else {
-    setVar("--cx", "28.2mm");
-    setVar("--cy", "21.6mm");
-    setVar("--d",  "34.0mm");
+    setVar("--cx", "28.2mm"); setVar("--cy", "21.6mm"); setVar("--d",  "34.0mm");
   }
-  LS.setItem("cred_diseno", key);
+  saveLocal({frontDesign:key});
 }
-
 function setDisenoReverso(key){
-  const src = BACK_TPLS[key] || BACK_TPLS.blanco;
   const backImg = $("#tpl-img-back");
-  if (backImg) backImg.src = src;
+  if (backImg) backImg.src = BACK_TPLS[key] || BACK_TPLS.blanco;
 
-  /* PRESETS por diseño (QR trasero) – ajusta si tu PNG negro difiere */
+  // Presets del QR por diseño (ajusta si necesitas)
   if (key === "negro"){
-    setVar("--qr-size", "19mm");
-    setVar("--qr-x",    "7mm");
-    setVar("--qr-y",    "8mm");
+    setVar("--qr-size", "19mm"); setVar("--qr-x", "7mm"); setVar("--qr-y", "8mm");
   } else {
-    setVar("--qr-size", "19mm");
-    setVar("--qr-x",    "7mm");
-    setVar("--qr-y",    "8mm");
+    setVar("--qr-size", "19mm"); setVar("--qr-x", "7mm"); setVar("--qr-y", "8mm");
   }
-  LS.setItem("cred_reverso", key);
+  saveLocal({backDesign:key});
 }
-
 function initDisenos(){
   // Frente
   const radiosF = [...document.querySelectorAll('input[name="diseno"]')];
-  const savedF  = LS.getItem("cred_diseno") || "negro";
-  const matchF  = radiosF.find(r => r.value===savedF) || radiosF[0];
-  matchF.checked = true;
+  const savedF  = loadLocal().frontDesign || "negro";
+  (radiosF.find(r=>r.value===savedF)||radiosF[0]).checked = true;
   setDisenoFrente(savedF);
-
-  radiosF.forEach(r => r.addEventListener("change", e => {
-    if (e.target.checked) { setDisenoFrente(e.target.value); renderCarnet(); }
-  }));
-  // Atajo T
-  window.addEventListener("keydown", (ev) => {
+  radiosF.forEach(r => r.addEventListener("change", e => { if(e.target.checked){ setDisenoFrente(e.target.value); renderCarnet(); }}));
+  window.addEventListener("keydown", ev=>{
     if (ev.key.toLowerCase() !== "t") return;
-    const cur = LS.getItem("cred_diseno") || "negro";
-    const next = cur==="negro" ? "blanco" : "negro";
-    const radio = radiosF.find(r => r.value===next);
-    if (radio) radio.checked = true;
-    setDisenoFrente(next);
-    renderCarnet();
+    const cur = loadLocal().frontDesign || "negro";
+    const next = cur === "negro" ? "blanco" : "negro";
+    (radiosF.find(r=>r.value===next)||radiosF[0]).checked = true;
+    setDisenoFrente(next); renderCarnet();
   });
 
   // Reverso
   const radiosB = [...document.querySelectorAll('input[name="reverso"]')];
-  const savedB  = LS.getItem("cred_reverso") || "blanco";
-  const matchB  = radiosB.find(r => r.value===savedB) || radiosB[0];
-  matchB.checked = true;
+  const savedB  = loadLocal().backDesign || "blanco";
+  (radiosB.find(r=>r.value===savedB)||radiosB[0]).checked = true;
   setDisenoReverso(savedB);
-
-  radiosB.forEach(r => r.addEventListener("change", e => {
-    if (e.target.checked) { setDisenoReverso(e.target.value); renderCarnet(); }
-  }));
-  // Atajo R
-  window.addEventListener("keydown", (ev) => {
+  radiosB.forEach(r => r.addEventListener("change", e => { if(e.target.checked){ setDisenoReverso(e.target.value); renderCarnet(); }}));
+  window.addEventListener("keydown", ev=>{
     if (ev.key.toLowerCase() !== "r") return;
-    const cur = LS.getItem("cred_reverso") || "blanco";
-    const next = cur==="negro" ? "blanco" : "negro";
-    const radio = radiosB.find(r => r.value===next);
-    if (radio) radio.checked = true;
-    setDisenoReverso(next);
-    renderCarnet();
+    const cur = loadLocal().backDesign || "blanco";
+    const next = cur === "negro" ? "blanco" : "negro";
+    (radiosB.find(r=>r.value===next)||radiosB[0]).checked = true;
+    setDisenoReverso(next); renderCarnet();
   });
 }
 
-/* Entradas */
+/* ====== ENTRADAS ====== */
 function initInputs(){
   const inNombre = $("#input-nombre");
   inNombre?.addEventListener("input", () => {
     const v = inNombre.value.trim() || "—";
     $("#nombre").textContent = v;
+    saveLocal({nombre:v});
     if (lastCred) lastCred.nombre = v;
   });
 
-  $("#toggle-qr")?.addEventListener("change", () => renderCarnet());
+  $("#toggle-qr")?.addEventListener("change", (e) => {
+    saveLocal({showQR: e.target.checked});
+    renderCarnet();
+  });
 
+  // Foto -> preview y guardar comprimida
   const inFoto = $("#input-foto");
   let lastBlobUrl = null;
-  inFoto?.addEventListener("change", (e) => {
+  inFoto?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-    lastBlobUrl = URL.createObjectURL(file);
+    lastBlobUrl = URL.createObjectURL(file);     // preview rápida
     $("#foto").src = lastBlobUrl;
-    if (lastCred) lastCred.foto_url = lastBlobUrl;
+    // versión comprimida persistente
+    try{
+      const dataUrl = await fileToDataURL(file, 900);
+      saveLocal({fotoDataUrl: dataUrl});
+    }catch(err){ console.warn("No se pudo comprimir/guardar foto", err); }
   });
 }
 
-/* Movimiento fino (brand y QR) + Foto por teclado + Guardar layout */
+/* ====== MOVIMIENTO FINO (brand y QR) + FOTO por teclado + guardado layout ====== */
 function px(n){ return Number(n.toFixed(2)); }
 function initMove(){
   const brand = $("#brand-front");
   const qrBox = $("#qr-wrap");
-  brand?.classList.add("draggable");
-  qrBox?.classList.add("draggable");
+  brand?.classList.add("draggable"); qrBox?.classList.add("draggable");
 
-  // Drag genérico
   const makeDrag = (el)=>{
     if (!el) return;
     let dragging=false, dx=0, dy=0;
-    el.addEventListener("pointerdown",(e)=>{
-      dragging=true;el.setPointerCapture(e.pointerId);
-      dx=e.clientX; dy=e.clientY;
-    });
-    el.addEventListener("pointermove",(e)=>{
-      if(!dragging) return;
-      const diffX = e.clientX - dx;
-      const diffY = e.clientY - dy;
-      el.style.transform = `translate(${px(diffX)}px, ${px(diffY)}px)`;
-    });
-    const endDrag = (e)=>{
-      if(!dragging) return; dragging=false; el.releasePointerCapture?.(e.pointerId);
-    };
-    el.addEventListener("pointerup", endDrag);
-    el.addEventListener("pointercancel", endDrag);
+    el.addEventListener("pointerdown",(e)=>{ dragging=true; el.setPointerCapture(e.pointerId); dx=e.clientX; dy=e.clientY; });
+    el.addEventListener("pointermove",(e)=>{ if(!dragging) return; el.style.transform=`translate(${px(e.clientX-dx)}px, ${px(e.clientY-dy)}px)`; });
+    const end= (e)=>{ if(!dragging) return; dragging=false; el.releasePointerCapture?.(e.pointerId); };
+    el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
   };
-  makeDrag(brand);
-  makeDrag(qrBox);
+  makeDrag(brand); makeDrag(qrBox);
 
   // ALT + flechas: mover brand o QR (si visible)
   window.addEventListener("keydown",(e)=>{
     if(!e.altKey) return;
-    const qrVisible = !$("#qr-wrap")?.classList.contains("hidden");
-    const target = qrVisible ? $("#qr-wrap") : brand;
+    const target = (!$("#qr-wrap")?.classList.contains("hidden")) ? $("#qr-wrap") : brand;
     const st = getComputedStyle(target);
     const m = st.transform.match(/matrix\(([^)]+)\)/);
-    let tx=0, ty=0;
-    if(m){
-      const arr = m[1].split(",").map(Number);
-      tx = arr[4]||0; ty = arr[5]||0;
-    }
+    let tx=0, ty=0; if(m){ const a=m[1].split(",").map(Number); tx=a[4]||0; ty=a[5]||0; }
     const step = e.shiftKey ? 2 : 0.5;
-    if(e.key==="ArrowLeft"){ tx-=step; }
-    else if(e.key==="ArrowRight"){ tx+=step; }
-    else if(e.key==="ArrowUp"){ ty-=step; }
-    else if(e.key==="ArrowDown"){ ty+=step; }
-    else return;
-    e.preventDefault();
-    target.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
+    if(e.key==="ArrowLeft"){ tx-=step; } else if(e.key==="ArrowRight"){ tx+=step; }
+    else if(e.key==="ArrowUp"){ ty-=step; } else if(e.key==="ArrowDown"){ ty+=step; } else return;
+    e.preventDefault(); target.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
   });
 
-  // CTRL + flechas: mover centro de FOTO (—cx, cy—) y zoom
+  // CTRL + flechas: mover centro de FOTO + zoom
   window.addEventListener("keydown",(e)=>{
     if(!e.ctrlKey) return;
     const step = e.shiftKey ? 2 : 0.5; // mm
@@ -464,20 +458,14 @@ function initMove(){
     else if(e.key==="ArrowRight"){ nx = curX + step; }
     else if(e.key==="ArrowUp"){ ny = curY - step; }
     else if(e.key==="ArrowDown"){ ny = curY + step; }
-    else if(e.key==="=" || e.key==="+"){ // zoom in
-      const d = mm(getComputedStyle(document.documentElement).getPropertyValue("--d"));
-      setVarMM("--d", d + (e.shiftKey ? 2 : 0.5));
-      e.preventDefault(); return;
-    } else if(e.key==="-" || e.key==="_"){ // zoom out
-      const d = mm(getComputedStyle(document.documentElement).getPropertyValue("--d"));
-      setVarMM("--d", Math.max(10, d - (e.shiftKey ? 2 : 0.5)));
-      e.preventDefault(); return;
-    } else { return; }
+    else if(e.key==="=" || e.key==="+"){ setVarMM("--d", mm(getComputedStyle(document.documentElement).getPropertyValue("--d")) + (e.shiftKey ? 2 : 0.5)); e.preventDefault(); return; }
+    else if(e.key==="-" || e.key==="_"){ setVarMM("--d", Math.max(10, mm(getComputedStyle(document.documentElement).getPropertyValue("--d")) - (e.shiftKey ? 2 : 0.5))); e.preventDefault(); return; }
+    else { return; }
     setVarMM("--cx", nx); setVarMM("--cy", ny);
     e.preventDefault();
   });
 
-  // Guardar layout
+  // Guardar layout (vars + transforms + visibilidad QR)
   $("#btn-guardar-layout")?.addEventListener("click", ()=>{
     const root = getComputedStyle(document.documentElement);
     const vars = ["--cx","--cy","--d","--card-w","--card-h","--qr-size","--qr-x","--qr-y"];
@@ -485,60 +473,60 @@ function initMove(){
     obj.brandTransform = getComputedStyle(brand).transform;
     obj.qrTransform    = getComputedStyle(qrBox).transform;
     obj.qrVisible      = !qrBox.classList.contains("hidden");
-    LS.setItem("cred_layout", JSON.stringify(obj));
-    alert("Layout guardado.");
+    try{ LS.setItem(LAYOUT_KEY, JSON.stringify(obj)); alert("Layout guardado."); }catch{}
   });
 
   // Cargar layout si existe
   try{
-    const raw = LS.getItem("cred_layout");
+    const raw = LS.getItem(LAYOUT_KEY);
     if(raw){
       const obj = JSON.parse(raw);
       Object.entries(obj).forEach(([k,v])=>{
         if(k==="brandTransform"){ brand.style.transform = v || "none"; }
         else if(k==="qrTransform"){ $("#qr-wrap").style.transform = v || "none"; }
-        else if(k==="qrVisible"){ $("#toggle-qr").checked = !!v; $("#qr-wrap").classList.toggle("hidden", !v); }
+        else if(k==="qrVisible"){ $("#toggle-qr").checked = !!v; $("#qr-wrap").classList.toggle("hidden", !v); saveLocal({showQR:!!v}); }
         else if(k.startsWith("--")) setVar(k, v);
       });
     }
   }catch(e){}
 }
 
-/* Descarga PNG */
+/* ====== DESCARGA PNG ====== */
 async function descargarPNG(){
   const node = document.getElementById("sheet");
   const scale = Math.max(2, Math.round(window.devicePixelRatio||1));
-  const canvas = await html2canvas(node, {
-    backgroundColor: null,
-    scale,
-    useCORS: true,
-    logging: false
-  });
+  const canvas = await html2canvas(node, { backgroundColor: null, scale, useCORS: true, logging: false });
   const a = document.createElement("a");
   a.download = "credencial-caritas.png";
   a.href = canvas.toDataURL("image/png");
   a.click();
 }
 
-/* Init */
-function initAuthBinding(){
+/* ====== AUTH (opcional) ====== */
+function initAuth(){
   document.addEventListener("firebase:ready:caritas", () => {
     const auth = window.CARITAS?.auth;
     if (!auth) return;
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      await ensureLastCred(user);
-      await renderCarnet();
+    // Mostrar botón logout si hay sesión
+    onAuthStateChanged(auth, (user) => {
+      const btn = document.getElementById("btn-logout");
+      if (user) { btn.style.display = ""; }
+      else { btn.style.display = "none"; }
+    });
+    document.getElementById("btn-logout")?.addEventListener("click", async ()=>{
+      try{ await signOut(auth); alert("Sesión cerrada."); }catch(e){ console.warn(e); }
     });
   });
 }
+
+/* ====== INIT ====== */
 function init(){
   initDisenos();
   initInputs();
   initMove();
-  initAuthBinding();
+  initAuth();
   renderCarnet();
-  $("#btn-descargar")?.addEventListener("click", descargarPNG);
+  document.getElementById("btn-descargar")?.addEventListener("click", descargarPNG);
 }
 init();
 </script>
