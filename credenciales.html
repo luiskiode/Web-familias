@@ -20,7 +20,7 @@
     --name-size: 14px;
     --role-size: 11px;
 
-    /* QR (solo en reverso; se ajusta por diseño) */
+    /* QR (solo en reverso; se ajusta por diseño del reverso) */
     --qr-size: 19mm;
     --qr-x: 7mm;
     --qr-y: 8mm;
@@ -46,9 +46,10 @@
   .row input[type="file"]{flex:1}
   .muted{opacity:.7;font-size:.88rem}
 
-  /* Selector blanco/negro */
-  #selector-diseno{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .5rem 0}
-  #selector-diseno label{cursor:pointer}
+  /* Selectores */
+  .selectors{display:grid;gap:.5rem;margin:.25rem 0 .5rem 0}
+  .selectors .line{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+  .selectors label{cursor:pointer}
 
   /* Lienzo */
   #sheet{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
@@ -136,17 +137,27 @@
   <section id="side">
     <h2>Credencial – Modo Simple</h2>
 
-    <!-- Selector Blanco/Negro -->
-    <div id="selector-diseno">
-      <strong>Diseño:</strong>
-      <label><input type="radio" name="diseno" value="blanco"> Blanco</label>
-      <label><input type="radio" name="diseno" value="negro" checked> Negro</label>
-      <span class="muted">(atajo: tecla “T”)</span>
-    </div>
+    <div class="selectors">
+      <!-- Frente -->
+      <div class="line" id="selector-diseno">
+        <strong>Frente:</strong>
+        <label><input type="radio" name="diseno" value="blanco"> Blanco</label>
+        <label><input type="radio" name="diseno" value="negro" checked> Negro</label>
+        <span class="muted">(atajo: tecla “T”)</span>
+      </div>
 
-    <!-- Mostrar/ocultar QR trasero -->
-    <div class="row" style="gap:10px">
-      <label><input id="toggle-qr" type="checkbox" checked> Mostrar QR atrás</label>
+      <!-- Reverso -->
+      <div class="line" id="selector-reverso">
+        <strong>Reverso:</strong>
+        <label><input type="radio" name="reverso" value="blanco" checked> Blanco</label>
+        <label><input type="radio" name="reverso" value="negro"> Negro</label>
+        <span class="muted">(atajo: tecla “R”)</span>
+      </div>
+
+      <!-- Mostrar/ocultar QR trasero -->
+      <div class="line">
+        <label><input id="toggle-qr" type="checkbox" checked> Mostrar QR atrás</label>
+      </div>
     </div>
 
     <!-- Datos -->
@@ -170,7 +181,7 @@
   <!-- LIENZO (FRENTE + REVERSO) -->
   <section id="canvas">
     <div id="sheet">
-      <!-- Frente (SIN QR) -->
+      <!-- Frente -->
       <article id="card-front" class="card gafete">
         <img id="tpl-img-front" class="template" alt="plantilla frente" src="assets/plantillas/cred-frente-negro.png" />
         <div class="photo-wrap"><img id="foto" class="photo" alt="foto" src="" /></div>
@@ -273,61 +284,95 @@ async function renderCarnet(){
   }
 }
 
-/* Conmutador BLANCO/NEGRO con presets (foto + QR trasero) */
-const TPLS = {
-  blanco: { front: "assets/plantillas/cred-frente-blanco.png", back: "assets/plantillas/cred-reverso.png" },
-  negro:  { front: "assets/plantillas/cred-frente-negro.png",  back: "assets/plantillas/cred-reverso.png" }
+/* Conmutadores de plantillas */
+const FRONT_TPLS = {
+  blanco: "assets/plantillas/cred-frente-blanco.png",
+  negro:  "assets/plantillas/cred-frente-negro.png",
 };
-function setDiseno(key){
-  const tpl = TPLS[key] || TPLS.blanco;
+const BACK_TPLS = {
+  blanco: "assets/plantillas/cred-reverso.png",
+  negro:  "assets/plantillas/cred-reverso-negro.png",
+};
+
+function setDisenoFrente(key){
+  const src = FRONT_TPLS[key] || FRONT_TPLS.blanco;
   const frontImg = $("#tpl-img-front");
-  const backImg  = $("#tpl-img-back");
-  if (frontImg) frontImg.src = tpl.front;
-  if (backImg)  backImg.src  = tpl.back || "";
+  if (frontImg) frontImg.src = src;
 
   document.body.classList.toggle("tema-negro",  key==="negro");
   document.body.classList.toggle("tema-blanco", key==="blanco");
 
-  /* PRESETS por diseño (ajustados para llenar bien el círculo) */
+  /* PRESETS por diseño (foto) */
   if (key === "negro"){
     setVar("--cx", "27.6mm");
     setVar("--cy", "18.3mm");
     setVar("--d",  "34.2mm");
-
-    setVar("--qr-size", "18.5mm");
-    setVar("--qr-x",    "6mm");
-    setVar("--qr-y",    "7mm");
   } else {
     setVar("--cx", "28.2mm");
     setVar("--cy", "21.6mm");
     setVar("--d",  "34.0mm");
+  }
+  LS.setItem("cred_diseno", key);
+}
 
+function setDisenoReverso(key){
+  const src = BACK_TPLS[key] || BACK_TPLS.blanco;
+  const backImg = $("#tpl-img-back");
+  if (backImg) backImg.src = src;
+
+  /* PRESETS por diseño (QR trasero) – ajusta si tu PNG negro difiere */
+  if (key === "negro"){
+    setVar("--qr-size", "19mm");
+    setVar("--qr-x",    "7mm");
+    setVar("--qr-y",    "8mm");
+  } else {
     setVar("--qr-size", "19mm");
     setVar("--qr-x",    "7mm");
     setVar("--qr-y",    "8mm");
   }
-  LS.setItem("cred_diseno", key);
+  LS.setItem("cred_reverso", key);
 }
-function initDiseno(){
-  const radios = [...document.querySelectorAll('input[name="diseno"]')];
-  const params = new URLSearchParams(location.search);
-  const fromQS = params.get("diseno");
-  const saved  = LS.getItem("cred_diseno");
-  const initial = (fromQS==="negro"||fromQS==="blanco") ? fromQS : (saved||"negro");
-  const match = radios.find(r => r.value===initial);
-  if (match) match.checked = true;
-  setDiseno(initial);
 
-  radios.forEach(r => r.addEventListener("change", e => {
-    if (e.target.checked) setDiseno(e.target.value), renderCarnet();
+function initDisenos(){
+  // Frente
+  const radiosF = [...document.querySelectorAll('input[name="diseno"]')];
+  const savedF  = LS.getItem("cred_diseno") || "negro";
+  const matchF  = radiosF.find(r => r.value===savedF) || radiosF[0];
+  matchF.checked = true;
+  setDisenoFrente(savedF);
+
+  radiosF.forEach(r => r.addEventListener("change", e => {
+    if (e.target.checked) { setDisenoFrente(e.target.value); renderCarnet(); }
   }));
+  // Atajo T
   window.addEventListener("keydown", (ev) => {
     if (ev.key.toLowerCase() !== "t") return;
     const cur = LS.getItem("cred_diseno") || "negro";
     const next = cur==="negro" ? "blanco" : "negro";
-    const radio = radios.find(r => r.value===next);
+    const radio = radiosF.find(r => r.value===next);
     if (radio) radio.checked = true;
-    setDiseno(next);
+    setDisenoFrente(next);
+    renderCarnet();
+  });
+
+  // Reverso
+  const radiosB = [...document.querySelectorAll('input[name="reverso"]')];
+  const savedB  = LS.getItem("cred_reverso") || "blanco";
+  const matchB  = radiosB.find(r => r.value===savedB) || radiosB[0];
+  matchB.checked = true;
+  setDisenoReverso(savedB);
+
+  radiosB.forEach(r => r.addEventListener("change", e => {
+    if (e.target.checked) { setDisenoReverso(e.target.value); renderCarnet(); }
+  }));
+  // Atajo R
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key.toLowerCase() !== "r") return;
+    const cur = LS.getItem("cred_reverso") || "blanco";
+    const next = cur==="negro" ? "blanco" : "negro";
+    const radio = radiosB.find(r => r.value===next);
+    if (radio) radio.checked = true;
+    setDisenoReverso(next);
     renderCarnet();
   });
 }
@@ -386,10 +431,11 @@ function initMove(){
   makeDrag(brand);
   makeDrag(qrBox);
 
-  // ALT + flechas: mover brand o QR si está visible (prioriza QR si visible y el puntero está sobre él)
+  // ALT + flechas: mover brand o QR (si visible)
   window.addEventListener("keydown",(e)=>{
     if(!e.altKey) return;
-    const target = (!qrBox?.classList.contains("hidden")) ? qrBox : brand;
+    const qrVisible = !$("#qr-wrap")?.classList.contains("hidden");
+    const target = qrVisible ? $("#qr-wrap") : brand;
     const st = getComputedStyle(target);
     const m = st.transform.match(/matrix\(([^)]+)\)/);
     let tx=0, ty=0;
@@ -450,8 +496,8 @@ function initMove(){
       const obj = JSON.parse(raw);
       Object.entries(obj).forEach(([k,v])=>{
         if(k==="brandTransform"){ brand.style.transform = v || "none"; }
-        else if(k==="qrTransform"){ qrBox.style.transform = v || "none"; }
-        else if(k==="qrVisible"){ $("#toggle-qr").checked = !!v; qrBox.classList.toggle("hidden", !v); }
+        else if(k==="qrTransform"){ $("#qr-wrap").style.transform = v || "none"; }
+        else if(k==="qrVisible"){ $("#toggle-qr").checked = !!v; $("#qr-wrap").classList.toggle("hidden", !v); }
         else if(k.startsWith("--")) setVar(k, v);
       });
     }
@@ -487,7 +533,7 @@ function initAuthBinding(){
   });
 }
 function init(){
-  initDiseno();
+  initDisenos();
   initInputs();
   initMove();
   initAuthBinding();
