@@ -1,249 +1,247 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <base href="/Web-familias/">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎫 Credenciales — Cáritas CNC</title>
-  <link rel="stylesheet" href="styles-caritas.css" />
-  <link rel="icon" type="image/png" href="img/favicon.png">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Credenciales – Cáritas CNC (Modo Simple)</title>
 
+<style>
+  :root{
+    /* Tamaño CR80 vertical */
+    --card-w: 54mm;
+    --card-h: 85.6mm;
 
-  <!-- 🔌 Supabase bootstrap -->
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    /* Círculo de foto (preset centrado para tus plantillas) */
+    --cx: 26mm;       /* centro X */
+    --cy: 21mm;       /* centro Y */
+    --d:  30mm;       /* diámetro */
 
-    const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
-
-    window.CARITAS = window.CARITAS || {};
-    if (!window.CARITAS.supabase) {
-      window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      document.dispatchEvent(new Event("supabase:ready:caritas"));
-    }
-  </script>
-
-  <!-- 🔐 Firebase bootstrap -->
-  <script type="module">
-    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-      authDomain: "web-familias.firebaseapp.com",
-      projectId: "web-familias",
-      storageBucket: "web-familias.appspot.com",
-      messagingSenderId: "261699620792",
-      appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-    };
-
-    const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence).catch(()=>{});
-
-    window.CARITAS = window.CARITAS || {};
-    window.CARITAS.auth = auth;
-
-    document.dispatchEvent(new Event("firebase:ready:caritas"));
-    onAuthStateChanged(auth, async (user)=>{
-  if(!user){ /* redirige a login o muestra aviso */ return; }
-  await ensureLastCred(user);
-  await renderCarnet();
-});
-  </script>
-
-  
-</head>
-<body>
- <!-- === LAYOUT 2 COL: SIDEBAR + PREVIEW === -->
-<main class="cred-layout">
-  <!-- Sidebar -->
-  <aside id="editor" class="cred-sidebar">
-
-    <div class="group">
-      <h3>Acciones</h3>
-      <button class="btn w-full" id="btn-dl-png">Descargar PNG (frente+reverso)</button>
-      <button class="btn w-full" id="btn-save-layout">📏 Guardar layout</button>
-      <button class="btn w-full" id="btn-copy-link">🔗 Copiar enlace público</button>
-      <a class="btn w-full" href="index.html">← Volver</a>
-      <a class="btn w-full" id="btn-admin-local" style="display:none">🗂️ Administrar</a>
-    </div>
-
-    <div class="group">
-      <h3>Plantillas</h3>
-      <label class="btn w-full">📄 Plantilla frente
-        <input type="file" id="tpl-front" accept="image/*" hidden>
-      </label>
-      <label class="btn w-full">📄 Plantilla reverso
-        <input type="file" id="tpl-back" accept="image/*" hidden>
-      </label>
-      <label class="subtle">Orientación</label>
-      <select id="card-orient" class="btn w-full">
-        <option value="landscape">Horizontal</option>
-        <option value="portrait">Gafete (vertical)</option>
-      </select>
-      <label class="subtle">Tamaño</label>
-      <input type="range" id="card-size" min="70" max="120" value="100" step="1">
-    </div>
-
-    <div class="group">
-      <h3>Posicionar</h3>
-      <select id="move-target" class="btn w-full">
-        <option value="brand">Nombre + Logo</option>
-        <option value="logo">Solo Logo</option>
-        <option value="role">Rol</option>
-      </select>
-      <div class="move-grid">
-        <button class="btn" id="mv-up">↑</button>
-        <div></div>
-        <button class="btn" id="mv-right">→</button>
-        <button class="btn" id="mv-left">←</button>
-        <div></div>
-        <button class="btn" id="mv-down">↓</button>
-      </div>
-      <button class="btn w-full" id="btn-save-cred">💾 Guardar credencial</button>
-    </div>
-
-    <div class="group">
-      <h3>Datos</h3>
-      <label class="subtle">Nombre</label>
-      <input class="input" id="input-nombre" placeholder="Tu nombre">
-      <div id="edit-nombre-hint" class="hint">Se guarda automáticamente</div>
-
-      <label class="subtle">Foto de perfil</label>
-      <input type="file" id="file-foto" accept="image/*" class="input">
-      <small class="muted">JPG/PNG recomendados</small>
-    </div>
-  </aside>
-
-  <!-- Preview / Editor -->
-  <section class="cred-preview">
-    <div class="sheet" id="sheet">
-      <!-- FRENTE -->
-      <section class="card front" id="card-front" aria-label="Credencial frente">
-        <img class="wm" src="assets/logo-caritas.png" alt="">
-        <img class="tpl" id="tpl-img-front" alt="">
-        <div class="photo"><img id="foto" alt="Foto"></div>
-
-        <div class="brand-row">
-          <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
-          <div class="name" id="nombre">—</div>
-        </div>
-
-        <div class="role" id="rol">Voluntario Cáritas CNC</div>
-        <div class="stripes" aria-hidden="true"><span></span><span></span><span></span></div>
-        <div class="band">CÁRITAS CNC</div>
-      </section>
-
-      <!-- REVERSO -->
-  <section class="card back" id="card-back" aria-label="Credencial reverso">
-  <img class="wm" src="assets/logo-caritas.png" alt="">
-  <img class="tpl" id="tpl-img-back" alt="">
-  <img class="logo" src="assets/logo-caritas.png" alt="Cáritas">
-
-  <div class="scan">SCAN ME</div>
-  <div class="qr-wrap">
-    <canvas id="qr"></canvas>
-  </div>
-
-  <div class="footer">CÁRITAS CNC</div>
-</section></div>          <!-- cierra .sheet -->
-</section>   
-</main>
-  <!-- Vista Admin -->
-<section id="admin" style="display:none; width:100%; max-width:980px">
-  <div class="controls" style="justify-content:space-between">
-    <div>
-      <input id="adm-q" type="search" placeholder="Buscar por nombre, email, UID o código" style="padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;width:340px">
-      <button class="btn" id="adm-reload">Buscar</button>
-    </div>
-    <div class="muted">Solo usuarios con rol que comience por <b>Admin</b></div>
-  </div>
-  <div style="overflow:auto;border:1px solid #2a2a2a;border-radius:12px">
-    <table id="adm-table" style="width:100%; border-collapse:collapse">
-      <thead>
-        <tr style="background:#16161a">
-          <th style="padding:10px;text-align:left">Nombre</th>
-          <th style="padding:10px;text-align:left">Email</th>
-          <th style="padding:10px;text-align:left">Rol</th>
-          <th style="padding:10px;text-align:left">Código</th>
-          <th style="padding:10px">Acciones</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-  <!-- Logo Cáritas simple (SVG) -->
-  <svg width="0" height="0" style="position:absolute">
-    <symbol id="logo-caritas" viewBox="0 0 100 100" fill="currentColor">
-      <rect x="45" y="10" width="10" height="80" rx="4"/><rect x="10" y="45" width="80" height="10" rx="4"/>
-      <circle cx="20" cy="20" r="6"/><circle cx="80" cy="20" r="6"/><circle cx="20" cy="80" r="6"/><circle cx="80" cy="80" r="6"/>
-    </symbol>
-  </svg>
-  
-  <!-- Lógica: ESM, QR + Supabase + Firebase -->
- <script type="module">
-    import * as QR from "https://esm.sh/qrcode@1.5.3";
-  // --- STATE: credencial del usuario ---
-let lastCred = null;
-
-// Carga (o crea) la credencial y llena lastCred
-async function ensureLastCred(user){
-  const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
-  // intenta obtener la pública
-  const data = await getPublicCred(user.uid);
-  if (data) { 
-    lastCred = data; 
-    return data; 
+    /* Tipografías y medidas */
+    --name-size: 14px;
+    --role-size: 11px;
+    --qr: 34mm;
   }
-  // si no existe, crea un registro mínimo
-  await upsertCred(user.uid, user.email, nombreBase, null);
-  const fresh = await getPublicCred(user.uid);
-  lastCred = fresh || { uid:user.uid, email:user.email, nombre:nombreBase, foto_url:null, rol:"Voluntario Cáritas CNC" };
+
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b0d12;color:#e8e8e8;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif}
+  body.tema-blanco{background:#f3f5f7;color:#111}
+  main{max-width:1100px;margin:12px auto;padding:12px;display:grid;grid-template-columns:380px 1fr;gap:16px}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+
+  /* Panel izquierdo (editor simple) */
+  #side{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;
+    padding:12px;
+    backdrop-filter:saturate(120%) blur(6px);
+  }
+  #side h2{margin:.3rem 0 .6rem 0;font-size:1.05rem}
+  .row{display:flex;gap:.5rem;align-items:center;margin:.5rem 0}
+  .row input[type="text"]{flex:1;padding:.55rem;border-radius:10px;border:1px solid #ccc;background:#fff;color:#111}
+  .row input[type="file"]{flex:1}
+  .muted{opacity:.7;font-size:.88rem}
+
+  /* Selector blanco/negro */
+  #selector-diseno{display:flex;gap:.75rem;align-items:center;margin:.25rem 0 .75rem 0}
+  #selector-diseno label{cursor:pointer}
+
+  /* Lienzo (frente+reverso) */
+  #sheet{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+  .card{
+    position:relative;
+    width:var(--card-w);
+    height:var(--card-h);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+    background:#111;
+    isolation:isolate;
+  }
+  .card img.template{
+    position:absolute;inset:0;
+    width:100%;height:100%;object-fit:cover;z-index:0;
+    pointer-events:none;user-select:none;
+  }
+
+  /* Foto circular */
+  .photo-wrap{
+    position:absolute;
+    left:calc(var(--cx) - var(--d)/2);
+    top: calc(var(--cy) - var(--d)/2);
+    width:var(--d); height:var(--d);
+    border-radius:50%;
+    overflow:hidden;
+    display:grid;place-items:center;
+    z-index:2;
+  }
+  .photo{width:100%;height:100%;object-fit:cover}
+
+  /* Fila de marca (logo + nombre + rol) */
+  .brand-row{
+    position:absolute;left:8mm;top:52mm;right:14mm;
+    display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;z-index:3;
+  }
+  .brand-row .logo{
+    width:16mm;aspect-ratio:1;border-radius:4px;
+    background:#b10202;display:grid;place-items:center;
+    color:#fff;font-weight:800;font-size:12px;user-select:none;
+  }
+  .brand-row .name{
+    margin:0;font-weight:800;font-size:var(--name-size);line-height:1.15;color:#fff;
+  }
+  .brand-row .role{
+    margin:.15rem 0 0 0;font-weight:600;font-size:var(--role-size);opacity:.9;color:#fff
+  }
+  body.tema-blanco .brand-row .name,
+  body.tema-blanco .brand-row .role{color:#b10202}
+
+  /* QR (frente esquina inferior derecha sobre la franja) */
+  .qr-wrap{
+    position:absolute;right:4mm;bottom:4mm;width:var(--qr);height:var(--qr);z-index:3;
+    background:transparent;border-radius:6px;display:grid;place-items:center;
+  }
+  .qr-wrap canvas{width:100%;height:100%}
+
+  /* Botonera */
+  .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+  .btn{
+    appearance:none;border:0;border-radius:12px;padding:.6rem .9rem;font-weight:700;cursor:pointer;
+  }
+  .btn.primary{background:#b10202;color:#fff}
+  .btn.ghost{background:#fff;color:#111;border:1px solid #ccc}
+  body.tema-blanco .btn.ghost{background:#111;color:#fff;border:1px solid #222}
+
+  /* Arrastre de elementos (nombre/rol/logo) */
+  .draggable{cursor:move}
+</style>
+</head>
+
+<body class="tema-negro">
+<main>
+  <!-- === PANEL IZQUIERDO (MODO SIMPLE) === -->
+  <section id="side">
+    <h2>Credencial – Modo Simple</h2>
+
+    <!-- Selector Blanco/Negro -->
+    <div id="selector-diseno">
+      <strong>Diseño:</strong>
+      <label><input type="radio" name="diseno" value="blanco"> Blanco</label>
+      <label><input type="radio" name="diseno" value="negro" checked> Negro</label>
+      <span class="muted">(atajo: tecla “T”)</span>
+    </div>
+
+    <!-- Datos -->
+    <div class="row">
+      <label for="input-nombre"><strong>Nombre</strong></label>
+    </div>
+    <div class="row">
+      <input id="input-nombre" type="text" placeholder="Nombre y Apellido" autocomplete="name" />
+    </div>
+
+    <div class="row">
+      <label for="input-foto"><strong>Foto</strong></label>
+    </div>
+    <div class="row">
+      <input id="input-foto" type="file" accept="image/*" />
+    </div>
+
+    <div class="actions">
+      <button id="btn-guardar-layout" class="btn ghost">📏 Guardar layout</button>
+      <button id="btn-descargar" class="btn primary">⬇️ Descargar PNG</button>
+    </div>
+    <p class="muted">Arrastra el bloque del nombre (o usa <kbd>ALT</kbd> + flechas) para ajuste fino.</p>
+  </section>
+
+  <!-- === LIENZO (FRENTE + REVERSO) === -->
+  <section id="canvas">
+    <div id="sheet">
+      <!-- Frente -->
+      <article id="card-front" class="card gafete">
+        <img id="tpl-img-front" class="template" alt="plantilla frente" src="assets/plantillas/cred-frente-negro.png" />
+        <div class="photo-wrap"><img id="foto" class="photo" alt="foto" src="" /></div>
+        <div id="brand-front" class="brand-row draggable">
+          <div class="logo">✚</div>
+          <div>
+            <h3 id="nombre" class="name">Voluntario</h3>
+            <p id="rol" class="role">Voluntario Cáritas CNC</p>
+          </div>
+        </div>
+        <div class="qr-wrap"><canvas id="qr"></canvas></div>
+      </article>
+
+      <!-- Reverso (opcional; si no hay plantilla, quedará vacío) -->
+      <article id="card-back" class="card gafete">
+        <img id="tpl-img-back" class="template" alt="plantilla reverso" src="assets/plantillas/cred-reverso.png" />
+      </article>
+    </div>
+  </section>
+</main>
+
+<!-- === CÓDIGO PRINCIPAL === -->
+<script type="module">
+/* Librerías ESM */
+import QR from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
+import html2canvas from "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+/* Estado */
+let lastCred = null;              // cache de datos de la credencial
+const LS = window.localStorage;
+const $  = (q,root=document)=>root.querySelector(q);
+
+/* Utilidad: set CSS var en :root */
+function setVar(name, val){
+  document.documentElement.style.setProperty(name, val);
+}
+
+/* ======================
+   BACKEND (opcional)
+   Intenta usar tus funciones si existen; si no, no rompe.
+====================== */
+async function upsertCred(uid, email, nombre, fotoUrl){
+  try{
+    if (window.upsertCred) return await window.upsertCred(uid,email,nombre,fotoUrl);
+  }catch(e){}
+  // fallback local
+  lastCred = { uid, email, nombre, foto_url: fotoUrl, rol:"Voluntario Cáritas CNC" };
   return lastCred;
 }
-  // Evita doble ejecución si el HTML se evalúa otra vez
-  if (window.__CRED_INIT__) {
-    console.debug("CRED: ya inicializado");
-  } else {
-    window.__CRED_INIT__ = true;
-    let lastCred = null;  // cache de la fila actual
-    // ========== Helpers ==========
-    const esc = (s="") =>
-      String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    const urlFromBase = (rel)=> new URL(rel, document.baseURI).href;
-    // Dibuja el QR del tamaño del contenedor .qr-wrap respetando DPR
+async function getPublicCred(uid){
+  try{
+    if (window.getPublicCred) return await window.getPublicCred(uid);
+  }catch(e){}
+  // fallback local
+  return lastCred;
+}
+
+/* ======================
+   LÓGICA DE RENDER
+====================== */
+async function ensureLastCred(user){
+  if (lastCred && lastCred.uid===user.uid) return lastCred;
+  const nombreBase = user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
+  await upsertCred(user?.uid, user?.email, nombreBase, null);
+  lastCred = await getPublicCred(user?.uid) || lastCred || { nombre:nombreBase, rol:"Voluntario Cáritas CNC" };
+  return lastCred;
+}
+
 async function drawQR(canvasId, url){
   const el  = document.getElementById(canvasId);
   const box = el?.parentElement;
   if (!el || !box) return;
 
   const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
-
   const render = () => {
-    let w = box.getBoundingClientRect().width;           // px visibles
+    let w = box.getBoundingClientRect().width;
     if (!w) {
       const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr')) || 34;
-      w = mm * 3.7795;                                   // fallback mm→px
+      w = mm * 3.7795; // mm → px
     }
     const px = Math.max(96, Math.round(w * dpr));
-el.width = el.height = px;
-el.style.width  = Math.round(w) + "px";
-el.style.height = Math.round(w) + "px";
-
-// ✅ robusto a ambas libs
-const QRlib = window.QR || window.QRCode;
-if (QRlib && typeof QRlib.toCanvas === "function") {
-  QRlib.toCanvas(el, url, { width: px, margin: 0 });
-} else {
-  console.warn("⚠️ QR lib aún no lista; reintento en 500ms");
-  setTimeout(()=>drawQR(canvasId, url), 500);
-}
-
-    // usa qrcode@1.5.x
+    el.width = el.height = px;
+    el.style.width  = Math.round(w) + "px";
+    el.style.height = Math.round(w) + "px";
     QR.toCanvas(el, url, { width: px, margin: 0 });
   };
 
@@ -252,757 +250,218 @@ if (QRlib && typeof QRlib.toCanvas === "function") {
   new ResizeObserver(render).observe(box);
 }
 
+async function renderCarnet(){
+  const auth = window.CARITAS?.auth;
+  const user = auth?.currentUser || null;
 
-}
-
-
-
-  // Espera a layout estable
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  
-
-
-
-    // Esperas Firebase (debe estar bootstrapped en <head>)
-    function waitForAuth(timeout=12000){
-      if (window.CARITAS?.auth) return Promise.resolve(window.CARITAS.auth);
-      const t0 = performance.now();
-      return new Promise((resolve,reject)=>{
-        const onReady = ()=>{ document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); };
-        document.addEventListener('firebase:ready:caritas', onReady);
-        const iv=setInterval(()=>{
-          if (window.CARITAS?.auth){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); resolve(window.CARITAS.auth); }
-          if (performance.now()-t0>timeout){ clearInterval(iv); document.removeEventListener('firebase:ready:caritas', onReady); reject(new Error("Firebase no inicializado")); }
-        },50);
-      });
-    }
-    async function waitForUser(){
-      const auth = await waitForAuth().catch(()=>null);
-      return auth?.currentUser || await new Promise(r=>auth?.onAuthStateChanged?.(u=>r(u||null)));
-    }
-
-    // Supabase (expuesto en <head>)
-    const supabase = window.CARITAS?.supabase;
-
-    // ========== RPC ==========
-    async function getPublicCred(uid){
-      const { data, error } = await supabase.rpc("get_credencial_publica", { uid });
-      if (error) throw error;
-      return (Array.isArray(data) ? data[0] : data) || null;
-    }
-    async function upsertCred(uid, email, nombre, foto_url=null){
-      const { data, error } = await supabase.rpc("upsert_mi_credencial", {
-        uid, p_email: email, p_nombre: nombre, p_rol: "Voluntario Cáritas CNC", p_foto: foto_url
-      });
-      if (error) throw error;
-      return data;
-    }
-
-    async function renderCarnet(){
-  const user = auth.currentUser;
-  if(!user) return;
-
-  // asegúrate de tener datos en memoria
-  if (!lastCred) await ensureLastCred(user);
+  if (user && !lastCred) await ensureLastCred(user);
   const c = lastCred || {};
-  
-  // fallbacks
-  const nombreSafe = c.nombre || user.displayName || (user.email||"").split("@")[0] || "Voluntario";
-  const emailSafe  = c.email  || user.email || "";
+
+  const nombreSafe = c.nombre || user?.displayName || (user?.email||"").split("@")[0] || "Voluntario";
   const rolSafe    = c.rol    || "Voluntario Cáritas CNC";
-  const codSafe    = c.codigo_verificacion || "";
 
-  // DOM
-  document.getElementById("nombreCarnet").textContent = esc(nombreSafe);
-  document.getElementById("emailCarnet").textContent  = esc(emailSafe);
-  document.getElementById("rolCarnet").textContent    = esc(rolSafe);
-  document.getElementById("codigoCarnet").textContent = esc(codSafe);
+  const elNombre = $("#nombre");
+  const elRol    = $("#rol");
+  const elFoto   = $("#foto");
 
-  const foto = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
-  const img  = document.getElementById("fotoCarnet");
-  if (img) img.src = foto;
+  if (elNombre) elNombre.textContent = nombreSafe;
+  if (elRol)    elRol.textContent    = rolSafe;
 
-  // QR
-  const qrUrl = urlFromBase(`credenciales.html?view=public&id=${user.uid}`);
+  if (elFoto) {
+    elFoto.src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
+  }
+
+  const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
   await drawQR("qr", qrUrl);
 }
-    
-    // ---------- util ----------
-const toast = (t)=> alert(t);
-function fitText(el, max=5.8, min=4.6){ // tamaños en mm
-  const toPx = mm => mm * 3.7795;
-  let size = max;
-  el.style.fontSize = max+'mm';
-  const w = el.parentElement?.clientWidth || 160;
-  while (el.scrollWidth > w && size > min){
-    size -= .2;
-    el.style.fontSize = size+'mm';
+
+/* ======================
+   CONMUTADOR BLANCO/NEGRO
+====================== */
+const TPLS = {
+  blanco: {
+    front: "assets/plantillas/cred-frente-blanco.png",
+    back:  "assets/plantillas/cred-reverso.png" // opcional
+  },
+  negro:  {
+    front: "assets/plantillas/cred-frente-negro.png",
+    back:  "assets/plantillas/cred-reverso.png" // opcional
   }
+};
+
+function setDiseno(key){
+  const tpl = TPLS[key] || TPLS.blanco;
+  const frontImg = $("#tpl-img-front");
+  const backImg  = $("#tpl-img-back");
+  if (frontImg) frontImg.src = tpl.front;
+  if (backImg)  backImg.src  = tpl.back || "";
+
+  document.body.classList.toggle("tema-negro",  key==="negro");
+  document.body.classList.toggle("tema-blanco", key==="blanco");
+  LS.setItem("cred_diseno", key);
 }
 
-// Auto-guardar nombre SIN perder foto
-let saveNameTimer = null;
-async function saveNombreAuto(user, nombre){
-  const hint = document.getElementById("edit-nombre-hint");
-  try{
-    hint.textContent = "Guardando…";
-    const foto = lastCred?.foto_url || null;
-    await upsertCred(user.uid, user.email, nombre, foto);
-    lastCred = { ...(lastCred||{}), nombre };
-    hint.textContent = "✅ Guardado";
-    await renderCarnet(user);
-    // Ajusta tamaño del nombre al ancho disponible
-    fitText(document.getElementById("nombre"));
-  }catch(e){
-    console.error(e); hint.textContent = "❌ Error al guardar";
-  }finally{
-    setTimeout(()=>{ if(hint.textContent.startsWith("✅")) hint.textContent="Se guarda automáticamente"; }, 1200);
-  }
-}
+function initDiseno(){
+  const radios = [...document.querySelectorAll('input[name="diseno"]')];
+  const params = new URLSearchParams(location.search);
+  const fromQS = params.get("diseno");
+  const saved  = LS.getItem("cred_diseno");
+  const initial = (fromQS==="negro"||fromQS==="blanco") ? fromQS : (saved||"negro");
+  const match = radios.find(r => r.value===initial);
+  if (match) match.checked = true;
+  setDiseno(initial);
 
+  radios.forEach(r => r.addEventListener("change", e => {
+    if (e.target.checked) setDiseno(e.target.value);
+  }));
 
-
-// Subir foto SIN perder nombre
-async function saveFoto(user, file){
-  const ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `credenciales/${user.uid}-${Date.now()}.${ext}`;
-  const up = await supabase.storage.from("fotos").upload(path, file, { upsert:true });
-  if (up.error) throw up.error;
-  const { data: pub } = supabase.storage.from("fotos").getPublicUrl(path);
-  const foto_url = pub.publicUrl;
-
-  const nombre = (lastCred?.nombre || user.displayName || (user.email||"").split("@")[0] || "Usuario");
-  await upsertCred(user.uid, user.email, nombre, foto_url); // enviamos nombre+foto nueva
-  // después de upsert/save
-  lastCred = { ...(lastCred||{}), nombre, foto_url };   // usa las variables reales que tengas
-  await renderCarnet();
-  alert("✅ Foto actualizada");
-}
-
-// ---------- ADMIN ----------
-async function isAdmin(uid){
-  const { data, error } = await supabase.rpc("is_admin", { uid });
-  if (error) return false;
-  return !!data;
-}
-async function loadAdmin(q=""){
-  const { data, error } = await supabase.rpc("admin_list_credenciales", { p_search: q, p_limit: 100, p_offset: 0 });
-  if (error) throw error;
-  const tbody = document.querySelector("#adm-table tbody");
-  tbody.innerHTML = "";
-  (data||[]).forEach(row=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="padding:10px">${row.nombre||"—"}</td>
-      <td style="padding:10px">${row.email||"—"}</td>
-      <td style="padding:10px">${row.rol||"—"}</td>
-      <td style="padding:10px;font-family:monospace">${row.codigo||"—"}</td>
-      <td style="padding:10px;text-align:center">
-        <a class="btn" href="credenciales.html?view=public&id=${row.user_id}">Ver</a>
-      </td>`;
-    tbody.appendChild(tr);
-  });
-}
-    // ========== Descargar PNG (ESM/UMD robusto) ==========
-    document.getElementById("btn-dl-png").addEventListener("click", async ()=>{
-      let html2canvas;
-      try {
-        const mod = await import("https://esm.sh/html2canvas@1.4.1");
-        html2canvas = (mod && (mod.default||mod));
-      } catch {
-        await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
-        html2canvas = window.html2canvas;
-      }
-      if (typeof html2canvas !== "function") {
-        alert("No se pudo cargar html2canvas"); return;
-      }
-      const node = document.getElementById("sheet");
-      const canvas = await html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
-      const link = document.createElement('a');
-      link.download = `credencial-cnc_${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
-
-   // ---------- ROUTER ----------
-const params = new URLSearchParams(location.search);
-const view = params.get("view");
-
-if (view === "public"){
-  const uid = params.get("id");
-  const data = uid ? await getPublicCred(uid).catch(()=>null) : null;
-  if(!data){
-    alert("❌ Credencial no encontrada");
-    location.href = "index.html";
-  } else {
-    const nombre = data?.nombre || "Voluntario";
-    document.getElementById("nombre").textContent = esc(nombre);
-    document.getElementById("rol").textContent    = esc(data?.rol || "Voluntario Cáritas CNC");
-    document.getElementById("foto").src = data?.foto_url
-      || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=111&color=fff`;
-    await drawQR("qr", new URL(`credenciales.html?view=public&id=${uid}`, document.baseURI).href);
-    document.getElementById("editor")?.style.setProperty("display","none");
-    document.getElementById("admin")?.style.setProperty("display","none");
-  }
-
-} else if (view === "admin"){
-  const user = await waitForUser();
-  if (!user) {
-    location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
-  } else if (!await isAdmin(user.uid)) {
-    alert("Acceso solo para Admin");
-    location.href = "index.html";
-  } else {
-    document.getElementById("sheet")?.style.setProperty("display","none");
-    document.getElementById("editor")?.style.setProperty("display","none");
-    document.getElementById("admin")?.style.setProperty("display","");
-    await loadAdmin();
-    document.getElementById("adm-reload").addEventListener("click", ()=>{
-      const q = document.getElementById("adm-q").value.trim();
-      loadAdmin(q);
-    });
-  }
-
-} else { // view=carnet (por defecto)
-  const user = await waitForUser();
-  if (!user) {
-    location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
-  } else {
-    await renderCarnet(user);
-    // Guardar credencial (nombre/foto ya se auto-guardan; esto fuerza un upsert)
-document.getElementById("btn-save-cred")?.addEventListener("click", async ()=>{
-  const user = await waitForUser();
-  if (!user) {
-    location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
-    return;
-  }
-  const nombre = document.getElementById("input-nombre")?.value?.trim()
-               || (lastCred?.nombre) || (user.displayName || (user.email||"").split("@")[0] || "Usuario");
-  const foto   = lastCred?.foto_url || null;
-  try{
-    await upsertCred(user.uid, user.email, nombre, foto);
-    await renderCarnet(user);
-    alert("✅ Credencial guardada");
-  }catch(e){
-    console.error(e);
-    alert("❌ No se pudo guardar");
-  }
-});
-    // mostrar editor
-    const ed = document.getElementById("editor");
-    ed && (ed.style.display = "");
-
-  // auto-guardar nombre (debounce)
-const inputNombre = document.getElementById("input-nombre");
-if (inputNombre){
-  inputNombre.value = document.getElementById("nombre").textContent.trim();
-  inputNombre.addEventListener("input", ()=>{
-    clearTimeout(saveNameTimer);
-    const nombre = inputNombre.value.trim();
-    saveNameTimer = setTimeout(()=> saveNombreAuto(user, nombre), 500);
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key.toLowerCase() !== "t") return;
+    const cur = LS.getItem("cred_diseno") || "negro";
+    const next = cur==="negro" ? "blanco" : "negro";
+    const radio = radios.find(r => r.value===next);
+    if (radio) radio.checked = true;
+    setDiseno(next);
   });
 }
 
-// subir foto
-const inputFoto = document.getElementById("file-foto");
-inputFoto?.addEventListener("change", async (e)=>{
-  const f = e.target.files?.[0];
-  if (!f) return;
-  try { await saveFoto(user, f); }
-  catch(err){ console.error(err); alert("❌ No se pudo subir la foto"); }
-  finally { e.target.value = ""; }
-});
-  }
+/* ======================
+   ENTRADAS (nombre + foto)
+====================== */
+function initInputs(){
+  const inNombre = $("#input-nombre");
+  const elNombre = $("#nombre");
+  inNombre?.addEventListener("input", () => {
+    const v = inNombre.value.trim() || "—";
+    if (elNombre) elNombre.textContent = v;
+    if (lastCred) lastCred.nombre = v;
+  });
+
+  const inFoto = $("#input-foto");
+  inFoto?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    $("#foto").src = url;
+    if (lastCred) lastCred.foto_url = url;
+  });
 }
-    // ========= Plantilla + orientación + tamaño (no altera tus funciones) =========
-(function(){
-  const frontImg = document.getElementById("tpl-img-front");
-  const backImg  = document.getElementById("tpl-img-back");
-  const sel      = document.getElementById("card-orient");
-  const rng      = document.getElementById("card-size");
-  const cardF    = document.getElementById("card-front");
-  const cardB    = document.getElementById("card-back");
 
-  // Cargar plantillas desde archivos (objeto URL)
-  document.getElementById("tpl-front")?.addEventListener("change", e=>{
-    const f = e.target.files?.[0]; if(!f) return;
-    frontImg.src = URL.createObjectURL(f);
+/* ======================
+   MOVER (drag + ALT+flechas) y GUARDAR LAYOUT
+====================== */
+function px(n){ return Number(n.toFixed(2)); }
+function initMove(){
+  const brand = $("#brand-front");
+  brand?.classList.add("draggable");
+
+  // Drag
+  let dragging=false, dx=0, dy=0, startX=0, startY=0;
+  brand?.addEventListener("pointerdown",(e)=>{
+    dragging=true;brand.setPointerCapture(e.pointerId);
+    const r = brand.getBoundingClientRect();
+    startX=r.left; startY=r.top; dx=e.clientX; dy=e.clientY;
   });
-  document.getElementById("tpl-back")?.addEventListener("change", e=>{
-    const f = e.target.files?.[0]; if(!f) return;
-    backImg.src = URL.createObjectURL(f);
+  brand?.addEventListener("pointermove",(e)=>{
+    if(!dragging) return;
+    const diffX = e.clientX - dx;
+    const diffY = e.clientY - dy;
+    brand.style.transform = `translate(${px(diffX)}px, ${px(diffY)}px)`;
   });
-
-  // Orientación: horizontal / gafete (vertical)
-  function applyOrient(v){
-    const isPortrait = v === "portrait";
-    cardF.classList.toggle("gafete", isPortrait);
-    cardB.classList.toggle("gafete", isPortrait);
-
-    // Ajustar dimensiones base
-    const baseW = 85.6, baseH = 54;
-    const pct   = Number(rng.value||100)/100;
-    const w = isPortrait ? baseH : baseW;
-    const h = isPortrait ? baseW : baseH;
-    document.documentElement.style.setProperty("--card-w", (w*pct)+"mm");
-    document.documentElement.style.setProperty("--card-h", (h*pct)+"mm");
-  }
-  sel?.addEventListener("change", ()=> applyOrient(sel.value));
-  applyOrient(sel?.value || "landscape");
-
-  // Tamaño: escala porcentual del estándar
-  rng?.addEventListener("input", ()=>{
-    const isPortrait = cardF.classList.contains("gafete");
-    const baseW = 85.6, baseH = 54;
-    const pct   = Number(rng.value||100)/100;
-    const w = isPortrait ? baseH : baseW;
-    const h = isPortrait ? baseW : baseH;
-    document.documentElement.style.setProperty("--card-w", (w*pct)+"mm");
-    document.documentElement.style.setProperty("--card-h", (h*pct)+"mm");
-  });
-})();
-
-    // ========== Calibración (flechas y +/-) ==========
-    (function(){
-      const root = document.documentElement;
-      function loadLayout(){
-        try{
-          const cfg = JSON.parse(localStorage.getItem("cred:layout")||"{}");
-          ["--cx","--cy","--d"].forEach(k=> cfg[k] && root.style.setProperty(k, cfg[k]));
-        }catch{}
-      }
-      function saveLayout(){
-        const cs = getComputedStyle(root);
-        const cfg = {
-          "--cx": cs.getPropertyValue("--cx").trim(),
-          "--cy": cs.getPropertyValue("--cy").trim(),
-          "--d" : cs.getPropertyValue("--d").trim()
-        };
-        localStorage.setItem("cred:layout", JSON.stringify(cfg));
-        alert("📏 Layout guardado");
-      }
-      loadLayout();
-      document.addEventListener("keydown",(e)=>{
-        if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
-        const cs = getComputedStyle(root);
-        const num = v => parseFloat(String(v).replace("mm",""))||0;
-        let cx = num(cs.getPropertyValue("--cx"));
-        let cy = num(cs.getPropertyValue("--cy"));
-        let d  = num(cs.getPropertyValue("--d"));
-        const step = e.shiftKey ? 1 : .5;
-        let used=false;
-        switch(e.key){
-          case "ArrowLeft":  cx -= step; used=true; break;
-          case "ArrowRight": cx += step; used=true; break;
-          case "ArrowUp":    cy -= step; used=true; break;
-          case "ArrowDown":  cy += step; used=true; break;
-          case "+": case "=": d += step; used=true; break;
-          case "-":           d -= step; used=true; break;
-        }
-        if (!used) return;
-        e.preventDefault();
-        root.style.setProperty("--cx", cx+"mm");
-        root.style.setProperty("--cy", cy+"mm");
-        root.style.setProperty("--d" , Math.max(10, d)+"mm");
-      });
-      document.getElementById("btn-save-layout")?.addEventListener("click", saveLayout);
-    })();
-
-   // __CRED_INIT__
-
-  // Copiar mi enlace público (carnet)
-document.getElementById("btn-copy-link")?.addEventListener("click", ()=>{
-  const user = window.CARITAS?.auth?.currentUser;
-  if (!user) return alert("Debes iniciar sesión");
-  const url = new URL(`credenciales.html?view=public&id=${user.uid}`, document.baseURI).href;
-  navigator.clipboard.writeText(url).then(
-    ()=> alert("✅ Enlace copiado"),
-    ()=> alert(url) // fallback simple si Clipboard falla
-  );
-});
-// ========= Persistencia: plantilla + orientación + tamaño =========
-// Guarda en localStorage y restaura en todas las vistas (carnet / pública / admin)
-(function(){
-  const DESIGN_KEY = "cred:design";
-
-  const frontImg = document.getElementById("tpl-img-front");
-  const backImg  = document.getElementById("tpl-img-back");
-  const sel      = document.getElementById("card-orient");
-  const rng      = document.getElementById("card-size");
-  const cardF    = document.getElementById("card-front");
-  const cardB    = document.getElementById("card-back");
-
-  // ---- helpers de estado ----
-  function saveDesign(partial={}){
-    const prev = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
-    const design = { ...prev, ...partial };
-    localStorage.setItem(DESIGN_KEY, JSON.stringify(design));
-    return design;
-  }
-  function applyOrientValue(orient="landscape", pct=1){
-    const isPortrait = orient === "portrait";
-    cardF?.classList.toggle("gafete", isPortrait);
-    cardB?.classList.toggle("gafete", isPortrait);
-
-    const baseW = 85.6, baseH = 54; // mm CR80
-    const w = (isPortrait ? baseH : baseW) * pct;
-    const h = (isPortrait ? baseW : baseH) * pct;
-    document.documentElement.style.setProperty("--card-w", w + "mm");
-    document.documentElement.style.setProperty("--card-h", h + "mm");
-  }
-  function applyDesign(design={}){
-    const orient = design.orient || "landscape";
-    const size   = Number(design.size || 100);      // %
-    sel && (sel.value = orient);
-    rng && (rng.value = size);
-    applyOrientValue(orient, size/100);
-
-    if (design.tplFront && frontImg) frontImg.src = design.tplFront;
-    if (design.tplBack  && backImg)  backImg.src  = design.tplBack;
-  }
-  function loadDesign(){
-    const design = JSON.parse(localStorage.getItem(DESIGN_KEY) || "{}");
-    applyDesign(design);
-  }
-
-  // ---- carga inicial (todas las vistas) ----
-  loadDesign();
-
-  // ---- UI listeners ----
-  sel?.addEventListener("change", ()=>{
-    const design = saveDesign({ orient: sel.value });
-    applyDesign(design);
-  });
-
-  rng?.addEventListener("input", ()=>{
-    const size = Number(rng.value || 100);
-    const design = saveDesign({ size });
-    applyDesign(design);
-  });
-
-  // Convertir archivo a DataURL y reducir tamaño para caber en localStorage
-  async function fileToDataURL(file, max=1400){
-    const raw = await new Promise((res, rej)=>{
-      const fr = new FileReader();
-      fr.onload = () => res(fr.result);
-      fr.onerror = rej;
-      fr.readAsDataURL(file);
-    });
-    // Downscale en canvas (reduce peso, mantiene aspecto)
-    return await new Promise((resolve)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const w = img.width, h = img.height;
-        const scale = Math.min(1, max / Math.max(w,h));
-        const cw = Math.round(w * scale), ch = Math.round(h * scale);
-        const c = document.createElement("canvas");
-        c.width = cw; c.height = ch;
-        c.getContext("2d").drawImage(img, 0, 0, cw, ch);
-        resolve(c.toDataURL("image/jpeg", 0.9));
-      };
-      img.src = raw;
-    });
-  }
-
-  document.getElementById("tpl-front")?.addEventListener("change", async (e)=>{
-    const f = e.target.files?.[0]; if (!f) return;
-    const dataURL = await fileToDataURL(f, 1600);
-    if (frontImg) frontImg.src = dataURL;
-    saveDesign({ tplFront: dataURL });
-  });
-
-  document.getElementById("tpl-back")?.addEventListener("change", async (e)=>{
-    const f = e.target.files?.[0]; if (!f) return;
-    const dataURL = await fileToDataURL(f, 1600);
-    if (backImg) backImg.src = dataURL;
-    saveDesign({ tplBack: dataURL });
-  });
-
-  // Integramos con tu botón existente "📏 Guardar layout"
-  document.getElementById("btn-save-layout")?.addEventListener("click", ()=>{
-    saveDesign({
-      orient: sel?.value || "landscape",
-      size: Number(rng?.value || 100)
-      // Las plantillas ya se guardan cuando las eliges
-    });
-    // Tu alerta de "Layout guardado" ya se muestra en tu handler actual
-  }, { capture:true });
-})();
-// ====== Mover Nombre/Logo/Rol + Guardar en layout ======
-(function(){
-  const root = document.documentElement;
-  const $ = (id)=> document.getElementById(id);
-
-  // Variables CSS que ya estás usando (en mm)
-  const targets = {
-    brand: ["--brand-dx","--brand-dy"],
-    logo:  ["--logo-dx","--logo-dy"],
-    role:  ["--role-dx","--role-dy"]
+  const endDrag = (e)=>{
+    if(!dragging) return; dragging=false; brand.releasePointerCapture?.(e.pointerId);
+    // Persistimos como offset css variables? Simple: dejamos transform aplicado.
   };
+  brand?.addEventListener("pointerup", endDrag);
+  brand?.addEventListener("pointercancel", endDrag);
 
-  const LKEY = "cred-layout";               // clave en localStorage
-  const STEP_BTN  = 0.5;                    // mm por click
-  const STEP_KEYS = { base: 0.5, shift: 1 };// mm con teclado (ALT) / Shift = 1mm
-
-  function num(v){ return parseFloat(String(v).replace("mm","")) || 0; }
-  function getVar(vname){
-    const cs = getComputedStyle(root);
-    return num(cs.getPropertyValue(vname));
-  }
-  function setVar(vname, valMm){
-    root.style.setProperty(vname, (valMm||0) + "mm");
-  }
-
-  // Nudge genérico en mm
-  function nudge(dx, dy){
-    const t = $("#move-target")?.value || "brand";
-    const [vx, vy] = targets[t];
-    const nx = getVar(vx) + dx;
-    const ny = getVar(vy) + dy;
-    setVar(vx, nx);
-    setVar(vy, ny);
-  }
-
-  // Botonera
-  $("#mv-up")   ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( 0, -STEP_BTN); });
-  $("#mv-down") ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( 0,  STEP_BTN); });
-  $("#mv-left") ?.addEventListener("click",(e)=>{ e.preventDefault(); nudge(-STEP_BTN, 0);  });
-  $("#mv-right")?.addEventListener("click",(e)=>{ e.preventDefault(); nudge( STEP_BTN, 0);  });
-
-  // Teclado: mantener ALT para mover (flechas); Shift = paso 1 mm
-  document.addEventListener("keydown",(e)=>{
-    if (!e.altKey) return;                             // solo con ALT presionado
-    if (e.target && (e.target.tagName==="INPUT" || e.target.isContentEditable)) return;
-    const step = e.shiftKey ? STEP_KEYS.shift : STEP_KEYS.base;
-    let used=false;
-    switch(e.key){
-      case "ArrowUp":    nudge(0,-step); used=true; break;
-      case "ArrowDown":  nudge(0, step); used=true; break;
-      case "ArrowLeft":  nudge(-step,0); used=true; break;
-      case "ArrowRight": nudge( step,0); used=true; break;
+  // ALT + flechas (ajuste fino del contenedor brand)
+  window.addEventListener("keydown",(e)=>{
+    if(!e.altKey) return;
+    const st = getComputedStyle(brand);
+    const m = st.transform.match(/matrix\(([^)]+)\)/);
+    let tx=0, ty=0;
+    if(m){
+      const arr = m[1].split(",").map(Number);
+      tx = arr[4]||0; ty = arr[5]||0;
     }
-    if (used) e.preventDefault();
-  });
-
-  // ---------- Guardar / Cargar Layout ----------
-  function readLayout(){
-    // Lee las vars actuales (en mm) y devuelve objeto simple
-    return {
-      brandDx: getVar("--brand-dx"),
-      brandDy: getVar("--brand-dy"),
-      logoDx:  getVar("--logo-dx"),
-      logoDy:  getVar("--logo-dy"),
-      roleDx:  getVar("--role-dx"),
-      roleDy:  getVar("--role-dy"),
-    };
-  }
-
-  function applyLayout(v){
-    if (!v) return;
-    if ("brandDx" in v) setVar("--brand-dx", v.brandDx);
-    if ("brandDy" in v) setVar("--brand-dy", v.brandDy);
-    if ("logoDx"  in v) setVar("--logo-dx",  v.logoDx);
-    if ("logoDy"  in v) setVar("--logo-dy",  v.logoDy);
-    if ("roleDx"  in v) setVar("--role-dx",  v.roleDx);
-    if ("roleDy"  in v) setVar("--role-dy",  v.roleDy);
-  }
-
-  function saveLayout(){
-    try{
-      const prev = JSON.parse(localStorage.getItem(LKEY) || "{}");
-      const now  = readLayout();
-      localStorage.setItem(LKEY, JSON.stringify({ ...prev, ...now }));
-      alert("Layout guardado ✅");
-    }catch(err){
-      console.error(err);
-      alert("No se pudo guardar el layout");
-    }
-  }
-
-  // Hook al botón existente "Guardar layout"
-  $("#btn-save-layout")?.addEventListener("click", (e)=>{
+    const step = e.shiftKey ? 2 : 0.5;
+    if(e.key==="ArrowLeft"){ tx-=step; }
+    else if(e.key==="ArrowRight"){ tx+=step; }
+    else if(e.key==="ArrowUp"){ ty-=step; }
+    else if(e.key==="ArrowDown"){ ty+=step; }
+    else return;
     e.preventDefault();
-    saveLayout();
+    brand.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
   });
 
-  // Aplica el layout guardado al cargar la vista
-  (function initFromStorage(){
-    try{
-      const saved = JSON.parse(localStorage.getItem(LKEY) || "{}");
-      applyLayout(saved);
-    }catch(err){
-      console.warn("Sin layout guardado");
-    }
-  })();
-})();
+  // Guardar layout (vars globales + transform del brand)
+  $("#btn-guardar-layout")?.addEventListener("click", ()=>{
+    const root = getComputedStyle(document.documentElement);
+    const vars = ["--cx","--cy","--d","--card-w","--card-h","--qr"];
+    const obj = Object.fromEntries(vars.map(v => [v, root.getPropertyValue(v).trim()]));
+    obj.brandTransform = getComputedStyle(brand).transform;
+    LS.setItem("cred_layout", JSON.stringify(obj));
+    alert("Layout guardado.");
+  });
 
-  // Integrar con "📏 Guardar layout": guardamos también estos offsets
-  const LKEY = "cred:layout";
-  function saveLayoutPlus(){
-    const cs = getComputedStyle(root);
-    const keys = ["--cx","--cy","--d","--brand-dx","--brand-dy","--logo-dx","--logo-dy","--role-dx","--role-dy"];
-    const cfg = {};
-    keys.forEach(k=> cfg[k] = cs.getPropertyValue(k).trim());
-    try{
-      const prev = JSON.parse(localStorage.getItem(LKEY)||"{}");
-      localStorage.setItem(LKEY, JSON.stringify({ ...prev, ...cfg }));
-    }catch{}
-    alert("📏 Layout guardado (foto + nombre/logo/rol)");
-  }
-  // Capturamos el click para asegurar guardado completo (sin romper tu handler)
-  document.getElementById("btn-save-layout")?.addEventListener("click", (e)=>{
-    e.stopImmediatePropagation?.();
-    saveLayoutPlus();
-  }, {capture:true});
-
-  // Cargar si existe
-  (function loadLayoutPlus(){
-    try{
-      const cfg = JSON.parse(localStorage.getItem(LKEY)||"{}");
-      ["--brand-dx","--brand-dy","--logo-dx","--logo-dy","--role-dx","--role-dy"].forEach(k=>{
-        if (cfg[k]) root.style.setProperty(k, cfg[k]);
+  // Cargar layout si existe
+  try{
+    const raw = LS.getItem("cred_layout");
+    if(raw){
+      const obj = JSON.parse(raw);
+      Object.entries(obj).forEach(([k,v])=>{
+        if(k==="brandTransform"){ brand.style.transform = v || "none"; }
+        else if(k.startsWith("--")) setVar(k, v);
       });
-    }catch{}
-  })();
-
-  // Guardar credencial (BD): nombre/foto actuales
-  $("#btn-save-cred")?.addEventListener("click", async ()=>{
-    try{
-      const user = await waitForUser();
-      if (!user) return location.href = "login.html?next=" + encodeURIComponent(location.pathname + location.search);
-      const nombre = document.getElementById("nombre")?.textContent?.trim() || "";
-      const foto   = document.getElementById("foto")?.src || null;
-      await upsertCred(user.uid, user.email, nombre || null, foto || null);
-      alert("✅ Credencial guardada");
-      await renderCarnet(user);
-    }catch(err){
-      console.error(err);
-      alert("❌ No se pudo guardar la credencial");
     }
+  }catch(e){}
+}
+
+/* ======================
+   DESCARGA PNG (frente+reverso)
+====================== */
+async function descargarPNG(){
+  const node = document.getElementById("sheet");
+  const scale = Math.max(2, Math.round(window.devicePixelRatio||1));
+  const canvas = await html2canvas(node, {
+    backgroundColor: null,
+    scale,
+    useCORS: true,
+    logging: false
   });
+  const a = document.createElement("a");
+  a.download = "credencial-caritas.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
 
-// ====== Movimiento preciso (solo el target elegido) + Drag ======
-(function(){
-  const root = document.documentElement;
-  const $ = s => document.getElementById(s);
-
-  const targets = {
-    brand: { el: document.querySelector('.brand-row'), vx: '--brand-dx', vy: '--brand-dy' },
-    logo:  { el: document.querySelector('.brand-row .logo'), vx: '--logo-dx',  vy: '--logo-dy'  },
-    role:  { el: document.querySelector('.role'), vx: '--role-dx', vy: '--role-dy' },
-  };
-
-  const sel = $('#move-target');
-  const getT = () => targets[sel?.value || 'brand'];
-
-  const mmPerPx = () => {
-    // convierte desplazamiento en px a mm según ancho real de la tarjeta
-    const card = document.querySelector('.card.front');
-    const rect = card.getBoundingClientRect();
-    const wmm  = parseFloat(getComputedStyle(root).getPropertyValue('--card-w')) || 85.6;
-    return wmm / rect.width;
-  };
-
-  const toNum = v => parseFloat(String(v).replace('mm','')) || 0;
-  function nudge(dxmm, dymm){
-    const t = getT();
-    const cs = getComputedStyle(root);
-    root.style.setProperty(t.vx, (toNum(cs.getPropertyValue(t.vx)) + dxmm) + 'mm');
-    root.style.setProperty(t.vy, (toNum(cs.getPropertyValue(t.vy)) + dymm) + 'mm');
-  }
-
-  // Flechas con Alt (Shift = paso 1mm)
-  document.addEventListener('keydown', (e)=>{
-    if (!e.altKey) return;
-    if (e.target && (e.target.tagName==='INPUT' || e.target.isContentEditable)) return;
-    const step = e.shiftKey ? 1 : .5;
-    let used=false;
-    switch(e.key){
-      case 'ArrowUp':    nudge(0,-step); used=true; break;
-      case 'ArrowDown':  nudge(0, step); used=true; break;
-      case 'ArrowLeft':  nudge(-step,0); used=true; break;
-      case 'ArrowRight': nudge( step,0); used=true; break;
-    }
-    if (used) e.preventDefault();
+/* ======================
+   INICIALIZACIÓN
+====================== */
+function initAuthBinding(){
+  // Cuando Firebase avise que está listo en window.CARITAS
+  document.addEventListener("firebase:ready:caritas", () => {
+    const auth = window.CARITAS?.auth;
+    if (!auth) return;
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      await ensureLastCred(user);
+      await renderCarnet();
+    });
   });
+}
 
-  // Botones
-  $('#mv-up')   ?.addEventListener('click', e=>{e.preventDefault(); nudge(0,-.5);});
-  $('#mv-down') ?.addEventListener('click', e=>{e.preventDefault(); nudge(0, .5);});
-  $('#mv-left') ?.addEventListener('click', e=>{e.preventDefault(); nudge(-.5,0);});
-  $('#mv-right')?.addEventListener('click', e=>{e.preventDefault(); nudge( .5,0);});
+function init(){
+  initDiseno();
+  initInputs();
+  initMove();
+  initAuthBinding();
+  renderCarnet();
 
-  // Drag (solo el target seleccionado)
-  function makeDraggable(){
-    Object.values(targets).forEach(t => t.el?.classList.add('drag-ready'));
-    let dragging = null, startX=0, startY=0, startVX=0, startVY=0;
-
-    function onDown(e){
-      const t = getT();
-      if (!t.el || !t.el.contains(e.target)) return; // drag solo sobre el target activo
-      dragging = t;
-      const cs = getComputedStyle(root);
-      startVX = toNum(cs.getPropertyValue(t.vx));
-      startVY = toNum(cs.getPropertyValue(t.vy));
-      startX = e.clientX; startY = e.clientY;
-      t.el.classList.add('dragging');
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp, { once:true });
-      e.preventDefault();
-    }
-    function onMove(e){
-      if (!dragging) return;
-      const mul = mmPerPx();
-      const dxmm = (e.clientX-startX) * mul;
-      const dymm = (e.clientY-startY) * mul;
-      root.style.setProperty(dragging.vx, (startVX + dxmm) + 'mm');
-      root.style.setProperty(dragging.vy, (startVY + dymm) + 'mm');
-    }
-    function onUp(){
-      if (dragging?.el) dragging.el.classList.remove('dragging');
-      dragging = null;
-      window.removeEventListener('pointermove', onMove);
-    }
-    // Escuchamos el área de la tarjeta frontal para iniciar drag
-    document.getElementById('card-front')?.addEventListener('pointerdown', onDown);
-  }
-  makeDraggable();
-
-  // Guardar en layout (sumamos offsets al storage)
-  const LKEY = 'cred:layout';
-  function saveLayoutPlus(){
-    const cs = getComputedStyle(root);
-    const keys = ['--cx','--cy','--d','--brand-dx','--brand-dy','--logo-dx','--logo-dy','--role-dx','--role-dy'];
-    const cfg = {}; keys.forEach(k => cfg[k] = cs.getPropertyValue(k).trim());
-    try{
-      const prev = JSON.parse(localStorage.getItem(LKEY)||'{}');
-      localStorage.setItem(LKEY, JSON.stringify({ ...prev, ...cfg }));
-    }catch{}
-    alert('📏 Layout guardado (foto + nombre/logo/rol)');
-  }
-  document.getElementById('btn-save-layout')?.addEventListener('click', (e)=>{
-    e.stopImmediatePropagation?.();
-    saveLayoutPlus();
-  }, { capture:true });
-
-  // Guardar credencial (BD): nombre y foto actuales
-  document.getElementById('btn-save-cred')?.addEventListener('click', async ()=>{
-    try{
-      const user = await waitForUser();
-      if (!user) return location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
-      const nombre = document.getElementById('nombre')?.textContent?.trim() || '';
-      const foto   = document.getElementById('foto')?.src || null;
-      await upsertCred(user.uid, user.email, nombre || null, foto || null);
-      alert('✅ Credencial guardada');
-      await renderCarnet(user);
-    }catch(err){
-      console.error(err); alert('❌ No se pudo guardar la credencial');
-    }
-  });
-})();
+  $("#btn-descargar")?.addEventListener("click", descargarPNG);
+}
+init();
 </script>
-<script src="error-overlay.js"></script>
-<script src="health-caritas.js"></script>
-<script src="self-heal-caritas.js" type="module"></script>
 </body>
 </html>

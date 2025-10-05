@@ -51,39 +51,56 @@ console.log("🛠 self-heal-caritas.js cargado");
     }
   }
 
-  // ========= Sustituir UMD por ESM =========
-  async function ensureESMLibs() {
-    const bad = ['qrcode.min.js','jsQR.min.js','html2canvas.min.js'];
-    document.querySelectorAll('script[src]').forEach(s => {
-      const src = s.getAttribute('src') || '';
-      if (bad.some(b => src.includes(b))) {
-        console.warn('🧹 Removiendo UMD por CSP:', src);
-        s.remove();
-      }
-    });
-    try {
-      if (!window.QRCode) {
-        const mod = await import('https://esm.sh/qrcode@1');
-        window.QRCode = mod.default || mod;
-        console.log('✅ QRCode (ESM) listo');
-      }
-    } catch {}
-    try {
-      if (!window.jsQR) {
-        const mod = await import('https://esm.sh/jsqr@1.4.0');
-        window.jsQR = mod.default || mod;
-        console.log('✅ jsQR (ESM) listo');
-      }
-    } catch {}
-    try {
-      if (!window.html2canvas) {
-        const mod = await import('https://esm.sh/html2canvas@1.4.1');
-        window.html2canvas = mod.default || mod;
-        console.log('✅ html2canvas (ESM) listo');
-      }
-    } catch {}
+ // ========= Sustituir UMD por ESM =========
+async function ensureESMLibs() {
+  const bad = ['qrcode.min.js','jsQR.min.js','html2canvas.min.js'];
+  document.querySelectorAll('script[src]').forEach(s => {
+    const src = s.getAttribute('src') || '';
+    if (bad.some(b => src.includes(b))) {
+      console.warn('🧹 Removiendo UMD por CSP:', src);
+      s.remove();
+    }
+  });
+
+  // QR
+  try {
+    if (!window.QRCode) {
+      const mod = await import('https://esm.sh/qrcode@1');
+      window.QRCode = mod.default || mod;
+      console.log('✅ QRCode (ESM) listo');
+    }
+    // Alias de compatibilidad para código que espera window.QR
+    if (window.QRCode && !window.QR) {
+      window.QR = window.QRCode;
+      console.log('↩️ Alias QR -> QRCode');
+    }
+  } catch (e) {
+    console.warn('⚠️ No se pudo cargar QR ESM', e);
   }
 
+  // jsQR
+  try {
+    if (!window.jsQR) {
+      const mod = await import('https://esm.sh/jsqr@1.4.0');
+      window.jsQR = mod.default || mod;
+      console.log('✅ jsQR (ESM) listo');
+    }
+  } catch (e) {
+    console.warn('⚠️ No se pudo cargar jsQR ESM', e);
+  }
+
+  // html2canvas
+  try {
+    if (!window.html2canvas) {
+      const mod = await import('https://esm.sh/html2canvas@1.4.1');
+      window.html2canvas = mod.default || mod;
+      console.log('✅ html2canvas (ESM) listo');
+    }
+  } catch (e) {
+    console.warn('⚠️ No se pudo cargar html2canvas ESM', e);
+  }
+}
+  
   // ========= Asegurar Supabase =========
   async function ensureSupabase() {
     window.CARITAS = window.CARITAS || {};
