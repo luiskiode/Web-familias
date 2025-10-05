@@ -20,10 +20,10 @@
     --name-size: 14px;
     --role-size: 11px;
 
-    /* QR (se ajusta por diseño desde JS) */
-    --qr-size: 18mm;
-    --qr-x: 6mm;    /* separación al borde derecho */
-    --qr-y: 7mm;    /* separación al borde inferior */
+    /* QR (solo en reverso; se ajusta por diseño) */
+    --qr-size: 19mm;
+    --qr-x: 7mm;
+    --qr-y: 8mm;
   }
 
   *{box-sizing:border-box}
@@ -106,7 +106,7 @@
   body.tema-blanco .brand-row .name,
   body.tema-blanco .brand-row .role{color:#b10202}
 
-  /* QR en su lugar (usa variables) */
+  /* QR (SOLO REVERSO) */
   .qr-wrap{
     position:absolute;
     right:var(--qr-x);
@@ -159,13 +159,16 @@
       <button id="btn-guardar-layout" class="btn ghost">📏 Guardar layout</button>
       <button id="btn-descargar" class="btn primary">⬇️ Descargar PNG</button>
     </div>
-    <p class="muted">Arrastra el bloque del nombre (o usa <kbd>ALT</kbd> + flechas) para ajuste fino.</p>
+    <p class="muted">
+      Arrastra el bloque del nombre (o usa <kbd>ALT</kbd> + flechas) para moverlo.
+      Para la <strong>FOTO</strong>: <kbd>Ctrl</kbd> + Flechas (mover), <kbd>Ctrl</kbd> + <kbd>=</kbd>/<kbd>-</kbd> (zoom).
+    </p>
   </section>
 
   <!-- LIENZO (FRENTE + REVERSO) -->
   <section id="canvas">
     <div id="sheet">
-      <!-- Frente -->
+      <!-- Frente (SIN QR) -->
       <article id="card-front" class="card gafete">
         <img id="tpl-img-front" class="template" alt="plantilla frente" src="assets/plantillas/cred-frente-negro.png" />
         <div class="photo-wrap"><img id="foto" class="photo" alt="foto" src="" /></div>
@@ -176,12 +179,12 @@
             <p id="rol" class="role">Voluntario Cáritas CNC</p>
           </div>
         </div>
-        <div class="qr-wrap"><canvas id="qr"></canvas></div>
       </article>
 
-      <!-- Reverso (opcional) -->
+      <!-- Reverso (CON QR) -->
       <article id="card-back" class="card gafete">
         <img id="tpl-img-back" class="template" alt="plantilla reverso" src="assets/plantillas/cred-reverso.png" />
+        <div class="qr-wrap"><canvas id="qr-back"></canvas></div>
       </article>
     </div>
   </section>
@@ -201,6 +204,8 @@ const $  = (q,root=document)=>root.querySelector(q);
 
 /* Utils */
 function setVar(name, val){ document.documentElement.style.setProperty(name, val); }
+const mm = (v)=>parseFloat(String(v).replace("mm","")) || 0;
+function setVarMM(name, val){ setVar(name, `${val.toFixed(2)}mm`); }
 
 /* Backend (fallbacks seguros) */
 async function upsertCred(uid, email, nombre, fotoUrl){
@@ -230,8 +235,8 @@ async function drawQR(canvasId, url){
   const render = () => {
     let w = box.getBoundingClientRect().width;
     if (!w) {
-      const mm = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr-size')) || 18;
-      w = mm * 3.7795; // mm → px
+      const mmSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--qr-size')) || 19;
+      w = mmSize * 3.7795; // mm → px
     }
     const px = Math.max(96, Math.round(w * dpr));
     el.width = el.height = px;
@@ -259,11 +264,12 @@ async function renderCarnet(){
   $("#rol").textContent    = rolSafe;
   $("#foto").src = c.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreSafe)}&background=111&color=fff`;
 
+  // QR SOLO EN EL REVERSO
   const qrUrl = new URL(`credenciales.html?view=public&id=${user?.uid||"anon"}`, document.baseURI).href;
-  await drawQR("qr", qrUrl);
+  await drawQR("qr-back", qrUrl);
 }
 
-/* Conmutador BLANCO/NEGRO con presets */
+/* Conmutador BLANCO/NEGRO con presets (foto + QR trasero) */
 const TPLS = {
   blanco: { front: "assets/plantillas/cred-frente-blanco.png", back: "assets/plantillas/cred-reverso.png" },
   negro:  { front: "assets/plantillas/cred-frente-negro.png",  back: "assets/plantillas/cred-reverso.png" }
@@ -275,31 +281,27 @@ function setDiseno(key){
   if (frontImg) frontImg.src = tpl.front;
   if (backImg)  backImg.src  = tpl.back || "";
 
-  // Tema UI
   document.body.classList.toggle("tema-negro",  key==="negro");
   document.body.classList.toggle("tema-blanco", key==="blanco");
 
-  // ====== PRESETS por diseño ======
+  /* PRESETS por diseño (ajustados para llenar bien el círculo) */
   if (key === "negro"){
-    /* Plantilla negra */
-    setVar("--cx", "27.3mm");
-    setVar("--cy", "18.2mm");
-    setVar("--d",  "33.8mm");   // un poco + grande para cubrir el borde del círculo
+    setVar("--cx", "27.6mm");
+    setVar("--cy", "18.3mm");
+    setVar("--d",  "34.2mm");   // un toque mayor para cubrir el borde interno
 
     setVar("--qr-size", "18.5mm");
-    setVar("--qr-x",    "6mm"); // separaciones al borde
+    setVar("--qr-x",    "6mm");
     setVar("--qr-y",    "7mm");
   } else {
-    /* Plantilla blanca */
-    setVar("--cx", "28.0mm");
-    setVar("--cy", "22.0mm");
-    setVar("--d",  "33.0mm");
+    setVar("--cx", "28.2mm");
+    setVar("--cy", "21.6mm");
+    setVar("--d",  "34.0mm");
 
     setVar("--qr-size", "19mm");
     setVar("--qr-x",    "7mm");
     setVar("--qr-y",    "8mm");
   }
-  // =================================
   LS.setItem("cred_diseno", key);
 }
 function initDiseno(){
@@ -346,13 +348,13 @@ function initInputs(){
   });
 }
 
-/* Movimiento fino + Guardar layout */
+/* Movimiento fino (brand) + Foto por teclado + Guardar layout */
 function px(n){ return Number(n.toFixed(2)); }
 function initMove(){
   const brand = $("#brand-front");
   brand?.classList.add("draggable");
 
-  // Drag
+  // Drag brand
   let dragging=false, dx=0, dy=0;
   brand?.addEventListener("pointerdown",(e)=>{
     dragging=true;brand.setPointerCapture(e.pointerId);
@@ -370,24 +372,49 @@ function initMove(){
   brand?.addEventListener("pointerup", endDrag);
   brand?.addEventListener("pointercancel", endDrag);
 
-  // ALT + flechas
+  // ALT + flechas: mover brand
   window.addEventListener("keydown",(e)=>{
-    if(!e.altKey) return;
-    const st = getComputedStyle(brand);
-    const m = st.transform.match(/matrix\(([^)]+)\)/);
-    let tx=0, ty=0;
-    if(m){
-      const arr = m[1].split(",").map(Number);
-      tx = arr[4]||0; ty = arr[5]||0;
+    if(e.altKey){
+      const st = getComputedStyle(brand);
+      const m = st.transform.match(/matrix\(([^)]+)\)/);
+      let tx=0, ty=0;
+      if(m){
+        const arr = m[1].split(",").map(Number);
+        tx = arr[4]||0; ty = arr[5]||0;
+      }
+      const step = e.shiftKey ? 2 : 0.5;
+      if(e.key==="ArrowLeft"){ tx-=step; }
+      else if(e.key==="ArrowRight"){ tx+=step; }
+      else if(e.key==="ArrowUp"){ ty-=step; }
+      else if(e.key==="ArrowDown"){ ty+=step; }
+      else return;
+      e.preventDefault();
+      brand.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
     }
-    const step = e.shiftKey ? 2 : 0.5;
-    if(e.key==="ArrowLeft"){ tx-=step; }
-    else if(e.key==="ArrowRight"){ tx+=step; }
-    else if(e.key==="ArrowUp"){ ty-=step; }
-    else if(e.key==="ArrowDown"){ ty+=step; }
-    else return;
+  });
+
+  // CTRL + flechas: mover centro de FOTO (—cx, cy—)
+  window.addEventListener("keydown",(e)=>{
+    if(!e.ctrlKey) return;
+    const step = e.shiftKey ? 2 : 0.5; // mm
+    const curX = mm(getComputedStyle(document.documentElement).getPropertyValue("--cx"));
+    const curY = mm(getComputedStyle(document.documentElement).getPropertyValue("--cy"));
+    let nx = curX, ny = curY;
+    if(e.key==="ArrowLeft"){ nx = curX - step; }
+    else if(e.key==="ArrowRight"){ nx = curX + step; }
+    else if(e.key==="ArrowUp"){ ny = curY - step; }
+    else if(e.key==="ArrowDown"){ ny = curY + step; }
+    else if(e.key==="=" || e.key==="+"){ // zoom in
+      const d = mm(getComputedStyle(document.documentElement).getPropertyValue("--d"));
+      setVarMM("--d", d + (e.shiftKey ? 2 : 0.5));
+      e.preventDefault(); return;
+    } else if(e.key==="-" || e.key==="_"){ // zoom out
+      const d = mm(getComputedStyle(document.documentElement).getPropertyValue("--d"));
+      setVarMM("--d", Math.max(10, d - (e.shiftKey ? 2 : 0.5)));
+      e.preventDefault(); return;
+    } else { return; }
+    setVarMM("--cx", nx); setVarMM("--cy", ny);
     e.preventDefault();
-    brand.style.transform = `translate(${px(tx)}px, ${px(ty)}px)`;
   });
 
   // Guardar layout
