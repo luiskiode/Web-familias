@@ -61,10 +61,22 @@
     </p>
   </section>
 
-<!-- 📂 Botón a Google Drive + Familias -->
+<!-- 📂 Botones principales -->
 <section class="container card center">
   <a id="btn-drive" class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
   <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
+</section>
+
+<!-- 🔽 Panel plegable donde VIVIRÁ la tabla real -->
+<section id="familiasPanel" class="familias-panel" hidden>
+  <header class="familias-head">
+    <h3 class="familias-title">Lista de familias</h3>
+    <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
+    <button id="familiasExport" class="btn">⬇️ Exportar CSV</button>
+  </header>
+  <div id="familiasMountInline" class="familias-body">
+    <!-- Aquí se MOVERÁ (no clonar) #familiasTable -->
+  </div>
 </section>
 
 <!-- 🎫 Credenciales (botón único) -->
@@ -435,106 +447,92 @@
   });
   
 </script>
+
 <script>
 (function(){
-  // 1) Ubicar el botón "Drive" y añadir "Familias" a su lado
-  const driveBtn = document.querySelector('#btn-drive, button[data-action="drive"], .btn-drive');
-  if (driveBtn && !document.getElementById('btn-familias')) {
-    const btn = document.createElement('button');
-    btn.id = 'btn-familias';
-    btn.className = driveBtn.className || 'btn ghost';
-    btn.style.marginLeft = '8px';
-    btn.textContent = 'Familias';
-    driveBtn.insertAdjacentElement('afterend', btn);
-  }
+  // Selecciones base (ajusta si cambias IDs)
+  const TABLE_SEL = '#familiasTable';
 
-  // 2) Selecciones del modal
-  const modal   = document.getElementById('familiasModal');
-  const mount   = document.getElementById('familiasMount');
-  const search  = document.getElementById('familiasSearch');
-  const btnOpen = document.getElementById('btn-familias');
-  const btnX1   = document.getElementById('closeFamilias');
-  const btnX2   = document.getElementById('closeFamilias2');
-  const btnCSV  = document.getElementById('exportFamilias');
+  const $ = (q,root=document)=>root.querySelector(q);
 
-  // 3) Función para clonar la lista/tabla existente
-  // Ajusta los selectores a tu DOM real:
-  // - Si usas <table id="familias-table">...<tbody>...</tbody></table>
-  // - O una lista <div id="familias-list">...</div>
-  function getFamiliasSource(){
-  return (
-    document.querySelector('#familiasTable') || // <--- TU ID REAL
-    document.querySelector('#familias-table') ||
-    document.querySelector('[data-familias-table]') ||
-    document.querySelector('#familias-list') ||
-    document.querySelector('[data-familias-list]')
-  );
-}
+  // Reubicar contenedor de tabla + paginación (una sola vez)
+  let moved = false;
+  function mountFamiliesBlockOnce(){
+    if (moved) return true;
 
-  function openModal(){
-    // Limpia el mount y clona la fuente actual
-    mount.innerHTML = '';
-    const src = getFamiliasSource();
-    if (src) {
-      const clone = src.cloneNode(true);
-      // Evita IDs duplicados
-      clone.removeAttribute('id');
-      mount.appendChild(clone);
-    } else {
-      mount.innerHTML = '<p class="muted">No encontré la lista de familias en la página. Verifica el selector.</p>';
+    const table = document.querySelector(TABLE_SEL);
+    const mount = $('#familiasMountInline');
+    if (!table || !mount) return false;
+
+    // Tomamos el wrapper de la tabla y el contenedor de paginación
+    const wrapper = table.closest('.table-wrapper') || table;
+    const pager   = document.getElementById('prevPage')?.parentElement || null;
+
+    // Creamos placeholders para no perder posición original (por si algún día se quiere revertir)
+    const phWrapper = document.createComment('familias-wrapper-placeholder');
+    wrapper.parentNode.insertBefore(phWrapper, wrapper);
+
+    let phPager = null;
+    if (pager && pager.parentNode) {
+      phPager = document.createComment('familias-pager-placeholder');
+      pager.parentNode.insertBefore(phPager, pager);
     }
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-    search && search.focus();
+
+    // Montamos un bloque que contenga wrapper + pager
+    const block = document.createElement('div');
+    block.id = 'familiasBlockInline';
+    block.appendChild(wrapper);
+    if (pager) block.appendChild(pager);
+
+    mount.appendChild(block);
+    moved = true;
+    return true;
   }
 
-  function closeModal(){
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
+  // Abrir/cerrar panel
+  function togglePanel(force){
+    const panel = $('#familiasPanel');
+    if (!panel) return;
+    if (panel.hasAttribute('hidden')) {
+      mountFamiliesBlockOnce();
+    }
+    const willOpen = (typeof force === 'boolean') ? force : panel.hasAttribute('hidden');
+    if (willOpen) {
+      panel.removeAttribute('hidden');
+      panel.scrollIntoView({ behavior:'smooth', block:'start' });
+    } else {
+      panel.setAttribute('hidden','');
+    }
   }
 
-  // 4) Filtro simple por texto (afecta filas <tr> o items <div>)
-  function filterFamilias(q){
-    const root = mount.firstElementChild;
-    if (!root) return;
-    const needle = q.trim().toLowerCase();
+  // Filtro sobre la tabla real
+  function filterFamilies(q){
+    const table = document.querySelector(TABLE_SEL);
+    if (!table) return;
+    const needle = (q||'').trim().toLowerCase();
 
-    // Si es tabla:
-    root.querySelectorAll('tbody tr, tr').forEach(tr=>{
+    table.querySelectorAll('tbody tr, tr').forEach(tr=>{
       const text = tr.textContent.toLowerCase();
       tr.style.display = (!needle || text.includes(needle)) ? '' : 'none';
     });
-    // Si es lista:
-    root.querySelectorAll('.item, li, [data-row]').forEach(el=>{
-      const text = el.textContent.toLowerCase();
-      el.style.display = (!needle || text.includes(needle)) ? '' : 'none';
-    });
   }
 
-  // 5) Exportar CSV básico desde lo que esté montado
+  // Exportar CSV (solo filas visibles)
   function exportCSV(){
-    const root = mount.querySelector('table') || mount;
-    let rows = [];
-    // Extrae filas de tabla si existe
+    const table = document.querySelector(TABLE_SEL);
+    if (!table) return;
+    const root = table.closest('table') || table;
+    const rows = [];
     const trs = root.querySelectorAll('tr');
-    if (trs.length){
-      trs.forEach(tr=>{
-        const cells = [...tr.querySelectorAll('th,td')].map(td=>{
-          let t = (td.innerText || '').replace(/\s+/g,' ').trim();
-          // CSV escape
-          if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
-          return t;
-        });
-        rows.push(cells.join(','));
+    trs.forEach(tr=>{
+      if (tr.style && tr.style.display==='none') return;
+      const cells = [...tr.querySelectorAll('th,td')].map(td=>{
+        let t=(td.innerText||'').replace(/\s+/g,' ').trim();
+        if (/[",;\n]/.test(t)) t=`"${t.replace(/"/g,'""')}"`;
+        return t;
       });
-    } else {
-      // Fallback: cada item como fila
-      root.querySelectorAll('.item, li, [data-row]').forEach(el=>{
-        let t = (el.innerText || '').replace(/\s+/g,' ').trim();
-        if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
-        rows.push(t);
-      });
-    }
+      if (cells.length) rows.push(cells.join(','));
+    });
     const csv = rows.join('\n');
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
@@ -544,33 +542,20 @@
     URL.revokeObjectURL(a.href);
   }
 
-  // 6) Eventos
-  btnOpen && btnOpen.addEventListener('click', openModal);
-  btnX1   && btnX1.addEventListener('click', closeModal);
-  btnX2   && btnX2.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeModal(); });
-  search && search.addEventListener('input', (e)=> filterFamilias(e.target.value));
-  btnCSV && btnCSV.addEventListener('click', exportCSV);
+  // Eventos
+  document.addEventListener('click', (e)=>{
+    if (e.target.closest('#btn-familias')) togglePanel();
+    if (e.target.closest('#familiasExport')) exportCSV();
+  });
+  document.addEventListener('input', (e)=>{
+    if (e.target && e.target.id==='familiasSearch') filterFamilies(e.target.value);
+  });
+
+  // (Opcional) abrir por defecto si viene con #familias
+  if (location.hash.replace('#','').toLowerCase().includes('familias')) {
+    togglePanel(true);
+  }
 })();
 </script>
-<!-- ===== Modal: Lista de Familias ===== -->
-<div id="familiasModal" class="modal" aria-hidden="true">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3>Lista de familias</h3>
-      <input id="familiasSearch" class="search" type="search" placeholder="Filtrar..." />
-      <button id="closeFamilias" class="btn ghost" aria-label="Cerrar">Cerrar</button>
-    </div>
-    <div class="modal-body">
-      <!-- Aquí montamos/clonamos la tabla existente -->
-      <div id="familiasMount"></div>
-    </div>
-    <div class="modal-foot">
-      <button id="exportFamilias" class="btn icon">⬇️ Exportar CSV</button>
-      <button id="closeFamilias2" class="btn">Listo</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
