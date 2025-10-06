@@ -260,3 +260,29 @@ input:required,select:required{border-left:3px solid var(--primary)}
   object-position:center;
   display:block;
 }
+/* ===== Modal Familias ===== */
+.modal{
+  position:fixed; inset:0; display:none; z-index:1000;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
+}
+.modal.open{display:grid; place-items:center}
+.modal-card{
+  width:min(1200px, 92vw); max-height:84vh; overflow:auto;
+  background:#0f1115; color:#fff; border:1px solid #2a2a2a;
+  border-radius:16px; box-shadow:0 18px 60px rgba(0,0,0,.6);
+}
+.modal-head{
+  position:sticky; top:0; display:flex; align-items:center; gap:12px;
+  padding:12px 16px; background:#12151b; border-bottom:1px solid #242424; z-index:1;
+}
+.modal-head h3{margin:0; font-size:1rem; font-weight:700}
+.modal-body{padding:12px 16px}
+.modal-foot{
+  display:flex; justify-content:flex-end; gap:8px; padding:12px 16px;
+  border-top:1px solid #242424; background:#12151b
+}
+.btn.icon{display:inline-flex; align-items:center; gap:8px}
+.modal .search{
+  margin-left:auto; min-width:220px; height:36px; border-radius:10px;
+  border:1px solid #333; background:#0e0f13; color:#e8e8e8; padding:0 10px;
+}
