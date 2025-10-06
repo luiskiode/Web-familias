@@ -61,10 +61,11 @@
     </p>
   </section>
 
-  <!-- 📂 Botón a Google Drive -->
-  <section class="container card center">
-    <a class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
-  </section>
+<!-- 📂 Botón a Google Drive + Familias -->
+<section class="container card center">
+  <a id="btn-drive" class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
+  <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
+</section>
 
 <!-- 🎫 Credenciales (botón único) -->
 <section class="container card center">
@@ -461,13 +462,14 @@
   // - Si usas <table id="familias-table">...<tbody>...</tbody></table>
   // - O una lista <div id="familias-list">...</div>
   function getFamiliasSource(){
-    return (
-      document.querySelector('#familias-table') ||
-      document.querySelector('[data-familias-table]') ||
-      document.querySelector('#familias-list') ||
-      document.querySelector('[data-familias-list]')
-    );
-  }
+  return (
+    document.querySelector('#familiasTable') || // <--- TU ID REAL
+    document.querySelector('#familias-table') ||
+    document.querySelector('[data-familias-table]') ||
+    document.querySelector('#familias-list') ||
+    document.querySelector('[data-familias-list]')
+  );
+}
 
   function openModal(){
     // Limpia el mount y clona la fuente actual
