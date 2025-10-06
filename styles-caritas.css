@@ -286,3 +286,29 @@ input:required,select:required{border-left:3px solid var(--primary)}
   margin-left:auto; min-width:220px; height:36px; border-radius:10px;
   border:1px solid #333; background:#0e0f13; color:#e8e8e8; padding:0 10px;
 }
+
+/* ===== Panel Famlias (inline, no modal) ===== */
+.familias-panel{
+  margin: 10px auto;
+  max-width: 1100px;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  background: #0f1115;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+body.tema-blanco .familias-panel{
+  background:#ffffff; color:#111; border-color:#e5e7eb;
+}
+.familias-head{
+  display:flex; gap:10px; align-items:center;
+  padding:10px 12px; border-bottom:1px solid #232323;
+}
+body.tema-blanco .familias-head{ border-bottom-color:#ececec }
+.familias-title{ margin:0; font-size:1rem; font-weight:700 }
+.familias-search{
+  margin-left:auto; min-width:240px; height:36px;
+  border-radius:10px; border:1px solid #333; background:#0e0f13; color:#e8e8e8; padding:0 10px;
+}
+body.tema-blanco .familias-search{ background:#fff; color:#111; border-color:#ddd }
+.familias-body{ padding:12px; overflow:auto; max-height:70vh }

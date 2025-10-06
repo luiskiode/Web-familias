@@ -557,5 +557,187 @@
   }
 })();
 </script>
+<!-- ==== Modal: Historial por familia ==== -->
+<div id="histModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="histTitle">Historial</h3>
+      <input id="histSearch" class="search" type="search" placeholder="Filtrar..." />
+      <button id="histExport" class="btn">⬇️ Exportar CSV</button>
+      <button id="histClose" class="btn ghost">Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <table id="histTable">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Resumen de cambios</th>
+          </tr>
+        </thead>
+        <tbody><!-- rows dinámicas --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+   // ========= Config =========
+  const STORAGE_KEY = 'familias_history_v1'; // localStorage
+  const TABLE_SEL   = '#familiasTable';
+  const FAMILIA_ID_FIELD = 'id';  // <-- usamos el id real de Supabase
+
+  // ========= Helpers =========
+  const $ = (q,root=document)=>root.querySelector(q);
+  const nowISO = ()=> new Date().toISOString();
+
+  function loadDB(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch{ return {}; } }
+  function saveDB(db){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+  function getHistory(familyId){ const db = loadDB(); return db[familyId] || []; }
+  function addHistory(familyId, entry){
+    const db = loadDB(); db[familyId] = db[familyId] || [];
+    db[familyId].unshift(entry); saveDB(db);
+  }
+
+  function diffObjects(prev, cur){
+    const keys = Array.from(new Set([...Object.keys(prev||{}), ...Object.keys(cur||{})]));
+    const changes = [];
+    keys.forEach(k=>{
+      const a = (prev||{})[k] ?? '';
+      const b = (cur||{})[k] ?? '';
+      if (String(a) !== String(b)) changes.push({field:k, from:a, to:b});
+    });
+    return changes;
+  }
+
+  // ========= Hook opcional en submit =========
+  // Si quieres registrar también el envío del formulario, mantenlo;
+  // si no, puedes comentarlo y registrar solo cambios desde la tabla.
+  async function logFamilyUpdate(formData, opts={}){
+    const user = (window.CARITAS?.auth?.currentUser) || null;
+    const familyId = formData[FAMILIA_ID_FIELD]; // en submit puede no existir todavía
+    if(!familyId){
+      // Si aún no existe id (insert nuevo), no registramos aquí.
+      // Los cambios posteriores (inline/paginación) sí tendrán id y quedarán en historial.
+      return;
+    }
+    const hist = getHistory(familyId);
+    const prevSnapshot = hist.find(h=>h.snapshot)?.snapshot || {};
+    const changes = diffObjects(prevSnapshot, formData);
+
+    addHistory(familyId, {
+      ts: nowISO(),
+      user: user?.email || user?.displayName || 'anon',
+      action: opts.action || 'update',
+      snapshot: formData,
+      changes
+    });
+  }
+
+  // ========= Botón “Historial” por fila =========
+  function ensureHistoryButtons(){
+    const table = document.querySelector(TABLE_SEL);
+    if(!table) return;
+
+    table.querySelectorAll('tbody tr').forEach(tr=>{
+      const familyId = tr.dataset.id; // el render ya pone data-id = fam.id
+      if (!familyId) return;
+
+      // usa la última celda (Acciones) ya existente
+      let td = tr.lastElementChild;
+      if (!td || td.tagName!=='TD') return;
+
+      // evita duplicados
+      if (td.querySelector('.btn-hist')) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-ghost btn-hist';
+      btn.type = 'button';
+      btn.textContent = 'Historial';
+      btn.addEventListener('click', ()=> openHistoryModal(familyId));
+      td.appendChild(btn);
+    });
+  }
+
+  // ========= UI modal =========
+  function renderHistoryTable(familyId, q=''){
+    const tbody = $('#histTable tbody'); tbody.innerHTML = '';
+    const rows = getHistory(familyId);
+    const needle = q.trim().toLowerCase();
+
+    rows.forEach(r=>{
+      const summary = (r.changes && r.changes.length)
+        ? r.changes.map(c=> `${c.field}: “${c.from}” → “${c.to}”`).join(' | ')
+        : '(sin cambios detectados)';
+      const line = `${r.ts} ${r.user||''} ${summary}`.toLowerCase();
+      if (needle && !line.includes(needle)) return;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${new Date(r.ts).toLocaleString()}</td>
+        <td>${r.user || '—'}</td>
+        <td>${summary}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openHistoryModal(familyId){
+    const modal = $('#histModal');
+    $('#histTitle').textContent = `Historial – ID: ${familyId}`;
+    renderHistoryTable(familyId);
+    modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+
+    $('#histSearch').oninput = (e)=> renderHistoryTable(familyId, e.target.value);
+    $('#histExport').onclick = ()=> exportHistoryCSV(familyId);
+    $('#histClose').onclick  = ()=> closeHistoryModal();
+    modal.addEventListener('click', (e)=>{ if (e.target === modal) closeHistoryModal(); }, {once:true});
+    document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ closeHistoryModal(); document.removeEventListener('keydown', esc); }});
+  }
+  function closeHistoryModal(){
+    const modal = $('#histModal');
+    modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
+  }
+
+  function exportHistoryCSV(familyId){
+    const rows = getHistory(familyId);
+    const out = [['fecha','usuario','accion','campo','de','a']];
+    rows.forEach(r=>{
+      if (r.changes?.length){
+        r.changes.forEach(c=> out.push([r.ts, r.user||'', r.action||'', c.field, String(c.from||''), String(c.to||'')]));
+      } else {
+        out.push([r.ts, r.user||'', r.action||'', '', '', '']);
+      }
+    });
+    const csv = out.map(cols => cols.map(v=>{
+      let t = String(v).replace(/\s+/g,' ').trim();
+      if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
+      return t;
+    }).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `historial_${familyId}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ========= Hook correcto del submit (opcional)
+  const form = document.querySelector('#famForm'); // <-- id real en tu HTML
+  if (form){
+    form.addEventListener('submit', async (e)=>{
+      try{
+        const data = Object.fromEntries(new FormData(form).entries());
+        // OJO: al crear nuevo, todavía NO tenemos id; por eso este log es opcional.
+        // Si actualizas familias existentes con id, este log ya usará el id correcto.
+        await logFamilyUpdate(data, {action:'submit'});
+      }catch(err){ console.warn('No se pudo registrar historial:', err); }
+    });
+  }
+
+  // ========= Start =========
+  ensureHistoryButtons();
+})();
+</script>
 </body>
 </html>
