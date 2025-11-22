@@ -4,7 +4,7 @@
 
 :root {
   --primary:#b91c1c;
-  --bg:#000;
+  --bg:transparent;
   --text:#fff;
   --muted:#c9c9c9;
   --border:#551010;
