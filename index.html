@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#b91c1c" />
   <title>Cáritas CNC</title>
-  <link rel="icon" type="image/png" href="img/favicon.png">
 
+  <link rel="icon" type="image/png" href="img/favicon.png">
   <base href="/Web-familias/">
   <link rel="icon" href="img/favicon.ico" />
   <link rel="stylesheet" href="styles-caritas.css" />
 
-  <!-- 🎨 Ajustes rápidos locales -->
+  <!-- 🎨 Ajustes de diseño específicos de esta página -->
   <style>
-    /* Un poco más de aire entre texto y botón en tarjetas centradas */
+    /* Un poco más de espacio entre texto y botón en tarjetas centradas */
     .card.center .btn {
       margin-top: 0.5rem;
     }
@@ -63,7 +63,7 @@
       filter: brightness(1.08);
     }
 
-    /* Modal específico de galería reutilizando estilos base de .modal/.modal-card */
+    /* Modal específico de galería reutilizando estilos base */
     #galleryModal .modal-card {
       max-width: 900px;
     }
@@ -76,31 +76,32 @@
     }
   </style>
 
-  <!-- ✅ CSP -->
+  <!-- ✅ CSP (agregamos jsdelivr para Chart.js) -->
   <meta http-equiv="Content-Security-Policy"
-  content="default-src 'self';
-           script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com https://www.gstatic.com;
-           style-src 'self' 'unsafe-inline' https://unpkg.com;
-           img-src * data: blob:;
-           connect-src *;
-           font-src * data:;">
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com https://www.gstatic.com https://cdn.jsdelivr.net;
+             style-src 'self' 'unsafe-inline' https://unpkg.com;
+             img-src * data: blob:;
+             connect-src *;
+             font-src * data:;">
 
   <!-- 🛠 Herramientas de diagnóstico -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
   <script defer src="api.js/error-overlay.js"></script>
 
-  <!-- ✅ Supabase ESM -->
+  <!-- ✅ Supabase ESM (único cliente para toda la app) -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw"; // ⚠️ reemplaza con tu anon key
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
 
     window.CARITAS = window.CARITAS || {};
     window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     document.dispatchEvent(new Event("supabase:ready:caritas"));
   </script>
 </head>
+
 <body>
   <!-- 🎥 Fondo -->
   <video id="video-fondo" autoplay muted loop>
@@ -138,7 +139,7 @@
     <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
   </section>
 
-  <!-- 🔽 Panel plegable donde VIVIRÁ la tabla real -->
+  <!-- 🔽 Panel plegable donde se monta la tabla de familias -->
   <section id="familiasPanel" class="familias-panel" hidden>
     <header class="familias-head">
       <h3 class="familias-title">Lista de familias</h3>
@@ -150,7 +151,7 @@
     </div>
   </section>
 
-  <!-- 🎫 Credenciales (botón único) -->
+  <!-- 🎫 Credenciales -->
   <section class="container card center">
     <h2>🎫 Credenciales Cáritas CNC</h2>
     <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
@@ -165,30 +166,137 @@
       organizan campañas de ayuda y sostienen espacios de servicio en comunidad.
     </p>
 
-   <div class="gallery-grid">
-  <figure class="gallery-item">
-    <img src="img/galeria1.jpg" alt="Actividad 1" data-gallery-full="img/galeria1.jpg">
-  </figure>
-
-  <figure class="gallery-item">
-    <img src="img/galeria2.jpg" alt="Actividad 2" data-gallery-full="img/galeria2.jpg">
-  </figure>
-
-  <figure class="gallery-item">
-    <img src="img/galeria3.jpg" alt="Actividad 3" data-gallery-full="img/galeria3.jpg">
-  </figure>
-
-  <figure class="gallery-item">
-    <img src="img/galeria4.jpg" alt="Actividad 4" data-gallery-full="img/galeria4.jpg">
-  </figure>
-
-  <figure class="gallery-item">
-    <img src="img/galeria5.jpg" alt="Actividad 5" data-gallery-full="img/galeria5.jpg">
-  </figure>
-</div>
+    <div class="gallery">
+      <h3 style="font-size:1rem;margin-top:0.75rem;">📸 Galería de momentos</h3>
+      <div class="gallery-grid">
+        <!-- Miniaturas (usa tus fotos en /img) -->
+        <figure class="gallery-item">
+          <img src="img/galeria1.jpg" alt="Actividad 1" data-gallery-full="img/galeria1.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria2.jpg" alt="Actividad 2" data-gallery-full="img/galeria2.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria3.jpg" alt="Actividad 3" data-gallery-full="img/galeria3.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria4.jpg" alt="Actividad 4" data-gallery-full="img/galeria4.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria5.jpg" alt="Actividad 5" data-gallery-full="img/galeria5.jpg">
+        </figure>
+      </div>
+      <p class="muted" style="margin-top:.6rem;font-size:.85rem;">
+        Puedes cambiar estas imágenes colocando tus fotos en la carpeta <code>img/</code> y actualizando los nombres de archivo.
+      </p>
+    </div>
   </section>
-  
-  <!-- 📋 Formulario Integral -->
+
+  <!-- 💰 Dashboard financiero -->
+  <section class="container card" id="tesoreria">
+    <h2>💰 Dashboard financiero Cáritas CNC</h2>
+    <p>Resumen de ingresos y gastos registrados en tesorería.</p>
+
+    <!-- Tarjetas de resumen -->
+    <div class="dash-grid">
+      <div class="stat-card">
+        <span>Total ingresos</span>
+        <strong id="tesoIngresos">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Total gastos</span>
+        <strong id="tesoGastos">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Saldo</span>
+        <strong id="tesoSaldo">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Movimientos</span>
+        <strong id="tesoMovs">0</strong>
+      </div>
+    </div>
+
+    <!-- Filtros y acciones -->
+    <div class="teso-filtros">
+      <label>Tipo:
+        <select id="tesoFiltroTipo">
+          <option value="">Todos</option>
+          <option value="ingreso">Ingresos</option>
+          <option value="gasto">Gastos</option>
+        </select>
+      </label>
+
+      <button class="btn" id="tesoExport">⬇️ Exportar CSV</button>
+    </div>
+
+    <!-- Form + gráfico -->
+    <div class="teso-layout">
+      <!-- Formulario nuevo movimiento -->
+      <form id="tesoForm" class="teso-form">
+        <h3>➕ Registrar movimiento</h3>
+        <div class="form-grid">
+          <label>Tipo<br>
+            <select name="tipo" required>
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+          </label>
+          <label>Categoría<br>
+            <input type="text" name="categoria" placeholder="Chocolatada, logística…">
+          </label>
+          <label>Monto (S/)<br>
+            <input type="number" name="monto" step="0.01" required>
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Abonado / Responsable<br>
+            <input type="text" name="abonado" placeholder="Nombre">
+          </label>
+          <label>Medio de pago<br>
+            <input type="text" name="medio_pago" placeholder="Yape, efectivo…">
+          </label>
+        </div>
+        <label>Concepto<br>
+          <input type="text" name="concepto" placeholder="Ej: Aporte campaña, compra de víveres…">
+        </label>
+        <label>Observaciones<br>
+          <textarea name="observaciones" rows="2"></textarea>
+        </label>
+        <button type="submit" class="btn" style="margin-top:.5rem;">Guardar movimiento</button>
+      </form>
+
+      <!-- Gráfico -->
+      <div class="teso-chart">
+        <h3>📊 Ingresos vs gastos</h3>
+        <canvas id="tesoChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla editable de tesorería -->
+    <div class="table-wrapper teso-table-wrapper">
+      <table id="tesoTable">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Categoría</th>
+            <th>Concepto</th>
+            <th>Abonado</th>
+            <th>Monto (S/)</th>
+            <th>Medio</th>
+            <th>Fecha (texto)</th>
+            <th>Hora</th>
+            <th>Obs.</th>
+            <th>Validado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 📋 Formulario Integral de Familias -->
   <section class="container card">
     <h2>📋 Registro Integral de Familia</h2>
     <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
@@ -353,191 +461,193 @@
     </div>
   </main>
 
-  <!-- ✅ Script de formulario y listado (con fallback a db.js) -->
-  <script type="module">
-    const supabase = window.CARITAS?.supabase;
-    const tabla = document.querySelector("#familiasTable tbody");
-    const msg = document.getElementById("msg");
-    let page = 0;
-    const pageSize = 10;
+  <!-- ===== Script Familias (Supabase + tabla + historial básico) ===== -->
+  <!-- ===== Script Familias (Supabase + tabla + historial básico) ===== -->
+<script type="module">
+  const supabaseFamilias = window.CARITAS?.supabase;
+  const tabla = document.querySelector("#familiasTable tbody");
+  const msg = document.getElementById("msg");
+  let page = 0;
+  const pageSize = 10;
 
-    // Fallback para savePendiente si ./api.js/db.js no existe
-    let savePendiente = async (datos) => {
-      try {
-        const k = "pendiente:" + Date.now();
-        localStorage.setItem(k, JSON.stringify(datos));
-        console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
-      } catch(e) { console.warn("No se pudo guardar localmente:", e); }
-    };
+  // Fallback para savePendiente si ./api.js/db.js no existe
+  let savePendiente = async (datos) => {
     try {
-      const mod = await import("./api.js/db.js");
-      if (mod?.savePendiente) savePendiente = mod.savePendiente;
-    } catch(e) {
-      console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
-    }
+      const k = "pendiente:" + Date.now();
+      localStorage.setItem(k, JSON.stringify(datos));
+      console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
+    } catch(e) { console.warn("No se pudo guardar localmente:", e); }
+  };
+  try {
+    const mod = await import("./api.js/db.js");
+    if (mod?.savePendiente) savePendiente = mod.savePendiente;
+  } catch(e) {
+    console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
+  }
 
-    function showMsg(text, type="info"){
-      msg.textContent = text;
-      msg.className = type;
-      setTimeout(()=>{ msg.textContent=""; },4000);
-    }
+  function showMsg(text, type="info"){
+    msg.textContent = text;
+    msg.className = type;
+    setTimeout(()=>{ msg.textContent=""; },4000);
+  }
 
-    const esc = (s="") => String(s).replace(/[&<>"']/g,
-      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-    );
+  const esc = (s="") => String(s).replace(/[&<>"']/g,
+    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+  );
 
-    // Guardar familia
-    const form = document.getElementById("famForm");
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
+  // Guardar familia
+  const famForm = document.getElementById("famForm");
+  famForm.addEventListener("submit", async e => {
+    e.preventDefault();
 
-      const datos = {
-        nombres_apellidos: form.nombres_apellidos.value,
-        direccion: form.direccion.value,
-        telefono_contacto: form.telefono_contacto.value,
-        dni_solicitante: form.dni_solicitante.value || null,
-        apellido_familia: form.apellido_familia.value || null,
-        observaciones: form.observaciones.value || null
-      };
+    const datos = {
+      nombres_apellidos: famForm.nombres_apellidos.value,
+      direccion: famForm.direccion.value,
+      telefono_contacto: famForm.telefono_contacto.value,
+      dni_solicitante: famForm.dni_solicitante.value || null,
+      apellido_familia: famForm.apellido_familia.value || null,
+      observaciones: famForm.observaciones.value || null
+    };
 
-      if (!navigator.onLine) {
-        await savePendiente(datos);
-        alert("📦 Guardado local. Se enviará cuando vuelva internet.");
-        if ("serviceWorker" in navigator && "SyncManager" in window) {
-          const reg = await navigator.serviceWorker.ready;
-          await reg.sync.register("sync-familias");
-        }
+    if (!navigator.onLine) {
+      await savePendiente(datos);
+      alert("📦 Guardado local. Se enviará cuando vuelva internet.");
+      if ("serviceWorker" in navigator && "SyncManager" in window) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.sync.register("sync-familias");
+      }
+    } else {
+      const { error } = await supabaseFamilias.from("familias").insert([datos]);
+      if (error) {
+        console.error("❌ Error guardando en Supabase:", error);
+        alert("❌ Error al guardar en Supabase");
       } else {
-        const { error } = await supabase.from("familias").insert([datos]);
-        if (error) {
-          console.error("❌ Error guardando en Supabase:", error);
-          alert("❌ Error al guardar en Supabase");
-        } else {
-          alert("✅ Familia registrada en Supabase");
-          form.reset();
-          cargarFamilias();
-        }
-      }
-    });
-
-    async function cargarFamilias(){
-      try {
-        const start = page * pageSize;
-        const end = start + pageSize - 1;
-        const { data, error } = await supabase
-          .from("familias")
-          .select("*")
-          .order("id",{ascending:true})
-          .range(start,end);
-
-        if(error) throw error;
-        tabla.innerHTML="";
-        if(!data || data.length===0){
-          tabla.innerHTML="<tr><td colspan='7'>Sin registros</td></tr>";
-          return;
-        }
-
-        data.forEach(fam=>{
-          const tr = document.createElement("tr");
-          tr.dataset.id = fam.id;
-
-          tr.innerHTML = `
-           <td>${fam.id}</td>
-           <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-           <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-           <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-           <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-           <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-           <td>
-             <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
-             <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
-           </td>
-          `;
-          tabla.appendChild(tr);
-        });
-      }catch(err){
-        console.error(err);
-        tabla.innerHTML="<tr><td colspan='7'>Error al cargar datos</td></tr>";
+        alert("✅ Familia registrada en Supabase");
+        famForm.reset();
+        cargarFamilias();
       }
     }
+  });
 
-    // Guardar cambios de visitada
-    document.getElementById("familiasTable")
-      ?.addEventListener("change", async e => {
-        if (e.target && e.target.type === "checkbox") {
-          const id = e.target.dataset.id;
-          const visitada = e.target.checked;
-          if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
+  async function cargarFamilias(){
+    try {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      const { data, error } = await supabaseFamilias
+        .from("familias")
+        .select("*")
+        .order("id",{ascending:true})
+        .range(start,end);
 
-          try {
-            await supabase.from("familias").update({ visitada }).eq("id", id);
-            showMsg("✅ Estado actualizado", "success");
-          } catch (err) {
-            console.error("❌ Error actualizando visitada:", err);
-            showMsg("❌ Error al actualizar", "error");
-            e.target.checked = !visitada;
-          }
-        }
+      if(error) throw error;
+      tabla.innerHTML="";
+      if(!data || data.length===0){
+        tabla.innerHTML="<tr><td colspan='7'>Sin registros</td></tr>";
+        return;
+      }
+
+      data.forEach(fam=>{
+        const tr = document.createElement("tr");
+        tr.dataset.id = fam.id;
+
+        tr.innerHTML = `
+         <td>${fam.id}</td>
+         <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+         <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+         <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+         <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+         <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+         <td>
+           <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
+           <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
+         </td>
+        `;
+        tabla.appendChild(tr);
       });
+    }catch(err){
+      console.error(err);
+      tabla.innerHTML="<tr><td colspan='7'>Error al cargar datos</td></tr>";
+    }
+  }
 
-    // Paginación
-    document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
-    document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
-
-    cargarFamilias();
-
-    // Guardado inline
-    document.getElementById("familiasTable").addEventListener("blur", async e => {
-      if (e.target.matches("[contenteditable]")) {
-        const id = e.target.closest("tr").dataset.id;
-        const field = e.target.dataset.field;
-        const value = e.target.textContent.trim();
+  // Guardar cambios de visitada
+  document.getElementById("familiasTable")
+    ?.addEventListener("change", async e => {
+      if (e.target && e.target.type === "checkbox") {
+        const id = e.target.dataset.id;
+        const visitada = e.target.checked;
+        if (!supabaseFamilias) return showMsg("❌ Supabase no inicializado", "error");
 
         try {
-          const { error } = await supabase
-            .from("familias")
-            .update({ [field]: value })
-            .eq("id", id);
-          if (error) throw error;
-          showMsg("✅ Campo actualizado", "success");
+          await supabaseFamilias.from("familias").update({ visitada }).eq("id", id);
+          showMsg("✅ Estado actualizado", "success");
         } catch (err) {
-          console.error("❌ Error al actualizar:", err);
+          console.error("❌ Error actualizando visitada:", err);
           showMsg("❌ Error al actualizar", "error");
+          e.target.checked = !visitada;
         }
       }
-    }, true);
+    });
 
-    // Eliminar fila (delegado)
-    document.getElementById("familiasTable").addEventListener("click", async (e) => {
-      const id = e.target?.dataset?.del;
-      if (!id) return;
+  // Paginación
+  document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
+  document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
 
-      e.preventDefault();
-      if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
+  cargarFamilias();
+
+  // Guardado inline
+  document.getElementById("familiasTable").addEventListener("blur", async e => {
+    if (e.target.matches("[contenteditable]")) {
+      const id = e.target.closest("tr").dataset.id;
+      const field = e.target.dataset.field;
+      const value = e.target.textContent.trim();
 
       try {
-        await supabase.from("familias").delete().eq("id", id);
-        showMsg("🗑️ Familia eliminada", "success");
-        cargarFamilias();
+        const { error } = await supabaseFamilias
+          .from("familias")
+          .update({ [field]: value })
+          .eq("id", id);
+        if (error) throw error;
+        showMsg("✅ Campo actualizado", "success");
       } catch (err) {
-        console.error("❌ Error eliminando:", err);
-        showMsg("❌ Error al eliminar", "error");
+        console.error("❌ Error al actualizar:", err);
+        showMsg("❌ Error al actualizar", "error");
       }
-    });
+    }
+  }, true);
 
-    // Abrir Historial (delegado)
-    document.getElementById("familiasTable").addEventListener("click", (e) => {
-      const id = e.target?.dataset?.hist;
-      if (!id) return;
+  // Eliminar fila (delegado)
+  document.getElementById("familiasTable").addEventListener("click", async (e) => {
+    const id = e.target?.dataset?.del;
+    if (!id) return;
 
-      e.preventDefault();
-      if (window.openHistoryModal) {
-        window.openHistoryModal(id);
-      } else {
-        console.warn("openHistoryModal no está disponible todavía.");
-      }
-    });
-  </script>
+    e.preventDefault();
+    if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
+
+    try {
+      await supabaseFamilias.from("familias").delete().eq("id", id);
+      showMsg("🗑️ Familia eliminada", "success");
+      cargarFamilias();
+    } catch (err) {
+      console.error("❌ Error eliminando:", err);
+      showMsg("❌ Error al eliminar", "error");
+    }
+  });
+
+  // Abrir Historial (delegado)
+  document.getElementById("familiasTable").addEventListener("click", (e) => {
+    const id = e.target?.dataset?.hist;
+    if (!id) return;
+
+    e.preventDefault();
+    if (window.openHistoryModal) {
+      window.openHistoryModal(id);
+    } else {
+      console.warn("openHistoryModal no está disponible todavía.");
+    }
+  });
+</script>
+
 
   <!-- 🔍 Galería: lightbox -->
   <script>
@@ -571,14 +681,12 @@
   })();
   </script>
 
+  <!-- Panel familias: mover tabla al panel y filtros -->
   <script>
   (function(){
-    // Selecciones base (ajusta si cambias IDs)
     const TABLE_SEL = '#familiasTable';
-
     const $ = (q,root=document)=>root.querySelector(q);
 
-    // Reubicar contenedor de tabla + paginación (una sola vez)
     let moved = false;
     function mountFamiliesBlockOnce(){
       if (moved) return true;
@@ -587,11 +695,9 @@
       const mount = $('#familiasMountInline');
       if (!table || !mount) return false;
 
-      // Tomamos el wrapper de la tabla y el contenedor de paginación
       const wrapper = table.closest('.table-wrapper') || table;
       const pager   = document.getElementById('prevPage')?.parentElement || null;
 
-      // Creamos placeholders para no perder posición original (por si algún día se quiere revertir)
       const phWrapper = document.createComment('familias-wrapper-placeholder');
       wrapper.parentNode.insertBefore(phWrapper, wrapper);
 
@@ -601,7 +707,6 @@
         pager.parentNode.insertBefore(phPager, pager);
       }
 
-      // Montamos un bloque que contenga wrapper + pager
       const block = document.createElement('div');
       block.id = 'familiasBlockInline';
       block.appendChild(wrapper);
@@ -612,7 +717,6 @@
       return true;
     }
 
-    // Abrir/cerrar panel
     function togglePanel(force){
       const panel = $('#familiasPanel');
       if (!panel) return;
@@ -628,7 +732,6 @@
       }
     }
 
-    // Filtro sobre la tabla real
     function filterFamilies(q){
       const table = document.querySelector(TABLE_SEL);
       if (!table) return;
@@ -640,7 +743,6 @@
       });
     }
 
-    // Exportar CSV (solo filas visibles)
     function exportCSV(){
       const table = document.querySelector(TABLE_SEL);
       if (!table) return;
@@ -665,7 +767,6 @@
       URL.revokeObjectURL(a.href);
     }
 
-    // Eventos
     document.addEventListener('click', (e)=>{
       if (e.target.closest('#btn-familias')) togglePanel();
       if (e.target.closest('#familiasExport')) exportCSV();
@@ -674,7 +775,6 @@
       if (e.target && e.target.id==='familiasSearch') filterFamilies(e.target.value);
     });
 
-    // (Opcional) abrir por defecto si viene con #familias
     if (location.hash.replace('#','').toLowerCase().includes('familias')) {
       togglePanel(true);
     }
@@ -712,19 +812,16 @@
               <th>Resumen de cambios</th>
             </tr>
           </thead>
-          <tbody><!-- rows dinámicas --></tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <!-- Historial local por familia -->
   <script>
   (function(){
-    // ========= Config =========
-    const STORAGE_KEY = 'familias_history_v1'; // localStorage
-    const TABLE_SEL   = '#familiasTable';
-    const FAMILIA_ID_FIELD = 'id';  // <-- usamos el id real de Supabase
-
-    // ========= Helpers =========
+    const STORAGE_KEY = 'familias_history_v1';
     const $ = (q,root=document)=>root.querySelector(q);
     const nowISO = ()=> new Date().toISOString();
 
@@ -747,14 +844,11 @@
       return changes;
     }
 
-    // ========= Hook opcional en submit =========
     async function logFamilyUpdate(formData, opts={}){
       const user = (window.CARITAS?.auth?.currentUser) || null;
-      const familyId = formData[FAMILIA_ID_FIELD]; // en submit puede no existir todavía
-      if(!familyId){
-        // Si aún no existe id (insert nuevo), no registramos aquí.
-        return;
-      }
+      const familyId = formData.id; // en creación todavía no hay id real, así que ahora mismo no se usa
+      if(!familyId) return;
+
       const hist = getHistory(familyId);
       const prevSnapshot = hist.find(h=>h.snapshot)?.snapshot || {};
       const changes = diffObjects(prevSnapshot, formData);
@@ -768,7 +862,6 @@
       });
     }
 
-    // ========= UI modal =========
     function renderHistoryTable(familyId, q=''){
       const tbody = $('#histTable tbody'); tbody.innerHTML = '';
       const rows = getHistory(familyId);
@@ -802,19 +895,15 @@
       document.getElementById('histExport').onclick = ()=> exportHistoryCSV(familyId);
       document.getElementById('histClose').onclick  = ()=> closeHistoryModal();
 
-      // Clic fuera para cerrar
       modal.addEventListener('click', (e)=>{ if (e.target === modal) closeHistoryModal(); }, {once:true});
-      // ESC para cerrar
       document.addEventListener('keydown', function esc(e){
         if(e.key==='Escape'){ closeHistoryModal(); document.removeEventListener('keydown', esc); }
       });
     }
-
-    // Exponer para que el otro script pueda llamarla
     window.openHistoryModal = openHistoryModal;
 
     function closeHistoryModal(){
-      const modal = $('#histModal');
+      const modal = document.getElementById('histModal');
       modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
     }
 
@@ -841,8 +930,7 @@
       URL.revokeObjectURL(a.href);
     }
 
-    // ========= Hook correcto del submit (opcional)
-    const form = document.querySelector('#famForm'); // <-- id real en tu HTML
+    const form = document.querySelector('#famForm');
     if (form){
       form.addEventListener('submit', async (e)=>{
         try{
@@ -851,8 +939,298 @@
         }catch(err){ console.warn('No se pudo registrar historial:', err); }
       });
     }
-
   })();
   </script>
+
+
+  <!-- ===== Tesorería: Dashboard financiero (Chart.js + Supabase) ===== -->
+<script type="module">
+  import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+
+  const supabaseTeso = window.CARITAS?.supabase;
+  if (!supabaseTeso) console.error("Supabase no inicializado para tesorería");
+
+  const tBody    = document.querySelector("#tesoTable tbody");
+  const tesoForm = document.querySelector("#tesoForm");
+  const filtroTipo = document.querySelector("#tesoFiltroTipo");
+  const btnExport  = document.querySelector("#tesoExport");
+
+  const elIngresos = document.getElementById("tesoIngresos");
+  const elGastos   = document.getElementById("tesoGastos");
+  const elSaldo    = document.getElementById("tesoSaldo");
+  const elMovs     = document.getElementById("tesoMovs");
+
+  let movimientos = [];
+  let chart;
+
+  const fmon = n => "S/ " + (Number(n)||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  async function cargarMovimientos(){
+    if (!supabaseTeso) return;
+
+    const { data, error } = await supabaseTeso
+      .from("tesoreria_movimientos")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error cargando tesorería:", error);
+      return;
+    }
+
+    movimientos = data || [];
+    renderDashboard();
+    renderTabla();
+    renderChart();
+  }
+
+  function getFiltrados(){
+    const tipo = filtroTipo.value;
+    return tipo ? movimientos.filter(m => m.tipo === tipo) : movimientos;
+  }
+
+  function renderDashboard(){
+    const rows = movimientos;
+    const ingresos = rows
+      .filter(r => r.tipo === "ingreso")
+      .reduce((s,r)=> s + Number(r.monto||0), 0);
+    const gastos = rows
+      .filter(r => r.tipo === "gasto")
+      .reduce((s,r)=> s + Number(r.monto||0), 0);
+    const saldo = ingresos - gastos;
+
+    elIngresos.textContent = fmon(ingresos);
+    elGastos.textContent   = fmon(gastos);
+    elSaldo.textContent    = fmon(saldo);
+    elMovs.textContent     = rows.length;
+  }
+
+  function esc(str=""){
+    return String(str).replace(/[&<>"']/g,
+      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+    );
+  }
+
+  function renderTabla(){
+    const rows = getFiltrados();
+    tBody.innerHTML = "";
+    if (!rows.length){
+      tBody.innerHTML = "<tr><td colspan='11'>Sin movimientos registrados</td></tr>";
+      return;
+    }
+
+    for (const r of rows){
+      const tr = document.createElement("tr");
+      tr.dataset.id = r.id;
+
+      tr.innerHTML = `
+        <td>
+          <select data-field="tipo">
+            <option value="ingreso" ${r.tipo==="ingreso"?"selected":""}>Ingreso</option>
+            <option value="gasto" ${r.tipo==="gasto"?"selected":""}>Gasto</option>
+          </select>
+        </td>
+        <td contenteditable="true" data-field="categoria">${esc(r.categoria||"")}</td>
+        <td contenteditable="true" data-field="concepto">${esc(r.concepto||"")}</td>
+        <td contenteditable="true" data-field="abonado">${esc(r.abonado||"")}</td>
+        <td contenteditable="true" data-field="monto">${esc(r.monto||"")}</td>
+        <td contenteditable="true" data-field="medio_pago">${esc(r.medio_pago||"")}</td>
+        <td contenteditable="true" data-field="fecha_texto">${esc(r.fecha_texto||"")}</td>
+        <td contenteditable="true" data-field="hora_texto">${esc(r.hora_texto||"")}</td>
+        <td contenteditable="true" data-field="observaciones">${esc(r.observaciones||"")}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" data-field="validado" ${r.validado ? "checked" : ""}>
+        </td>
+        <td>
+          <button class="btn-del" data-del="${r.id}">🗑</button>
+        </td>
+      `;
+      tBody.appendChild(tr);
+    }
+  }
+
+  async function actualizarCampo(id, field, value){
+    if (!supabaseTeso) return;
+    try {
+      if (field === "validado") {
+        value = !!value;
+      }
+      if (field === "monto") {
+        value = Number(String(value).replace(",","."));
+      }
+
+      const { error } = await supabaseTeso
+        .from("tesoreria_movimientos")
+        .update({ [field]: value })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      const row = movimientos.find(m => m.id === id);
+      if (row) row[field] = value;
+
+      renderDashboard();
+      renderChart();
+    } catch (err){
+      console.error("Error actualizando movimiento:", err);
+      alert("No se pudo guardar el cambio en tesorería.");
+    }
+  }
+
+  tBody.addEventListener("change", (e)=>{
+    const tr = e.target.closest("tr");
+    if (!tr) return;
+    const id = Number(tr.dataset.id);
+    const field = e.target.dataset.field;
+    if (!field) return;
+
+    if (e.target.tagName === "SELECT") {
+      actualizarCampo(id, field, e.target.value);
+    } else if (e.target.type === "checkbox") {
+      actualizarCampo(id, field, e.target.checked);
+    }
+  });
+
+  tBody.addEventListener("blur", (e)=>{
+    const cell = e.target;
+    if (!cell.matches("[contenteditable][data-field]")) return;
+    const tr = cell.closest("tr");
+    const id = Number(tr.dataset.id);
+    const field = cell.dataset.field;
+    const value = cell.textContent.trim();
+    actualizarCampo(id, field, value);
+  }, true);
+
+  tBody.addEventListener("click", async (e)=>{
+    const id = e.target?.dataset?.del;
+    if (!id) return;
+    if (!confirm("¿Eliminar este movimiento de tesorería?")) return;
+
+    const { error } = await supabaseTeso
+      .from("tesoreria_movimientos")
+      .delete()
+      .eq("id", id);
+
+    if (error){
+      console.error("Error eliminando:", error);
+      alert("No se pudo eliminar el movimiento.");
+      return;
+    }
+
+    movimientos = movimientos.filter(m => m.id !== Number(id));
+    renderDashboard();
+    renderTabla();
+    renderChart();
+  });
+
+  filtroTipo.addEventListener("change", ()=>{
+    renderTabla();
+    renderChart();
+  });
+
+  tesoForm.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    if (!supabaseTeso) return;
+
+    const data = Object.fromEntries(new FormData(tesoForm).entries());
+    const nuevo = {
+      tipo: data.tipo || "ingreso",
+      categoria: data.categoria || null,
+      concepto: data.concepto || null,
+      abonado: data.abonado || null,
+      monto: Number(data.monto || 0),
+      moneda: "PEN",
+      medio_pago: data.medio_pago || null,
+      observaciones: data.observaciones || null,
+      validado: false
+    };
+
+    try{
+      const { data: inserted, error } = await supabaseTeso
+        .from("tesoreria_movimientos")
+        .insert([nuevo])
+        .select();
+
+      if (error) throw error;
+
+      movimientos.push(inserted[0]);
+      tesoForm.reset();
+      renderDashboard();
+      renderTabla();
+      renderChart();
+    } catch(err){
+      console.error("Error insertando movimiento:", err);
+      alert("No se pudo guardar el movimiento.");
+    }
+  });
+
+  btnExport.addEventListener("click", ()=>{
+    const rows = getFiltrados();
+    if (!rows.length) {
+      alert("No hay movimientos para exportar.");
+      return;
+    }
+
+    const headers = ["tipo","categoria","concepto","abonado","monto","moneda","medio_pago","fecha_texto","hora_texto","observaciones","validado"];
+    const lines = [
+      headers.join(","),
+      ...rows.map(r => headers.map(h => {
+        let v = r[h];
+        if (v === null || v === undefined) v = "";
+        v = String(v).replace(/\s+/g," ").trim();
+        if (/[",;\n]/.test(v)) v = `"${v.replace(/"/g,'""')}"`;
+        return v;
+      }).join(","))
+    ];
+
+    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "tesoreria_movimientos.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  function renderChart(){
+    const rows = movimientos;
+    const ingresos = rows
+      .filter(r => r.tipo === "ingreso")
+      .reduce((s,r)=> s + Number(r.monto||0), 0);
+    const gastos = rows
+      .filter(r => r.tipo === "gasto")
+      .reduce((s,r)=> s + Number(r.monto||0), 0);
+    const saldo = ingresos - gastos;
+
+    const ctx = document.getElementById("tesoChart");
+    if (!ctx) return;
+
+    const data = {
+      labels: ["Ingresos", "Gastos", "Saldo"],
+      datasets: [{
+        label: "Soles",
+        data: [ingresos, gastos, saldo]
+      }]
+    };
+
+    const options = {
+      responsive:true,
+      scales:{ y:{ beginAtZero:true } }
+    };
+
+    if (!chart){
+      chart = new Chart(ctx, {
+        type: "bar",
+        data,
+        options
+      });
+    } else {
+      chart.data = data;
+      chart.update();
+    }
+  }
+
+  cargarMovimientos();
+</script>
+
 </body>
 </html>
