@@ -941,14 +941,15 @@
     }
   })();
   </script>
-
+<!-- Chart.js global -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- ===== Tesorería: Dashboard financiero (Chart.js + Supabase) ===== -->
 <script type="module">
-import * as Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
-
+  const Chart = window.Chart; // viene del <script src="...chart.umd.min.js">
   const supabaseTeso = window.CARITAS?.supabase;
   if (!supabaseTeso) console.error("Supabase no inicializado para tesorería");
+  if (!Chart) console.error("Chart.js no se ha cargado correctamente");
 
   const tBody    = document.querySelector("#tesoTable tbody");
   const tesoForm = document.querySelector("#tesoForm");
