@@ -11,6 +11,71 @@
   <link rel="icon" href="img/favicon.ico" />
   <link rel="stylesheet" href="styles-caritas.css" />
 
+  <!-- 🎨 Ajustes rápidos locales -->
+  <style>
+    /* Un poco más de aire entre texto y botón en tarjetas centradas */
+    .card.center .btn {
+      margin-top: 0.5rem;
+    }
+
+    /* Galería de fotos dinámica */
+    .gallery {
+      margin-top: 0.75rem;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.35);
+    }
+    body.tema-blanco .gallery-item {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+    }
+    .gallery-item img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+    }
+    .gallery-item::after {
+      content: "🔍 Ver";
+      position: absolute;
+      right: 6px;
+      bottom: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 0.7rem;
+    }
+    .gallery-item:hover img {
+      transform: scale(1.05);
+      filter: brightness(1.08);
+    }
+
+    /* Modal específico de galería reutilizando estilos base de .modal/.modal-card */
+    #galleryModal .modal-card {
+      max-width: 900px;
+    }
+    #galleryFull {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+
   <!-- ✅ CSP -->
   <meta http-equiv="Content-Security-Policy"
   content="default-src 'self';
@@ -63,7 +128,13 @@
 
   <!-- 📂 Botones principales -->
   <section class="container card center">
-    <a id="btn-drive" class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
+    <a
+      id="btn-drive"
+      class="btn"
+      href="https://drive.google.com/drive/folders/15O0gRC4yDubSsrd2Qvo_ni7Hm7Bk1KBc?usp=drive_link"
+      target="_blank"
+      rel="noopener noreferrer"
+    >📂 Acceder a Drive</a>
     <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
   </section>
 
@@ -85,6 +156,37 @@
     <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
     <a class="btn" href="credenciales.html">🪪 Abrir Credenciales</a>
   </section>
+
+  <!-- 🤝 Sobre el grupo + Galería -->
+  <section class="container card" id="sobre-grupo">
+    <h2>🤝 Sobre Cáritas CNC</h2>
+    <p>
+      Cáritas CNC está formada por voluntarios que, con alegría y compromiso, visitan familias,
+      organizan campañas de ayuda y sostienen espacios de servicio en comunidad.
+    </p>
+
+    <div class="gallery">
+      <h3 style="font-size:1rem;margin-top:0.75rem;">📸 Galería de momentos</h3>
+      <div class="gallery-grid">
+        <!-- Miniaturas (reemplaza las rutas por tus fotos reales) -->
+        <figure class="gallery-item">
+          <img src="img/galeria1.jpg" alt="Voluntarios organizando donaciones" data-gallery-full="img/galeria1.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria2.jpg" alt="Entrega de víveres a una familia" data-gallery-full="img/galeria2.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria3.jpg" alt="Encuentro comunitario y oración" data-gallery-full="img/galeria3.jpg">
+        </figure>
+        <figure class="gallery-item">
+          <img src="img/galeria4.jpg" alt="Equipo de Cáritas CNC reunido" data-gallery-full="img/galeria4.jpg">
+        </figure>
+      </div>
+      <p class="muted" style="margin-top:.6rem;font-size:.85rem;">
+        Puedes cambiar estas imágenes colocando tus fotos en la carpeta <code>img/</code> y actualizando los nombres de archivo.
+      </p>
+    </div>
+  </section>
   
   <!-- 📋 Formulario Integral -->
   <section class="container card">
@@ -98,25 +200,25 @@
         <legend>I. Datos Básicos</legend>
         <div class="form-grid">
           <label>👤 Nombre y apellidos*<br>
-            <input type="text" id="nombres_apellidos" required>
+            <input type="text" id="nombres_apellidos" name="nombres_apellidos" required>
           </label>
           <label>📍 Dirección*<br>
-            <input type="text" id="direccion" required>
+            <input type="text" id="direccion" name="direccion" required>
           </label>
           <label>📞 Teléfono*<br>
-            <input type="tel" id="telefono_contacto" required>
+            <input type="tel" id="telefono_contacto" name="telefono_contacto" required>
           </label>
         </div>
         <div class="form-grid">
           <label>🪪 DNI<br>
-            <input type="text" id="dni_solicitante">
+            <input type="text" id="dni_solicitante" name="dni_solicitante">
           </label>
           <label>👨‍👩‍👧 Apellido de la familia<br>
-            <input type="text" id="apellido_familia">
+            <input type="text" id="apellido_familia" name="apellido_familia">
           </label>
         </div>
         <label>📝 Observaciones<br>
-          <textarea id="observaciones" rows="3"></textarea>
+          <textarea id="observaciones" name="observaciones" rows="3"></textarea>
         </label>
         <label>📂 Subir archivo<br>
           <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
@@ -437,6 +539,38 @@
     });
   </script>
 
+  <!-- 🔍 Galería: lightbox -->
+  <script>
+  (function(){
+    const modal = document.getElementById('galleryModal');
+    const fullImg = document.getElementById('galleryFull');
+    const btnClose = document.getElementById('galleryClose');
+    if (!modal || !fullImg) return;
+
+    function open(src, alt){
+      fullImg.src = src;
+      fullImg.alt = alt || 'Foto Cáritas CNC';
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+    function close(){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+      fullImg.src = '';
+    }
+
+    document.addEventListener('click', (e)=>{
+      const img = e.target.closest('[data-gallery-full]');
+      if (!img) return;
+      const src = img.getAttribute('data-gallery-full') || img.src;
+      const alt = img.alt || '';
+      open(src, alt);
+    });
+    btnClose?.addEventListener('click', close);
+    modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
+  })();
+  </script>
+
   <script>
   (function(){
     // Selecciones base (ajusta si cambias IDs)
@@ -546,6 +680,19 @@
     }
   })();
   </script>
+
+  <!-- ==== Modal: Galería ==== -->
+  <div id="galleryModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Galería Cáritas CNC</h3>
+        <button id="galleryClose" class="btn ghost">Cerrar</button>
+      </div>
+      <div class="modal-body center">
+        <img id="galleryFull" src="" alt="Foto Cáritas CNC">
+      </div>
+    </div>
+  </div>
 
   <!-- ==== Modal: Historial por familia ==== -->
   <div id="histModal" class="modal" aria-hidden="true">
