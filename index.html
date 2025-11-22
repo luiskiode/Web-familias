@@ -945,7 +945,7 @@
 
   <!-- ===== Tesorería: Dashboard financiero (Chart.js + Supabase) ===== -->
 <script type="module">
-  import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+import * as Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
 
   const supabaseTeso = window.CARITAS?.supabase;
   if (!supabaseTeso) console.error("Supabase no inicializado para tesorería");
