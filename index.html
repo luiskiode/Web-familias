@@ -61,708 +61,651 @@
     </p>
   </section>
 
-<!-- 📂 Botones principales -->
-<section class="container card center">
-  <a id="btn-drive" class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
-  <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
-</section>
+  <!-- 📂 Botones principales -->
+  <section class="container card center">
+    <a id="btn-drive" class="btn" href="https://drive.google.com/drive/folders/1OaDPvylPIL_5ySTv4zWiU0YHbiZJiIpv?usp=drive_link" target="_blank">📂 Acceder a Drive</a>
+    <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">👨‍👩‍👧 Familias</button>
+  </section>
 
-<!-- 🔽 Panel plegable donde VIVIRÁ la tabla real -->
-<section id="familiasPanel" class="familias-panel" hidden>
-  <header class="familias-head">
-    <h3 class="familias-title">Lista de familias</h3>
-    <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
-    <button id="familiasExport" class="btn">⬇️ Exportar CSV</button>
-  </header>
-  <div id="familiasMountInline" class="familias-body">
-    <!-- Aquí se MOVERÁ (no clonar) #familiasTable -->
-  </div>
-</section>
+  <!-- 🔽 Panel plegable donde VIVIRÁ la tabla real -->
+  <section id="familiasPanel" class="familias-panel" hidden>
+    <header class="familias-head">
+      <h3 class="familias-title">Lista de familias</h3>
+      <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
+      <button id="familiasExport" class="btn">⬇️ Exportar CSV</button>
+    </header>
+    <div id="familiasMountInline" class="familias-body">
+      <!-- Aquí se MOVERÁ (no clonar) #familiasTable -->
+    </div>
+  </section>
 
-<!-- 🎫 Credenciales (botón único) -->
-<section class="container card center">
-  <h2>🎫 Credenciales Cáritas CNC</h2>
-  <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
-  <a class="btn" href="credenciales.html">🪪 Abrir Credenciales</a>
-</section>
+  <!-- 🎫 Credenciales (botón único) -->
+  <section class="container card center">
+    <h2>🎫 Credenciales Cáritas CNC</h2>
+    <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
+    <a class="btn" href="credenciales.html">🪪 Abrir Credenciales</a>
+  </section>
   
   <!-- 📋 Formulario Integral -->
   <section class="container card">
-  <h2>📋 Registro Integral de Familia</h2>
-  <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
+    <h2>📋 Registro Integral de Familia</h2>
+    <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
 
-  <form id="famForm" enctype="multipart/form-data">
+    <form id="famForm" enctype="multipart/form-data">
 
-    <!-- I. DATOS BÁSICOS -->
-    <fieldset>
-      <legend>I. Datos Básicos</legend>
-      <div class="form-grid">
-        <label>👤 Nombre y apellidos*<br>
-          <input type="text" id="nombres_apellidos" required>
+      <!-- I. DATOS BÁSICOS -->
+      <fieldset>
+        <legend>I. Datos Básicos</legend>
+        <div class="form-grid">
+          <label>👤 Nombre y apellidos*<br>
+            <input type="text" id="nombres_apellidos" required>
+          </label>
+          <label>📍 Dirección*<br>
+            <input type="text" id="direccion" required>
+          </label>
+          <label>📞 Teléfono*<br>
+            <input type="tel" id="telefono_contacto" required>
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>🪪 DNI<br>
+            <input type="text" id="dni_solicitante">
+          </label>
+          <label>👨‍👩‍👧 Apellido de la familia<br>
+            <input type="text" id="apellido_familia">
+          </label>
+        </div>
+        <label>📝 Observaciones<br>
+          <textarea id="observaciones" rows="3"></textarea>
         </label>
-        <label>📍 Dirección*<br>
-          <input type="text" id="direccion" required>
+        <label>📂 Subir archivo<br>
+          <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
         </label>
-        <label>📞 Teléfono*<br>
-          <input type="tel" id="telefono_contacto" required>
-        </label>
-      </div>
-      <div class="form-grid">
-        <label>🪪 DNI<br>
-          <input type="text" id="dni_solicitante">
-        </label>
-        <label>👨‍👩‍👧 Apellido de la familia<br>
-          <input type="text" id="apellido_familia">
-        </label>
-      </div>
-      <label>📝 Observaciones<br>
-        <textarea id="observaciones" rows="3"></textarea>
-      </label>
-      <label>📂 Subir archivo<br>
-      <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">      </label>
-    </fieldset>
+      </fieldset>
 
-    <!-- II. DATOS COMPLEMENTARIOS -->
-    <fieldset>
-      <legend>II. Datos Complementarios</legend>
-      <div class="form-grid">
-        <label>Jefe(a) de hogar<br><input type="text" id="jefe_hogar"></label>
-        <label>Edad<br><input type="number" id="edad"></label>
-        <label>Estado civil<br>
-          <select id="estado_civil">
-            <option value="">Seleccione...</option>
-            <option>Soltero(a)</option><option>Casado(a)</option>
-            <option>Conviviente</option><option>Divorciado(a)</option><option>Viudo(a)</option>
-          </select>
-        </label>
-      </div>
-      <div class="form-grid">
-        <label>Ocupación<br><input type="text" id="ocupacion"></label>
-        <label>Grado de instrucción<br>
-          <select id="instruccion">
-            <option value="">Seleccione...</option>
-            <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
-            <option>Técnico</option><option>Universitario</option><option>Otro</option>
-          </select>
-        </label>
-        <label>Integrantes<br><input type="number" id="num_integrantes"></label>
-      </div>
-      <label>Fecha entrevista<br><input type="date" id="fecha_entrevista"></label>
-    </fieldset>
+      <!-- II. DATOS COMPLEMENTARIOS -->
+      <fieldset>
+        <legend>II. Datos Complementarios</legend>
+        <div class="form-grid">
+          <label>Jefe(a) de hogar<br><input type="text" id="jefe_hogar"></label>
+          <label>Edad<br><input type="number" id="edad"></label>
+          <label>Estado civil<br>
+            <select id="estado_civil">
+              <option value="">Seleccione...</option>
+              <option>Soltero(a)</option><option>Casado(a)</option>
+              <option>Conviviente</option><option>Divorciado(a)</option><option>Viudo(a)</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Ocupación<br><input type="text" id="ocupacion"></label>
+          <label>Grado de instrucción<br>
+            <select id="instruccion">
+              <option value="">Seleccione...</option>
+              <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
+              <option>Técnico</option><option>Universitario</option><option>Otro</option>
+            </select>
+          </label>
+          <label>Integrantes<br><input type="number" id="num_integrantes"></label>
+        </div>
+        <label>Fecha entrevista<br><input type="date" id="fecha_entrevista"></label>
+      </fieldset>
 
-    <!-- III. SOCIO-ECONÓMICO -->
-    <fieldset>
-      <legend>III. Socio-Económico</legend>
-      <div class="form-grid">
-        <label>🏠 Casa precaria<br><select id="casa_precaria"><option></option><option>si</option><option>no</option></select></label>
-        <label>💧 Servicios básicos<br><select id="servicios_basicos"><option></option><option>si</option><option>no</option></select></label>
-        <label>🍽 Dificultad alimentos<br><select id="dificultad_alimentos"><option></option><option>si</option><option>no</option></select></label>
-      </div>
-      <div class="form-grid">
-        <label>⚖️ Mínimo alimentario<br><select id="minimo_alimentario"><option></option><option>si</option><option>no</option></select></label>
-        <label>👥 Hacinamiento<br><select id="hacinamiento"><option></option><option>si</option><option>no</option></select></label>
-        <label>💸 Vendió pertenencias<br><select id="vende_pertenencias"><option></option><option>si</option><option>no</option></select></label>
-      </div>
-    </fieldset>
+      <!-- III. SOCIO-ECONÓMICO -->
+      <fieldset>
+        <legend>III. Socio-Económico</legend>
+        <div class="form-grid">
+          <label>🏠 Casa precaria<br><select id="casa_precaria"><option></option><option>si</option><option>no</option></select></label>
+          <label>💧 Servicios básicos<br><select id="servicios_basicos"><option></option><option>si</option><option>no</option></select></label>
+          <label>🍽 Dificultad alimentos<br><select id="dificultad_alimentos"><option></option><option>si</option><option>no</option></select></label>
+        </div>
+        <div class="form-grid">
+          <label>⚖️ Mínimo alimentario<br><select id="minimo_alimentario"><option></option><option>si</option><option>no</option></select></label>
+          <label>👥 Hacinamiento<br><select id="hacinamiento"><option></option><option>si</option><option>no</option></select></label>
+          <label>💸 Vendió pertenencias<br><select id="vende_pertenencias"><option></option><option>si</option><option>no</option></select></label>
+        </div>
+      </fieldset>
 
-    <!-- IV. DISCAPACIDAD -->
-    <fieldset>
-      <legend>IV. Discapacidad</legend>
-      <div class="form-grid">
-        <label>Discapacidad grave<br><select id="discapacidad_grave"><option></option><option>si</option><option>no</option></select></label>
-        <label>Tipo discapacidad<br><input type="text" id="tipo_discapacidad"></label>
-        <label>Aparatos de ayuda<br><select id="aparatos_ayuda"><option></option><option>si</option><option>no</option></select></label>
+      <!-- IV. DISCAPACIDAD -->
+      <fieldset>
+        <legend>IV. Discapacidad</legend>
+        <div class="form-grid">
+          <label>Discapacidad grave<br><select id="discapacidad_grave"><option></option><option>si</option><option>no</option></select></label>
+          <label>Tipo discapacidad<br><input type="text" id="tipo_discapacidad"></label>
+          <label>Aparatos de ayuda<br><select id="aparatos_ayuda"><option></option><option>si</option><option>no</option></select></label>
+        </div>
+        <div class="form-grid">
+          <label>Intelectual grave<br><select id="discapacidad_intelectual"><option></option><option>si</option><option>no</option></select></label>
+          <label>Bajo tratamiento<br><select id="bajo_tratamiento"><option></option><option>si</option><option>no</option></select></label>
+          <label>Requiere cuidador<br><select id="requiere_cuidador"><option></option><option>si</option><option>no</option></select></label>
+        </div>
+      </fieldset>
+
+      <!-- V. VULNERABILIDAD -->
+      <fieldset>
+        <legend>V. Vulnerabilidad</legend>
+        <div class="form-grid">
+          <label>Abandono/depresión<br><select id="abandono_depresion"><option></option><option>si</option><option>no</option></select></label>
+          <label>Enfermedad crónica<br><select id="enfermedad_cronica"><option></option><option>si</option><option>no</option></select></label>
+          <label>Violencia<br><select id="violencia"><option></option><option>si</option><option>no</option></select></label>
+        </div>
+      </fieldset>
+
+      <!-- VI. EDUCACIÓN -->
+      <fieldset>
+        <legend>VI. Educación</legend>
+        <label>Niños fuera de escuela<br><select id="ninos_fuera_colegio"><option></option><option>si</option><option>no</option></select></label>
+        <label>¿Quiénes?<br><input type="text" id="quienes_fuera"></label>
+        <label>Causas<br><textarea id="causas_no_asistencia" rows="3"></textarea></label>
+        <label>Dispuestos a retorno<br><select id="dispuesto_retorno"><option></option><option>si</option><option>no</option></select></label>
+        <label>Apoyo requerido<br><input type="text" id="apoyo_requerido"></label>
+      </fieldset>
+
+      <!-- VII. PROGRAMAS -->
+      <fieldset>
+        <legend>VII. Programas del Estado</legend>
+        <div class="form-grid">
+          <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label>
+          <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular</label>
+          <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label>
+          <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label>
+          <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label>
+          <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label>
+          <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
+        </div>
+        <label>¿Apoyo suficiente?<br><select id="apoyo_suficiente"><option></option><option>si</option><option>no</option></select></label>
+        <label>Apoyo adicional<br><input type="text" id="apoyo_adicional"></label>
+      </fieldset>
+
+      <div class="center">
+        <button type="submit" class="btn">💾 Guardar Familia</button>
       </div>
-      <div class="form-grid">
-        <label>Intelectual grave<br><select id="discapacidad_intelectual"><option></option><option>si</option><option>no</option></select></label>
-        <label>Bajo tratamiento<br><select id="bajo_tratamiento"><option></option><option>si</option><option>no</option></select></label>
-        <label>Requiere cuidador<br><select id="requiere_cuidador"><option></option><option>si</option><option>no</option></select></label>
-      </div>
-    </fieldset>
+    </form>
+  </section>
 
-    <!-- V. VULNERABILIDAD -->
-    <fieldset>
-      <legend>V. Vulnerabilidad</legend>
-      <div class="form-grid">
-        <label>Abandono/depresión<br><select id="abandono_depresion"><option></option><option>si</option><option>no</option></select></label>
-        <label>Enfermedad crónica<br><select id="enfermedad_cronica"><option></option><option>si</option><option>no</option></select></label>
-        <label>Violencia<br><select id="violencia"><option></option><option>si</option><option>no</option></select></label>
-      </div>
-    </fieldset>
-
-    <!-- VI. EDUCACIÓN -->
-    <fieldset>
-      <legend>VI. Educación</legend>
-      <label>Niños fuera de escuela<br><select id="ninos_fuera_colegio"><option></option><option>si</option><option>no</option></select></label>
-      <label>¿Quiénes?<br><input type="text" id="quienes_fuera"></label>
-      <label>Causas<br><textarea id="causas_no_asistencia" rows="3"></textarea></label>
-      <label>Dispuestos a retorno<br><select id="dispuesto_retorno"><option></option><option>si</option><option>no</option></select></label>
-      <label>Apoyo requerido<br><input type="text" id="apoyo_requerido"></label>
-    </fieldset>
-
-    <!-- VII. PROGRAMAS -->
-    <fieldset>
-      <legend>VII. Programas del Estado</legend>
-      <div class="form-grid">
-        <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label>
-        <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular</label>
-        <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label>
-        <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label>
-        <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label>
-        <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label>
-        <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
-      </div>
-      <label>¿Apoyo suficiente?<br><select id="apoyo_suficiente"><option></option><option>si</option><option>no</option></select></label>
-      <label>Apoyo adicional<br><input type="text" id="apoyo_adicional"></label>
-    </fieldset>
-
-    <div class="center">
-      <button type="submit" class="btn">💾 Guardar Familia</button>
-    </div>
-  </form>
-</section>
-
-   <!-- 👨‍👩‍👧 Familias registradas -->
+  <!-- 👨‍👩‍👧 Familias registradas -->
   <main class="container card">
-  <h2>👨‍👩‍👧 Familias Registradas</h2>
-  <div id="msg"></div>
+    <h2>👨‍👩‍👧 Familias Registradas</h2>
+    <div id="msg"></div>
 
-  <div class="table-wrapper">
-    <table id="familiasTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombres</th>
-          <th>Dirección</th>
-          <th>Teléfono</th>
-          <th>Visitada</th>
-          <th>Mapa</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+    <div class="table-wrapper">
+      <table id="familiasTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombres</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Visitada</th>
+            <th>Mapa</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-  <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
-    <button id="prevPage" class="btn">⏮ Anterior</button>
-    <button id="nextPage" class="btn">Siguiente ⏭</button>
-  </div>
-</main>
+    <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
+      <button id="prevPage" class="btn">⏮ Anterior</button>
+      <button id="nextPage" class="btn">Siguiente ⏭</button>
+    </div>
+  </main>
 
-<!-- 🔐 Firebase ESM bootstrap: inicializa y expone window.CARITAS.auth en esta página -->
-<script type="module">
-  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import {
-    getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  <!-- ✅ Script de formulario y listado (con fallback a db.js) -->
+  <script type="module">
+    const supabase = window.CARITAS?.supabase;
+    const tabla = document.querySelector("#familiasTable tbody");
+    const msg = document.getElementById("msg");
+    let page = 0;
+    const pageSize = 10;
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD5X6LUG_dOwuaUf6jQUHw_LM5PFgOmc40",
-    authDomain: "web-familias.firebaseapp.com",
-    projectId: "web-familias",
-    storageBucket: "web-familias.appspot.com",
-    messagingSenderId: "261699620792",
-    appId: "1:261699620792:web:8ff59afb72e96c371dc94d"
-  };
-
-  const app  = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  await setPersistence(auth, browserLocalPersistence).catch(()=>{});
-
-  window.CARITAS = window.CARITAS || {};
-  window.CARITAS.auth = auth;
-
-  // Notifica listo y re-notifica en cada cambio
-  document.dispatchEvent(new Event("firebase:ready:caritas"));
-  onAuthStateChanged(auth, () => document.dispatchEvent(new Event("firebase:ready:caritas")));
-</script>
-
-<!-- ✅ Script de formulario y listado (con fallback a db.js) -->
-<script type="module">
-  const supabase = window.CARITAS?.supabase;
-  const tabla = document.querySelector("#familiasTable tbody");
-  const msg = document.getElementById("msg");
-  let page = 0;
-  const pageSize = 10;
-
-  // Fallback para savePendiente si ./api.js/db.js no existe
-  let savePendiente = async (datos) => {
-    try {
-      const k = "pendiente:" + Date.now();
-      localStorage.setItem(k, JSON.stringify(datos));
-      console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
-    } catch(e) { console.warn("No se pudo guardar localmente:", e); }
-  };
-  try {
-    const mod = await import("./api.js/db.js");
-    if (mod?.savePendiente) savePendiente = mod.savePendiente;
-  } catch(e) {
-    console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
-  }
-
-  function showMsg(text, type="info"){
-    msg.textContent = text;
-    msg.className = type;
-    setTimeout(()=>{ msg.textContent=""; },4000);
-  }
-
-  const esc = (s="") => String(s).replace(/[&<>"']/g,
-    m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-  );
-
-  // Guardar familia
-  const form = document.getElementById("famForm");
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-
-    const datos = {
-      nombres_apellidos: form.nombres_apellidos.value,
-      direccion: form.direccion.value,
-      telefono_contacto: form.telefono_contacto.value,
-      dni_solicitante: form.dni_solicitante.value || null,
-      apellido_familia: form.apellido_familia.value || null,
-      observaciones: form.observaciones.value || null
+    // Fallback para savePendiente si ./api.js/db.js no existe
+    let savePendiente = async (datos) => {
+      try {
+        const k = "pendiente:" + Date.now();
+        localStorage.setItem(k, JSON.stringify(datos));
+        console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
+      } catch(e) { console.warn("No se pudo guardar localmente:", e); }
     };
-
-    if (!navigator.onLine) {
-      await savePendiente(datos);
-      alert("📦 Guardado local. Se enviará cuando vuelva internet.");
-      if ("serviceWorker" in navigator && "SyncManager" in window) {
-        const reg = await navigator.serviceWorker.ready;
-        await reg.sync.register("sync-familias");
-      }
-    } else {
-      const { error } = await supabase.from("familias").insert([datos]);
-      if (error) {
-        console.error("❌ Error guardando en Supabase:", error);
-        alert("❌ Error al guardar en Supabase");
-      } else {
-        alert("✅ Familia registrada en Supabase");
-        form.reset();
-        cargarFamilias();
-      }
-    }
-  });
-
-  async function cargarFamilias(){
     try {
-      const start = page * pageSize;
-      const end = start + pageSize - 1;
-      const { data, error } = await supabase
-        .from("familias")
-        .select("*")
-        .order("id",{ascending:true})
-        .range(start,end);
-
-      if(error) throw error;
-      tabla.innerHTML="";
-      if(!data || data.length===0){
-        tabla.innerHTML="<tr><td colspan='7'>Sin registros</td></tr>";
-        return;
-      }
-
-      data.forEach(fam=>{
-        const tr = document.createElement("tr");
-        tr.dataset.id = fam.id;
-
-        tr.innerHTML = `
-           <td>${fam.id}</td>
-  <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-  <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-  <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-  <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-  <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-  <td>
-    <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
-    <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
-  </td>
-        `;
-        tabla.appendChild(tr);
-      });
-    }catch(err){
-      console.error(err);
-      tabla.innerHTML="<tr><td colspan='6'>Error al cargar datos</td></tr>";
+      const mod = await import("./api.js/db.js");
+      if (mod?.savePendiente) savePendiente = mod.savePendiente;
+    } catch(e) {
+      console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
     }
-  }
 
-  // Guardar cambios de visitada
-  document.getElementById("familiasTable")
-    ?.addEventListener("change", async e => {
-      if (e.target && e.target.type === "checkbox") {
-        const id = e.target.dataset.id;
-        const visitada = e.target.checked;
-        if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
+    function showMsg(text, type="info"){
+      msg.textContent = text;
+      msg.className = type;
+      setTimeout(()=>{ msg.textContent=""; },4000);
+    }
 
-        try {
-          await supabase.from("familias").update({ visitada }).eq("id", id);
-          showMsg("✅ Estado actualizado", "success");
-        } catch (err) {
-          console.error("❌ Error actualizando visitada:", err);
-          showMsg("❌ Error al actualizar", "error");
-          e.target.checked = !visitada;
+    const esc = (s="") => String(s).replace(/[&<>"']/g,
+      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+    );
+
+    // Guardar familia
+    const form = document.getElementById("famForm");
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const datos = {
+        nombres_apellidos: form.nombres_apellidos.value,
+        direccion: form.direccion.value,
+        telefono_contacto: form.telefono_contacto.value,
+        dni_solicitante: form.dni_solicitante.value || null,
+        apellido_familia: form.apellido_familia.value || null,
+        observaciones: form.observaciones.value || null
+      };
+
+      if (!navigator.onLine) {
+        await savePendiente(datos);
+        alert("📦 Guardado local. Se enviará cuando vuelva internet.");
+        if ("serviceWorker" in navigator && "SyncManager" in window) {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.sync.register("sync-familias");
+        }
+      } else {
+        const { error } = await supabase.from("familias").insert([datos]);
+        if (error) {
+          console.error("❌ Error guardando en Supabase:", error);
+          alert("❌ Error al guardar en Supabase");
+        } else {
+          alert("✅ Familia registrada en Supabase");
+          form.reset();
+          cargarFamilias();
         }
       }
     });
 
-  // Paginación
-  document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
-  document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
+    async function cargarFamilias(){
+      try {
+        const start = page * pageSize;
+        const end = start + pageSize - 1;
+        const { data, error } = await supabase
+          .from("familias")
+          .select("*")
+          .order("id",{ascending:true})
+          .range(start,end);
 
-  cargarFamilias();
+        if(error) throw error;
+        tabla.innerHTML="";
+        if(!data || data.length===0){
+          tabla.innerHTML="<tr><td colspan='7'>Sin registros</td></tr>";
+          return;
+        }
 
-  // Guardado inline
-  document.getElementById("familiasTable").addEventListener("blur", async e => {
-    if (e.target.matches("[contenteditable]")) {
-      const id = e.target.closest("tr").dataset.id;
-      const field = e.target.dataset.field;
-      const value = e.target.textContent.trim();
+        data.forEach(fam=>{
+          const tr = document.createElement("tr");
+          tr.dataset.id = fam.id;
+
+          tr.innerHTML = `
+           <td>${fam.id}</td>
+           <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
+           <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
+           <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
+           <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
+           <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+           <td>
+             <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
+             <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
+           </td>
+          `;
+          tabla.appendChild(tr);
+        });
+      }catch(err){
+        console.error(err);
+        tabla.innerHTML="<tr><td colspan='7'>Error al cargar datos</td></tr>";
+      }
+    }
+
+    // Guardar cambios de visitada
+    document.getElementById("familiasTable")
+      ?.addEventListener("change", async e => {
+        if (e.target && e.target.type === "checkbox") {
+          const id = e.target.dataset.id;
+          const visitada = e.target.checked;
+          if (!supabase) return showMsg("❌ Supabase no inicializado", "error");
+
+          try {
+            await supabase.from("familias").update({ visitada }).eq("id", id);
+            showMsg("✅ Estado actualizado", "success");
+          } catch (err) {
+            console.error("❌ Error actualizando visitada:", err);
+            showMsg("❌ Error al actualizar", "error");
+            e.target.checked = !visitada;
+          }
+        }
+      });
+
+    // Paginación
+    document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
+    document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
+
+    cargarFamilias();
+
+    // Guardado inline
+    document.getElementById("familiasTable").addEventListener("blur", async e => {
+      if (e.target.matches("[contenteditable]")) {
+        const id = e.target.closest("tr").dataset.id;
+        const field = e.target.dataset.field;
+        const value = e.target.textContent.trim();
+
+        try {
+          const { error } = await supabase
+            .from("familias")
+            .update({ [field]: value })
+            .eq("id", id);
+          if (error) throw error;
+          showMsg("✅ Campo actualizado", "success");
+        } catch (err) {
+          console.error("❌ Error al actualizar:", err);
+          showMsg("❌ Error al actualizar", "error");
+        }
+      }
+    }, true);
+
+    // Eliminar fila (delegado)
+    document.getElementById("familiasTable").addEventListener("click", async (e) => {
+      const id = e.target?.dataset?.del;
+      if (!id) return;
+
+      e.preventDefault();
+      if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
 
       try {
-        const { error } = await supabase
-          .from("familias")
-          .update({ [field]: value })
-          .eq("id", id);
-        if (error) throw error;
-        showMsg("✅ Campo actualizado", "success");
+        await supabase.from("familias").delete().eq("id", id);
+        showMsg("🗑️ Familia eliminada", "success");
+        cargarFamilias();
       } catch (err) {
-        console.error("❌ Error al actualizar:", err);
-        showMsg("❌ Error al actualizar", "error");
+        console.error("❌ Error eliminando:", err);
+        showMsg("❌ Error al eliminar", "error");
+      }
+    });
+
+    // Abrir Historial (delegado)
+    document.getElementById("familiasTable").addEventListener("click", (e) => {
+      const id = e.target?.dataset?.hist;
+      if (!id) return;
+
+      e.preventDefault();
+      if (window.openHistoryModal) {
+        window.openHistoryModal(id);
+      } else {
+        console.warn("openHistoryModal no está disponible todavía.");
+      }
+    });
+  </script>
+
+  <script>
+  (function(){
+    // Selecciones base (ajusta si cambias IDs)
+    const TABLE_SEL = '#familiasTable';
+
+    const $ = (q,root=document)=>root.querySelector(q);
+
+    // Reubicar contenedor de tabla + paginación (una sola vez)
+    let moved = false;
+    function mountFamiliesBlockOnce(){
+      if (moved) return true;
+
+      const table = document.querySelector(TABLE_SEL);
+      const mount = $('#familiasMountInline');
+      if (!table || !mount) return false;
+
+      // Tomamos el wrapper de la tabla y el contenedor de paginación
+      const wrapper = table.closest('.table-wrapper') || table;
+      const pager   = document.getElementById('prevPage')?.parentElement || null;
+
+      // Creamos placeholders para no perder posición original (por si algún día se quiere revertir)
+      const phWrapper = document.createComment('familias-wrapper-placeholder');
+      wrapper.parentNode.insertBefore(phWrapper, wrapper);
+
+      let phPager = null;
+      if (pager && pager.parentNode) {
+        phPager = document.createComment('familias-pager-placeholder');
+        pager.parentNode.insertBefore(phPager, pager);
+      }
+
+      // Montamos un bloque que contenga wrapper + pager
+      const block = document.createElement('div');
+      block.id = 'familiasBlockInline';
+      block.appendChild(wrapper);
+      if (pager) block.appendChild(pager);
+
+      mount.appendChild(block);
+      moved = true;
+      return true;
+    }
+
+    // Abrir/cerrar panel
+    function togglePanel(force){
+      const panel = $('#familiasPanel');
+      if (!panel) return;
+      if (panel.hasAttribute('hidden')) {
+        mountFamiliesBlockOnce();
+      }
+      const willOpen = (typeof force === 'boolean') ? force : panel.hasAttribute('hidden');
+      if (willOpen) {
+        panel.removeAttribute('hidden');
+        panel.scrollIntoView({ behavior:'smooth', block:'start' });
+      } else {
+        panel.setAttribute('hidden','');
       }
     }
-  }, true);
 
-  // Eliminar fila (delegado)
-document.getElementById("familiasTable").addEventListener("click", async (e) => {
-  const id = e.target?.dataset?.del;
-  if (!id) return;
+    // Filtro sobre la tabla real
+    function filterFamilies(q){
+      const table = document.querySelector(TABLE_SEL);
+      if (!table) return;
+      const needle = (q||'').trim().toLowerCase();
 
-  e.preventDefault();
-  if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
-
-  try {
-    await supabase.from("familias").delete().eq("id", id);
-    showMsg("🗑️ Familia eliminada", "success");
-    cargarFamilias();
-  } catch (err) {
-    console.error("❌ Error eliminando:", err);
-    showMsg("❌ Error al eliminar", "error");
-  }
-});
-
-// Abrir Historial (delegado)
-document.getElementById("familiasTable").addEventListener("click", (e) => {
-  const id = e.target?.dataset?.hist;
-  if (!id) return;
-
-  e.preventDefault();
-  if (window.openHistoryModal) {
-    window.openHistoryModal(id);
-  } else {
-    console.warn("openHistoryModal no está disponible todavía.");
-  }
-});
-</script>
-
-<script>
-(function(){
-  // Selecciones base (ajusta si cambias IDs)
-  const TABLE_SEL = '#familiasTable';
-
-  const $ = (q,root=document)=>root.querySelector(q);
-
-  // Reubicar contenedor de tabla + paginación (una sola vez)
-  let moved = false;
-  function mountFamiliesBlockOnce(){
-    if (moved) return true;
-
-    const table = document.querySelector(TABLE_SEL);
-    const mount = $('#familiasMountInline');
-    if (!table || !mount) return false;
-
-    // Tomamos el wrapper de la tabla y el contenedor de paginación
-    const wrapper = table.closest('.table-wrapper') || table;
-    const pager   = document.getElementById('prevPage')?.parentElement || null;
-
-    // Creamos placeholders para no perder posición original (por si algún día se quiere revertir)
-    const phWrapper = document.createComment('familias-wrapper-placeholder');
-    wrapper.parentNode.insertBefore(phWrapper, wrapper);
-
-    let phPager = null;
-    if (pager && pager.parentNode) {
-      phPager = document.createComment('familias-pager-placeholder');
-      pager.parentNode.insertBefore(phPager, pager);
-    }
-
-    // Montamos un bloque que contenga wrapper + pager
-    const block = document.createElement('div');
-    block.id = 'familiasBlockInline';
-    block.appendChild(wrapper);
-    if (pager) block.appendChild(pager);
-
-    mount.appendChild(block);
-    moved = true;
-    return true;
-  }
-
-  // Abrir/cerrar panel
-  function togglePanel(force){
-    const panel = $('#familiasPanel');
-    if (!panel) return;
-    if (panel.hasAttribute('hidden')) {
-      mountFamiliesBlockOnce();
-    }
-    const willOpen = (typeof force === 'boolean') ? force : panel.hasAttribute('hidden');
-    if (willOpen) {
-      panel.removeAttribute('hidden');
-      panel.scrollIntoView({ behavior:'smooth', block:'start' });
-    } else {
-      panel.setAttribute('hidden','');
-    }
-  }
-
-  // Filtro sobre la tabla real
-  function filterFamilies(q){
-    const table = document.querySelector(TABLE_SEL);
-    if (!table) return;
-    const needle = (q||'').trim().toLowerCase();
-
-    table.querySelectorAll('tbody tr, tr').forEach(tr=>{
-      const text = tr.textContent.toLowerCase();
-      tr.style.display = (!needle || text.includes(needle)) ? '' : 'none';
-    });
-  }
-
-  // Exportar CSV (solo filas visibles)
-  function exportCSV(){
-    const table = document.querySelector(TABLE_SEL);
-    if (!table) return;
-    const root = table.closest('table') || table;
-    const rows = [];
-    const trs = root.querySelectorAll('tr');
-    trs.forEach(tr=>{
-      if (tr.style && tr.style.display==='none') return;
-      const cells = [...tr.querySelectorAll('th,td')].map(td=>{
-        let t=(td.innerText||'').replace(/\s+/g,' ').trim();
-        if (/[",;\n]/.test(t)) t=`"${t.replace(/"/g,'""')}"`;
-        return t;
+      table.querySelectorAll('tbody tr').forEach(tr=>{
+        const text = tr.textContent.toLowerCase();
+        tr.style.display = (!needle || text.includes(needle)) ? '' : 'none';
       });
-      if (cells.length) rows.push(cells.join(','));
+    }
+
+    // Exportar CSV (solo filas visibles)
+    function exportCSV(){
+      const table = document.querySelector(TABLE_SEL);
+      if (!table) return;
+      const root = table.closest('table') || table;
+      const rows = [];
+      const trs = root.querySelectorAll('tr');
+      trs.forEach(tr=>{
+        if (tr.style && tr.style.display==='none') return;
+        const cells = [...tr.querySelectorAll('th,td')].map(td=>{
+          let t=(td.innerText||'').replace(/\s+/g,' ').trim();
+          if (/[",;\n]/.test(t)) t=`"${t.replace(/"/g,'""')}"`;
+          return t;
+        });
+        if (cells.length) rows.push(cells.join(','));
+      });
+      const csv = rows.join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'familias.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Eventos
+    document.addEventListener('click', (e)=>{
+      if (e.target.closest('#btn-familias')) togglePanel();
+      if (e.target.closest('#familiasExport')) exportCSV();
     });
-    const csv = rows.join('\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'familias.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
+    document.addEventListener('input', (e)=>{
+      if (e.target && e.target.id==='familiasSearch') filterFamilies(e.target.value);
+    });
 
-  // Eventos
-  document.addEventListener('click', (e)=>{
-    if (e.target.closest('#btn-familias')) togglePanel();
-    if (e.target.closest('#familiasExport')) exportCSV();
-  });
-  document.addEventListener('input', (e)=>{
-    if (e.target && e.target.id==='familiasSearch') filterFamilies(e.target.value);
-  });
+    // (Opcional) abrir por defecto si viene con #familias
+    if (location.hash.replace('#','').toLowerCase().includes('familias')) {
+      togglePanel(true);
+    }
+  })();
+  </script>
 
-  // (Opcional) abrir por defecto si viene con #familias
-  if (location.hash.replace('#','').toLowerCase().includes('familias')) {
-    togglePanel(true);
-  }
-})();
-</script>
-<!-- ==== Modal: Historial por familia ==== -->
-<div id="histModal" class="modal" aria-hidden="true">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="histTitle">Historial</h3>
-      <input id="histSearch" class="search" type="search" placeholder="Filtrar..." />
-      <button id="histExport" class="btn">⬇️ Exportar CSV</button>
-      <button id="histClose" class="btn ghost">Cerrar</button>
-    </div>
-    <div class="modal-body">
-      <table id="histTable">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Usuario</th>
-            <th>Resumen de cambios</th>
-          </tr>
-        </thead>
-        <tbody><!-- rows dinámicas --></tbody>
-      </table>
+  <!-- ==== Modal: Historial por familia ==== -->
+  <div id="histModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="histTitle">Historial</h3>
+        <input id="histSearch" class="search" type="search" placeholder="Filtrar..." />
+        <button id="histExport" class="btn">⬇️ Exportar CSV</button>
+        <button id="histClose" class="btn ghost">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <table id="histTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Resumen de cambios</th>
+            </tr>
+          </thead>
+          <tbody><!-- rows dinámicas --></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
-<script>
-(function(){
-   // ========= Config =========
-  const STORAGE_KEY = 'familias_history_v1'; // localStorage
-  const TABLE_SEL   = '#familiasTable';
-  const FAMILIA_ID_FIELD = 'id';  // <-- usamos el id real de Supabase
+  <script>
+  (function(){
+    // ========= Config =========
+    const STORAGE_KEY = 'familias_history_v1'; // localStorage
+    const TABLE_SEL   = '#familiasTable';
+    const FAMILIA_ID_FIELD = 'id';  // <-- usamos el id real de Supabase
 
-  // ========= Helpers =========
-  const $ = (q,root=document)=>root.querySelector(q);
-  const nowISO = ()=> new Date().toISOString();
+    // ========= Helpers =========
+    const $ = (q,root=document)=>root.querySelector(q);
+    const nowISO = ()=> new Date().toISOString();
 
-  function loadDB(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch{ return {}; } }
-  function saveDB(db){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
-  function getHistory(familyId){ const db = loadDB(); return db[familyId] || []; }
-  function addHistory(familyId, entry){
-    const db = loadDB(); db[familyId] = db[familyId] || [];
-    db[familyId].unshift(entry); saveDB(db);
-  }
-
-  function diffObjects(prev, cur){
-    const keys = Array.from(new Set([...Object.keys(prev||{}), ...Object.keys(cur||{})]));
-    const changes = [];
-    keys.forEach(k=>{
-      const a = (prev||{})[k] ?? '';
-      const b = (cur||{})[k] ?? '';
-      if (String(a) !== String(b)) changes.push({field:k, from:a, to:b});
-    });
-    return changes;
-  }
-
-  // ========= Hook opcional en submit =========
-  // Si quieres registrar también el envío del formulario, mantenlo;
-  // si no, puedes comentarlo y registrar solo cambios desde la tabla.
-  async function logFamilyUpdate(formData, opts={}){
-    const user = (window.CARITAS?.auth?.currentUser) || null;
-    const familyId = formData[FAMILIA_ID_FIELD]; // en submit puede no existir todavía
-    if(!familyId){
-      // Si aún no existe id (insert nuevo), no registramos aquí.
-      // Los cambios posteriores (inline/paginación) sí tendrán id y quedarán en historial.
-      return;
+    function loadDB(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch{ return {}; } }
+    function saveDB(db){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+    function getHistory(familyId){ const db = loadDB(); return db[familyId] || []; }
+    function addHistory(familyId, entry){
+      const db = loadDB(); db[familyId] = db[familyId] || [];
+      db[familyId].unshift(entry); saveDB(db);
     }
-    const hist = getHistory(familyId);
-    const prevSnapshot = hist.find(h=>h.snapshot)?.snapshot || {};
-    const changes = diffObjects(prevSnapshot, formData);
 
-    addHistory(familyId, {
-      ts: nowISO(),
-      user: user?.email || user?.displayName || 'anon',
-      action: opts.action || 'update',
-      snapshot: formData,
-      changes
-    });
-  }
+    function diffObjects(prev, cur){
+      const keys = Array.from(new Set([...Object.keys(prev||{}), ...Object.keys(cur||{})]));
+      const changes = [];
+      keys.forEach(k=>{
+        const a = (prev||{})[k] ?? '';
+        const b = (cur||{})[k] ?? '';
+        if (String(a) !== String(b)) changes.push({field:k, from:a, to:b});
+      });
+      return changes;
+    }
 
-  // ========= Botón “Historial” por fila =========
-  function ensureHistoryButtons(){
-    const table = document.querySelector(TABLE_SEL);
-    if(!table) return;
-
-    table.querySelectorAll('tbody tr').forEach(tr=>{
-      const familyId = tr.dataset.id; // el render ya pone data-id = fam.id
-      if (!familyId) return;
-
-      // usa la última celda (Acciones) ya existente
-      let td = tr.lastElementChild;
-      if (!td || td.tagName!=='TD') return;
-
-      // evita duplicados
-      if (td.querySelector('.btn-hist')) return;
-
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-ghost btn-hist';
-      btn.type = 'button';
-      btn.textContent = 'Historial';
-      btn.addEventListener('click', ()=> openHistoryModal(familyId));
-      td.appendChild(btn);
-    });
-  }
-
-  // ========= UI modal =========
-  function renderHistoryTable(familyId, q=''){
-    const tbody = $('#histTable tbody'); tbody.innerHTML = '';
-    const rows = getHistory(familyId);
-    const needle = q.trim().toLowerCase();
-
-    rows.forEach(r=>{
-      const summary = (r.changes && r.changes.length)
-        ? r.changes.map(c=> `${c.field}: “${c.from}” → “${c.to}”`).join(' | ')
-        : '(sin cambios detectados)';
-      const line = `${r.ts} ${r.user||''} ${summary}`.toLowerCase();
-      if (needle && !line.includes(needle)) return;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${new Date(r.ts).toLocaleString()}</td>
-        <td>${r.user || '—'}</td>
-        <td>${summary}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
- function openHistoryModal(familyId){
-  const modal = document.getElementById('histModal');
-  document.getElementById('histTitle').textContent = `Historial – ID: ${familyId}`;
-  renderHistoryTable(familyId);
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden','false');
-
-  document.getElementById('histSearch').oninput = (e)=> renderHistoryTable(familyId, e.target.value);
-  document.getElementById('histExport').onclick = ()=> exportHistoryCSV(familyId);
-  document.getElementById('histClose').onclick  = ()=> closeHistoryModal();
-
-  // Clic fuera para cerrar
-  modal.addEventListener('click', (e)=>{ if (e.target === modal) closeHistoryModal(); }, {once:true});
-  // ESC para cerrar
-  document.addEventListener('keydown', function esc(e){
-    if(e.key==='Escape'){ closeHistoryModal(); document.removeEventListener('keydown', esc); }
-  });
-}
-
-// Exponer para que el otro script pueda llamarla
-window.openHistoryModal = openHistoryModal;
-  function closeHistoryModal(){
-    const modal = $('#histModal');
-    modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
-  }
-
-  function exportHistoryCSV(familyId){
-    const rows = getHistory(familyId);
-    const out = [['fecha','usuario','accion','campo','de','a']];
-    rows.forEach(r=>{
-      if (r.changes?.length){
-        r.changes.forEach(c=> out.push([r.ts, r.user||'', r.action||'', c.field, String(c.from||''), String(c.to||'')]));
-      } else {
-        out.push([r.ts, r.user||'', r.action||'', '', '', '']);
+    // ========= Hook opcional en submit =========
+    async function logFamilyUpdate(formData, opts={}){
+      const user = (window.CARITAS?.auth?.currentUser) || null;
+      const familyId = formData[FAMILIA_ID_FIELD]; // en submit puede no existir todavía
+      if(!familyId){
+        // Si aún no existe id (insert nuevo), no registramos aquí.
+        return;
       }
-    });
-    const csv = out.map(cols => cols.map(v=>{
-      let t = String(v).replace(/\s+/g,' ').trim();
-      if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
-      return t;
-    }).join(',')).join('\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `historial_${familyId}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
+      const hist = getHistory(familyId);
+      const prevSnapshot = hist.find(h=>h.snapshot)?.snapshot || {};
+      const changes = diffObjects(prevSnapshot, formData);
 
-  // ========= Hook correcto del submit (opcional)
-  const form = document.querySelector('#famForm'); // <-- id real en tu HTML
-  if (form){
-    form.addEventListener('submit', async (e)=>{
-      try{
-        const data = Object.fromEntries(new FormData(form).entries());
-        // OJO: al crear nuevo, todavía NO tenemos id; por eso este log es opcional.
-        // Si actualizas familias existentes con id, este log ya usará el id correcto.
-        await logFamilyUpdate(data, {action:'submit'});
-      }catch(err){ console.warn('No se pudo registrar historial:', err); }
-    });
-  }
+      addHistory(familyId, {
+        ts: nowISO(),
+        user: user?.email || user?.displayName || 'anon',
+        action: opts.action || 'update',
+        snapshot: formData,
+        changes
+      });
+    }
 
-  // ========= Start =========
-  ensureHistoryButtons();
-})();
-</script>
+    // ========= UI modal =========
+    function renderHistoryTable(familyId, q=''){
+      const tbody = $('#histTable tbody'); tbody.innerHTML = '';
+      const rows = getHistory(familyId);
+      const needle = q.trim().toLowerCase();
+
+      rows.forEach(r=>{
+        const summary = (r.changes && r.changes.length)
+          ? r.changes.map(c=> `${c.field}: “${c.from}” → “${c.to}”`).join(' | ')
+          : '(sin cambios detectados)';
+        const line = `${r.ts} ${r.user||''} ${summary}`.toLowerCase();
+        if (needle && !line.includes(needle)) return;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(r.ts).toLocaleString()}</td>
+          <td>${r.user || '—'}</td>
+          <td>${summary}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openHistoryModal(familyId){
+      const modal = document.getElementById('histModal');
+      document.getElementById('histTitle').textContent = `Historial – ID: ${familyId}`;
+      renderHistoryTable(familyId);
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+
+      document.getElementById('histSearch').oninput = (e)=> renderHistoryTable(familyId, e.target.value);
+      document.getElementById('histExport').onclick = ()=> exportHistoryCSV(familyId);
+      document.getElementById('histClose').onclick  = ()=> closeHistoryModal();
+
+      // Clic fuera para cerrar
+      modal.addEventListener('click', (e)=>{ if (e.target === modal) closeHistoryModal(); }, {once:true});
+      // ESC para cerrar
+      document.addEventListener('keydown', function esc(e){
+        if(e.key==='Escape'){ closeHistoryModal(); document.removeEventListener('keydown', esc); }
+      });
+    }
+
+    // Exponer para que el otro script pueda llamarla
+    window.openHistoryModal = openHistoryModal;
+
+    function closeHistoryModal(){
+      const modal = $('#histModal');
+      modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
+    }
+
+    function exportHistoryCSV(familyId){
+      const rows = getHistory(familyId);
+      const out = [['fecha','usuario','accion','campo','de','a']];
+      rows.forEach(r=>{
+        if (r.changes?.length){
+          r.changes.forEach(c=> out.push([r.ts, r.user||'', r.action||'', c.field, String(c.from||''), String(c.to||'')]));
+        } else {
+          out.push([r.ts, r.user||'', r.action||'', '', '', '']);
+        }
+      });
+      const csv = out.map(cols => cols.map(v=>{
+        let t = String(v).replace(/\s+/g,' ').trim();
+        if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
+        return t;
+      }).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `historial_${familyId}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // ========= Hook correcto del submit (opcional)
+    const form = document.querySelector('#famForm'); // <-- id real en tu HTML
+    if (form){
+      form.addEventListener('submit', async (e)=>{
+        try{
+          const data = Object.fromEntries(new FormData(form).entries());
+          await logFamilyUpdate(data, {action:'submit'});
+        }catch(err){ console.warn('No se pudo registrar historial:', err); }
+      });
+    }
+
+  })();
+  </script>
 </body>
 </html>
