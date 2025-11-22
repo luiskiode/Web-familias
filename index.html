@@ -6,193 +6,33 @@
   <meta name="theme-color" content="#b91c1c" />
   <title>Cáritas CNC</title>
 
-  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <link rel="icon" href="img/favicon.ico" />
   <link rel="manifest" href="manifest.webmanifest" />
   <base href="/Web-familias/">
 
   <link rel="stylesheet" href="styles-caritas.css" />
 
-  <!-- 🎨 Ajustes de diseño específicos -->
-  <style>
-    .card.center .btn {
-      margin-top: 0.5rem;
-    }
-
-    /* Galería */
-    .gallery {
-      margin-top: 0.75rem;
-    }
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 0.5rem;
-    }
-    .gallery-item {
-      position: relative;
-      overflow: hidden;
-      border-radius: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(0, 0, 0, 0.35);
-    }
-    body.tema-blanco .gallery-item {
-      background: #f3f4f6;
-      border-color: #e5e7eb;
-    }
-    .gallery-item img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
-    }
-    .gallery-item::after {
-      content: "🔍 Ver";
-      position: absolute;
-      right: 6px;
-      bottom: 4px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      font-size: 0.7rem;
-    }
-    .gallery-item:hover img {
-      transform: scale(1.05);
-      filter: brightness(1.08);
-    }
-
-    /* Modal galería */
-    #galleryModal .modal-card {
-      max-width: 900px;
-    }
-    #galleryFull {
-      max-width: 100%;
-      height: auto;
-      border-radius: 12px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    /* Dashboard tesorería */
-    .dash-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-      gap:12px;
-      margin:12px 0 16px;
-    }
-    .stat-card{
-      padding:10px 12px;
-      border-radius:12px;
-      background:rgba(0,0,0,.45);
-      border:1px solid rgba(255,255,255,.06);
-      box-shadow:0 6px 18px rgba(0,0,0,.45);
-    }
-    .stat-card span{
-      display:block;
-      font-size:.8rem;
-      color:var(--muted);
-    }
-    .stat-card strong{
-      font-size:1.3rem;
-      margin-top:4px;
-      display:block;
-    }
-
-    .teso-filtros{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-bottom:12px;
-      flex-wrap: wrap;
-    }
-    .teso-filtros select{
-      padding:4px 8px;
-      border-radius:8px;
-      border:1px solid var(--border);
-      background:#111;
-      color:var(--text);
-    }
-
-    .teso-layout{
-      display:grid;
-      grid-template-columns:minmax(260px, 320px) minmax(0,1fr);
-      gap:18px;
-      align-items:flex-start;
-      margin-bottom:16px;
-    }
-    @media (max-width:900px){
-      .teso-layout{ grid-template-columns:1fr }
-    }
-    .teso-form{
-      background:var(--surface-2);
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid var(--border);
-    }
-    .teso-form h3{
-      margin:0 0 8px;
-      font-size:1rem;
-    }
-    .teso-chart{
-      background:var(--surface-2);
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid var(--border);
-    }
-    .teso-chart h3{
-      margin:0 0 8px;
-    }
-    #tesoChart {
-      max-width: 100%;
-      height: 260px;
-    }
-
-    /* Palabras del sacerdote */
-    .sacerdote-mensaje {
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.75rem;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      margin-bottom: 0.75rem;
-      white-space: pre-wrap;
-    }
-    body.tema-blanco .sacerdote-mensaje {
-      background: #f3f4f6;
-      border-color: #e5e7eb;
-    }
-    .sacerdote-form label {
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    .sacerdote-form textarea {
-      width: 100%;
-      resize: vertical;
-    }
-
-  </style>
-
-  <!-- ✅ CSP (incluye dominios para Supabase y Chart.js) -->
+  <!-- ✅ CSP básica (incluye Supabase y Chart.js) -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self';
-             script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com https://www.gstatic.com https://cdn.jsdelivr.net;
-             style-src 'self' 'unsafe-inline' https://unpkg.com;
-             img-src * data: blob:;
-             connect-src *;
-             font-src * data:;">
+        content="default-src 'self';
+                 script-src 'self' 'unsafe-inline' https://esm.sh https://cdn.jsdelivr.net;
+                 style-src 'self' 'unsafe-inline';
+                 img-src * data: blob:;
+                 connect-src *;
+                 font-src * data:;">
 
-  <!-- 🛠 Herramientas de diagnóstico -->
+  <!-- 🛠 Self-heal & overlay (si los tienes en tu repo) -->
   <script type="module" src="api.js/self-heal-caritas.js"></script>
   <script defer src="api.js/error-overlay.js"></script>
 
-  <!-- ✅ Supabase global -->
+  <!-- 🔌 Supabase global (Caritas CNC) -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
 
     window.CARITAS = window.CARITAS || {};
     window.CARITAS.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -201,65 +41,73 @@
 </head>
 
 <body>
-  <!-- 🎥 Fondo -->
-  <video id="video-fondo" autoplay muted loop>
-    <source src="videos/fondo.mp4" type="video/mp4">
+  <!-- 🎥 Fondo en movimiento -->
+  <video id="video-fondo" autoplay muted loop playsinline>
+    <source src="./videos/fondo.mp4" type="video/mp4" />
   </video>
 
-  <!-- Encabezado -->
+  <!-- Encabezado principal -->
   <header class="app-header">
-    <h1>Cáritas CNC</h1>
+    <div class="app-header-inner">
+      <h1>Cáritas CNC</h1>
+      <p class="app-subtitle">Servicio a las familias más necesitadas de la comunidad</p>
+    </div>
   </header>
 
-  <!-- 📌 Misión y Visión -->
+  <!-- Misión / Visión -->
   <section class="container card">
-    <h2>🌟 Nuestra Misión</h2>
+    <h2>🌟 Nuestra misión</h2>
     <p>
       Servir a las familias más necesitadas con solidaridad, acompañamiento y amor cristiano,
       promoviendo la dignidad y la esperanza.
     </p>
-    <h2>👁️ Nuestra Visión</h2>
+    <h2>👁️ Nuestra visión</h2>
     <p>
       Ser una comunidad unida que transforma la realidad de las familias vulnerables,
       sembrando valores de fe, justicia y caridad.
     </p>
   </section>
 
-  <!-- 📂 Botones principales -->
+  <!-- Accesos principales -->
   <section class="container card center">
-    <a
-      id="btn-drive"
-      class="btn"
-      href="https://drive.google.com/drive/folders/15O0gRC4yDubSsrd2Qvo_ni7Hm7Bk1KBc?usp=drive_link"
-      target="_blank"
-      rel="noopener noreferrer"
-    >📂 Acceder a Drive</a>
-    <button id="btn-familias" class="btn btn-ghost" type="button" style="margin-left:8px">
-      👨‍👩‍👧 Familias
-    </button>
-  </section>
+    <div class="btn-row">
+      <a
+        id="btn-drive"
+        class="btn"
+        href="https://drive.google.com/drive/folders/15O0gRC4yDubSsrd2Qvo_ni7Hm7Bk1KBc?usp=drive_link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        📂 <span>Acceder a Drive</span>
+      </a>
 
-  <!-- 🔽 Panel plegable para tabla de familias -->
-  <section id="familiasPanel" class="familias-panel" hidden>
-    <header class="familias-head">
-      <h3 class="familias-title">Lista de familias</h3>
-      <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
-      <button id="familiasExport" class="btn">⬇️ Exportar CSV</button>
-    </header>
-    <div id="familiasMountInline" class="familias-body">
-      <!-- Aquí se moverá la tabla de familias -->
+      <button id="btn-familias" class="btn btn-ghost" type="button">
+        👨‍👩‍👧 <span>Familias</span>
+      </button>
     </div>
   </section>
 
-  <!-- 🎫 Credenciales -->
-  <section class="container card center">
-    <h2>🎫 Credenciales Cáritas CNC</h2>
-    <p>Gestiona tu carnet, comparte el enlace público y, si eres Admin, administra todas las credenciales.</p>
-    <a class="btn" href="credenciales.html">🪪 Abrir Credenciales</a>
+  <!-- Panel plegable de familias -->
+  <section id="familiasPanel" class="familias-panel" hidden>
+    <header class="familias-head">
+      <h3>👨‍👩‍👧 Familias Registradas</h3>
+      <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
+      <button id="familiasExport" class="btn btn-ghost">⬇️ Exportar CSV</button>
+    </header>
+    <div id="familiasMountInline" class="familias-body"></div>
   </section>
 
-  <!-- 🤝 Sobre el grupo + Galería -->
-  <section class="container card" id="sobre-grupo">
+  <!-- Credenciales -->
+  <section class="container card center">
+    <h2>🎫 Credenciales Cáritas CNC</h2>
+    <p>Gestiona tu carnet, comparte el enlace público y, si eres admin, administra todas las credenciales.</p>
+    <a class="btn" href="credenciales.html">
+      🪪 <span>Abrir credenciales</span>
+    </a>
+  </section>
+
+  <!-- Sobre Cáritas + galería -->
+  <section class="container card">
     <h2>🤝 Sobre Cáritas CNC</h2>
     <p>
       Cáritas CNC está formada por voluntarios que, con alegría y compromiso, visitan familias,
@@ -267,31 +115,32 @@
     </p>
 
     <div class="gallery">
-      <h3 style="font-size:1rem;margin-top:0.75rem;">📸 Galería de momentos</h3>
+      <h3>📸 Galería de momentos</h3>
       <div class="gallery-grid">
         <figure class="gallery-item">
-          <img src="img/galeria1.jpg" alt="Actividad 1" data-gallery-full="img/galeria1.jpg">
+          <img src="img/galeria1.jpg" alt="Actividad 1" data-gallery-full="img/galeria1.jpg" />
         </figure>
         <figure class="gallery-item">
-          <img src="img/galeria2.jpg" alt="Actividad 2" data-gallery-full="img/galeria2.jpg">
+          <img src="img/galeria2.jpg" alt="Actividad 2" data-gallery-full="img/galeria2.jpg" />
         </figure>
         <figure class="gallery-item">
-          <img src="img/galeria3.jpg" alt="Actividad 3" data-gallery-full="img/galeria3.jpg">
+          <img src="img/galeria3.jpg" alt="Actividad 3" data-gallery-full="img/galeria3.jpg" />
         </figure>
         <figure class="gallery-item">
-          <img src="img/galeria4.jpg" alt="Actividad 4" data-gallery-full="img/galeria4.jpg">
+          <img src="img/galeria4.jpg" alt="Actividad 4" data-gallery-full="img/galeria4.jpg" />
         </figure>
         <figure class="gallery-item">
-          <img src="img/galeria5.jpg" alt="Actividad 5" data-gallery-full="img/galeria5.jpg">
+          <img src="img/galeria5.jpg" alt="Actividad 5" data-gallery-full="img/galeria5.jpg" />
         </figure>
       </div>
-      <p class="muted" style="margin-top:.6rem;font-size:.85rem;">
-        Puedes cambiar estas imágenes colocando tus fotos en la carpeta <code>img/</code> y actualizando los nombres de archivo.
+      <p class="muted gallery-note">
+        Puedes cambiar estas imágenes colocando tus fotos en la carpeta <code>img/</code>
+        y actualizando los nombres de archivo.
       </p>
     </div>
   </section>
 
-  <!-- ✝️ Palabras del sacerdote -->
+  <!-- Palabras del sacerdote -->
   <section class="container card" id="palabras-sacerdote">
     <h2>✝️ Palabras del sacerdote</h2>
     <p id="sacerdoteMensajeTexto" class="sacerdote-mensaje">
@@ -299,18 +148,20 @@
     </p>
 
     <form id="sacerdoteForm" class="sacerdote-form">
-      <label>Mensaje para la comunidad<br>
+      <label>Mensaje para la comunidad<br />
         <textarea name="contenido" rows="3" required
           placeholder="Escribe aquí una reflexión, aviso o palabra importante para las familias..."></textarea>
       </label>
-      <label>Nombre (opcional)<br>
-        <input type="text" name="autor" placeholder="P. Nombre Apellido">
+      <label>Nombre (opcional)<br />
+        <input type="text" name="autor" placeholder="P. Nombre Apellido" />
       </label>
-      <button type="submit" class="btn" style="margin-top:.4rem;">💬 Publicar mensaje</button>
+      <button type="submit" class="btn" style="margin-top:.4rem;">
+        💬 <span>Publicar mensaje</span>
+      </button>
     </form>
   </section>
 
-  <!-- 💰 Dashboard financiero -->
+  <!-- Tesorería -->
   <section class="container card" id="tesoreria">
     <h2>💰 Dashboard financiero Cáritas CNC</h2>
     <p>Resumen de ingresos y gastos registrados en tesorería.</p>
@@ -343,46 +194,53 @@
         </select>
       </label>
 
-      <button class="btn" id="tesoExport">⬇️ Exportar CSV</button>
+      <label>Mes:
+        <input type="month" id="tesoFiltroMes" />
+      </label>
+
+      <button class="btn btn-ghost" id="tesoExport">⬇️ Exportar CSV</button>
     </div>
 
     <div class="teso-layout">
       <form id="tesoForm" class="teso-form">
         <h3>➕ Registrar movimiento</h3>
         <div class="form-grid">
-          <label>Tipo<br>
+          <label>Tipo<br />
             <select name="tipo" required>
               <option value="ingreso">Ingreso</option>
               <option value="gasto">Gasto</option>
             </select>
           </label>
-          <label>Categoría<br>
-            <input type="text" name="categoria" placeholder="Chocolatada, logística…">
+          <label>Categoría<br />
+            <input type="text" name="categoria" placeholder="Chocolatada, logística…" />
           </label>
-          <label>Monto (S/)<br>
-            <input type="number" name="monto" step="0.01" required>
+          <label>Monto (S/)<br />
+            <input type="number" name="monto" step="0.01" required />
           </label>
         </div>
         <div class="form-grid">
-          <label>Abonado / Responsable<br>
-            <input type="text" name="abonado" placeholder="Nombre">
+          <label>Abonado / responsable<br />
+            <input type="text" name="abonado" placeholder="Nombre" />
           </label>
-          <label>Medio de pago<br>
-            <input type="text" name="medio_pago" placeholder="Yape, efectivo…">
+          <label>Medio de pago<br />
+            <input type="text" name="medio_pago" placeholder="Yape, efectivo…" />
           </label>
         </div>
-        <label>Concepto<br>
-          <input type="text" name="concepto" placeholder="Ej: Aporte campaña, compra de víveres…">
+        <label>Concepto<br />
+          <input type="text" name="concepto" placeholder="Ej: Aporte campaña, compra de víveres…" />
         </label>
-        <label>Observaciones<br>
+        <label>Observaciones<br />
           <textarea name="observaciones" rows="2"></textarea>
         </label>
-        <button type="submit" class="btn" style="margin-top:.5rem;">Guardar movimiento</button>
+        <button type="submit" class="btn" style="margin-top:.5rem;">
+          💾 <span>Guardar movimiento</span>
+        </button>
       </form>
 
       <div class="teso-chart">
         <h3>📊 Ingresos vs gastos</h3>
         <canvas id="tesoChart"></canvas>
+        <div id="tesoCatResumen" class="teso-cat-resumen"></div>
       </div>
     </div>
 
@@ -408,50 +266,49 @@
     </div>
   </section>
 
-  <!-- 📋 Formulario Integral de Familias -->
+  <!-- Formulario integral de familia -->
   <section class="container card">
-    <h2>📋 Registro Integral de Familia</h2>
+    <h2>📋 Registro integral de familia</h2>
     <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
 
     <form id="famForm" enctype="multipart/form-data">
       <!-- I. DATOS BÁSICOS -->
       <fieldset>
-        <legend>I. Datos Básicos</legend>
+        <legend>I. Datos básicos</legend>
         <div class="form-grid">
-          <label>👤 Nombre y apellidos*<br>
-            <input type="text" id="nombres_apellidos" name="nombres_apellidos" required>
+          <label>👤 Nombre y apellidos*<br />
+            <input type="text" id="nombres_apellidos" name="nombres_apellidos" required />
           </label>
-          <label>📍 Dirección*<br>
-            <input type="text" id="direccion" name="direccion" required>
+          <label>📍 Dirección*<br />
+            <input type="text" id="direccion" name="direccion" required />
           </label>
-          <label>📞 Teléfono*<br>
-            <input type="tel" id="telefono_contacto" name="telefono_contacto" required>
+          <label>📞 Teléfono*<br />
+            <input type="tel" id="telefono_contacto" name="telefono_contacto" required />
           </label>
         </div>
         <div class="form-grid">
-          <label>🪪 DNI<br>
-            <input type="text" id="dni_solicitante" name="dni_solicitante">
+          <label>🪪 DNI<br />
+            <input type="text" id="dni_solicitante" name="dni_solicitante" />
           </label>
-          <label>👨‍👩‍👧 Apellido de la familia<br>
-            <input type="text" id="apellido_familia" name="apellido_familia">
+          <label>👨‍👩‍👧 Apellido de la familia<br />
+            <input type="text" id="apellido_familia" name="apellido_familia" />
           </label>
         </div>
-        <label>📝 Observaciones<br>
+        <label>📝 Observaciones<br />
           <textarea id="observaciones" name="observaciones" rows="3"></textarea>
         </label>
-        <label>📂 Subir archivo<br>
-          <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png">
+        <label>📂 Subir archivo<br />
+          <input type="file" id="archivo" accept=".pdf,.doc,.docx,.jpg,.png" />
         </label>
       </fieldset>
 
-      <!-- (resto de secciones del formulario, igual que ya tenías) -->
       <!-- II. DATOS COMPLEMENTARIOS -->
       <fieldset>
-        <legend>II. Datos Complementarios</legend>
+        <legend>II. Datos complementarios</legend>
         <div class="form-grid">
-          <label>Jefe(a) de hogar<br><input type="text" id="jefe_hogar"></label>
-          <label>Edad<br><input type="number" id="edad"></label>
-          <label>Estado civil<br>
+          <label>Jefe(a) de hogar<br /><input type="text" id="jefe_hogar" /></label>
+          <label>Edad<br /><input type="number" id="edad" /></label>
+          <label>Estado civil<br />
             <select id="estado_civil">
               <option value="">Seleccione...</option>
               <option>Soltero(a)</option><option>Casado(a)</option>
@@ -460,31 +317,31 @@
           </label>
         </div>
         <div class="form-grid">
-          <label>Ocupación<br><input type="text" id="ocupacion"></label>
-          <label>Grado de instrucción<br>
+          <label>Ocupación<br /><input type="text" id="ocupacion" /></label>
+          <label>Grado de instrucción<br />
             <select id="instruccion">
               <option value="">Seleccione...</option>
               <option>Sin estudios</option><option>Primaria</option><option>Secundaria</option>
               <option>Técnico</option><option>Universitario</option><option>Otro</option>
             </select>
           </label>
-          <label>Integrantes<br><input type="number" id="num_integrantes"></label>
+          <label>Integrantes<br /><input type="number" id="num_integrantes" /></label>
         </div>
-        <label>Fecha entrevista<br><input type="date" id="fecha_entrevista"></label>
+        <label>Fecha entrevista<br /><input type="date" id="fecha_entrevista" /></label>
       </fieldset>
 
       <!-- III. SOCIO-ECONÓMICO -->
       <fieldset>
-        <legend>III. Socio-Económico</legend>
+        <legend>III. Situación socio-económica</legend>
         <div class="form-grid">
-          <label>🏠 Casa precaria<br><select id="casa_precaria"><option></option><option>si</option><option>no</option></select></label>
-          <label>💧 Servicios básicos<br><select id="servicios_basicos"><option></option><option>si</option><option>no</option></select></label>
-          <label>🍽 Dificultad alimentos<br><select id="dificultad_alimentos"><option></option><option>si</option><option>no</option></select></label>
+          <label>🏠 Casa precaria<br /><select id="casa_precaria"><option></option><option>si</option><option>no</option></select></label>
+          <label>💧 Servicios básicos<br /><select id="servicios_basicos"><option></option><option>si</option><option>no</option></select></label>
+          <label>🍽 Dificultad alimentos<br /><select id="dificultad_alimentos"><option></option><option>si</option><option>no</option></select></label>
         </div>
         <div class="form-grid">
-          <label>⚖️ Mínimo alimentario<br><select id="minimo_alimentario"><option></option><option>si</option><option>no</option></select></label>
-          <label>👥 Hacinamiento<br><select id="hacinamiento"><option></option><option>si</option><option>no</option></select></label>
-          <label>💸 Vendió pertenencias<br><select id="vende_pertenencias"><option></option><option>si</option><option>no</option></select></label>
+          <label>⚖️ Mínimo alimentario<br /><select id="minimo_alimentario"><option></option><option>si</option><option>no</option></select></label>
+          <label>👥 Hacinamiento<br /><select id="hacinamiento"><option></option><option>si</option><option>no</option></select></label>
+          <label>💸 Vendió pertenencias<br /><select id="vende_pertenencias"><option></option><option>si</option><option>no</option></select></label>
         </div>
       </fieldset>
 
@@ -492,14 +349,14 @@
       <fieldset>
         <legend>IV. Discapacidad</legend>
         <div class="form-grid">
-          <label>Discapacidad grave<br><select id="discapacidad_grave"><option></option><option>si</option><option>no</option></select></label>
-          <label>Tipo discapacidad<br><input type="text" id="tipo_discapacidad"></label>
-          <label>Aparatos de ayuda<br><select id="aparatos_ayuda"><option></option><option>si</option><option>no</option></select></label>
+          <label>Discapacidad grave<br /><select id="discapacidad_grave"><option></option><option>si</option><option>no</option></select></label>
+          <label>Tipo discapacidad<br /><input type="text" id="tipo_discapacidad" /></label>
+          <label>Aparatos de ayuda<br /><select id="aparatos_ayuda"><option></option><option>si</option><option>no</option></select></label>
         </div>
         <div class="form-grid">
-          <label>Intelectual grave<br><select id="discapacidad_intelectual"><option></option><option>si</option><option>no</option></select></label>
-          <label>Bajo tratamiento<br><select id="bajo_tratamiento"><option></option><option>si</option><option>no</option></select></label>
-          <label>Requiere cuidador<br><select id="requiere_cuidador"><option></option><option>si</option><option>no</option></select></label>
+          <label>Intelectual grave<br /><select id="discapacidad_intelectual"><option></option><option>si</option><option>no</option></select></label>
+          <label>Bajo tratamiento<br /><select id="bajo_tratamiento"><option></option><option>si</option><option>no</option></select></label>
+          <label>Requiere cuidador<br /><select id="requiere_cuidador"><option></option><option>si</option><option>no</option></select></label>
         </div>
       </fieldset>
 
@@ -507,47 +364,49 @@
       <fieldset>
         <legend>V. Vulnerabilidad</legend>
         <div class="form-grid">
-          <label>Abandono/depresión<br><select id="abandono_depresion"><option></option><option>si</option><option>no</option></select></label>
-          <label>Enfermedad crónica<br><select id="enfermedad_cronica"><option></option><option>si</option><option>no</option></select></label>
-          <label>Violencia<br><select id="violencia"><option></option><option>si</option><option>no</option></select></label>
+          <label>Abandono/depresión<br /><select id="abandono_depresion"><option></option><option>si</option><option>no</option></select></label>
+          <label>Enfermedad crónica<br /><select id="enfermedad_cronica"><option></option><option>si</option><option>no</option></select></label>
+          <label>Violencia<br /><select id="violencia"><option></option><option>si</option><option>no</option></select></label>
         </div>
       </fieldset>
 
       <!-- VI. EDUCACIÓN -->
       <fieldset>
         <legend>VI. Educación</legend>
-        <label>Niños fuera de escuela<br><select id="ninos_fuera_colegio"><option></option><option>si</option><option>no</option></select></label>
-        <label>¿Quiénes?<br><input type="text" id="quienes_fuera"></label>
-        <label>Causas<br><textarea id="causas_no_asistencia" rows="3"></textarea></label>
-        <label>Dispuestos a retorno<br><select id="dispuesto_retorno"><option></option><option>si</option><option>no</option></select></label>
-        <label>Apoyo requerido<br><input type="text" id="apoyo_requerido"></label>
+        <label>Niños fuera de escuela<br /><select id="ninos_fuera_colegio"><option></option><option>si</option><option>no</option></select></label>
+        <label>¿Quiénes?<br /><input type="text" id="quienes_fuera" /></label>
+        <label>Causas<br /><textarea id="causas_no_asistencia" rows="3"></textarea></label>
+        <label>Dispuestos a retorno<br /><select id="dispuesto_retorno"><option></option><option>si</option><option>no</option></select></label>
+        <label>Apoyo requerido<br /><input type="text" id="apoyo_requerido" /></label>
       </fieldset>
 
       <!-- VII. PROGRAMAS -->
       <fieldset>
         <legend>VII. Programas del Estado</legend>
         <div class="form-grid">
-          <label><input type="checkbox" name="programas_estado" value="Vaso de Leche"> Vaso de Leche</label>
-          <label><input type="checkbox" name="programas_estado" value="Comedor Popular"> Comedor Popular</label>
-          <label><input type="checkbox" name="programas_estado" value="Juntos"> Programa Juntos</label>
-          <label><input type="checkbox" name="programas_estado" value="SIS"> SIS</label>
-          <label><input type="checkbox" name="programas_estado" value="Pensión 65"> Pensión 65</label>
-          <label><input type="checkbox" name="programas_estado" value="ONG"> ONG</label>
-          <label><input type="checkbox" name="programas_estado" value="Otro"> Otro</label>
+          <label><input type="checkbox" name="programas_estado" value="Vaso de Leche" /> Vaso de Leche</label>
+          <label><input type="checkbox" name="programas_estado" value="Comedor Popular" /> Comedor Popular</label>
+          <label><input type="checkbox" name="programas_estado" value="Juntos" /> Programa Juntos</label>
+          <label><input type="checkbox" name="programas_estado" value="SIS" /> SIS</label>
+          <label><input type="checkbox" name="programas_estado" value="Pensión 65" /> Pensión 65</label>
+          <label><input type="checkbox" name="programas_estado" value="ONG" /> ONG</label>
+          <label><input type="checkbox" name="programas_estado" value="Otro" /> Otro</label>
         </div>
-        <label>¿Apoyo suficiente?<br><select id="apoyo_suficiente"><option></option><option>si</option><option>no</option></select></label>
-        <label>Apoyo adicional<br><input type="text" id="apoyo_adicional"></label>
+        <label>¿Apoyo suficiente?<br /><select id="apoyo_suficiente"><option></option><option>si</option><option>no</option></select></label>
+        <label>Apoyo adicional<br /><input type="text" id="apoyo_adicional" /></label>
       </fieldset>
 
       <div class="center">
-        <button type="submit" class="btn">💾 Guardar Familia</button>
+        <button type="submit" class="btn">
+          💾 <span>Guardar familia</span>
+        </button>
       </div>
     </form>
   </section>
 
-  <!-- 👨‍👩‍👧 Familias registradas -->
-  <main class="container card">
-    <h2>👨‍👩‍👧 Familias Registradas</h2>
+  <!-- Tabla de familias (copia original, que luego movemos al panel) -->
+  <main class="container card" id="familiasTablaSection">
+    <h2>👨‍👩‍👧 Familias registradas</h2>
     <div id="msg"></div>
 
     <div class="table-wrapper">
@@ -567,13 +426,50 @@
       </table>
     </div>
 
-    <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center;">
-      <button id="prevPage" class="btn">⏮ Anterior</button>
-      <button id="nextPage" class="btn">Siguiente ⏭</button>
+    <div class="pager">
+      <button id="prevPage" class="btn btn-ghost">⏮ Anterior</button>
+      <button id="nextPage" class="btn btn-ghost">Siguiente ⏭</button>
     </div>
   </main>
 
-  <!-- ===== Script Familias (Supabase + tabla + historial básico) ===== -->
+  <!-- Modal galería -->
+  <div id="galleryModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Galería Cáritas CNC</h3>
+        <button id="galleryClose" class="btn btn-ghost">Cerrar</button>
+      </div>
+      <div class="modal-body center">
+        <img id="galleryFull" src="" alt="Foto Cáritas CNC" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal historial familias -->
+  <div id="histModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="histTitle">Historial</h3>
+        <input id="histSearch" class="search" type="search" placeholder="Filtrar..." />
+        <button id="histExport" class="btn btn-ghost">⬇️ Exportar CSV</button>
+        <button id="histClose" class="btn btn-ghost">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <table id="histTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Resumen de cambios</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Script familias (Supabase + tabla) ===== -->
   <script type="module">
     const supabaseFamilias = window.CARITAS?.supabase;
     const tabla = document.querySelector("#familiasTable tbody");
@@ -581,34 +477,34 @@
     let page = 0;
     const pageSize = 10;
 
-    // Fallback para savePendiente si ./api.js/db.js no existe
+    // Guardado local si no hay db.js
     let savePendiente = async (datos) => {
       try {
         const k = "pendiente:" + Date.now();
         localStorage.setItem(k, JSON.stringify(datos));
-        console.warn("db.js no encontrado. Guardado local simple en localStorage:", k);
-      } catch(e) { console.warn("No se pudo guardar localmente:", e); }
+        console.warn("db.js no encontrado. Guardado local en localStorage:", k);
+      } catch (e) {
+        console.warn("No se pudo guardar localmente:", e);
+      }
     };
     try {
       const mod = await import("./api.js/db.js");
       if (mod?.savePendiente) savePendiente = mod.savePendiente;
-    } catch(e) {
-      console.warn("No se pudo importar ./api.js/db.js (ok en Pages):", e);
+    } catch (e) {
+      console.warn("No se pudo importar ./api.js/db.js (normal en Pages):", e);
     }
 
-    function showMsg(text, type="info"){
+    function showMsg(text, type = "info") {
       msg.textContent = text;
       msg.className = type;
-      setTimeout(()=>{ msg.textContent=""; },4000);
+      setTimeout(() => { msg.textContent = ""; }, 4000);
     }
 
-    const esc = (s="") => String(s).replace(/[&<>"']/g,
-      m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-    );
+    const esc = (s = "") =>
+      String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[m]));
 
-    // Guardar familia
     const famForm = document.getElementById("famForm");
-    famForm.addEventListener("submit", async e => {
+    famForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const datos = {
@@ -617,7 +513,7 @@
         telefono_contacto: famForm.telefono_contacto.value,
         dni_solicitante: famForm.dni_solicitante.value || null,
         apellido_familia: famForm.apellido_familia.value || null,
-        observaciones: famForm.observaciones.value || null
+        observaciones: famForm.observaciones.value || null,
       };
 
       if (!navigator.onLine) {
@@ -640,98 +536,98 @@
       }
     });
 
-    async function cargarFamilias(){
+    async function cargarFamilias() {
       try {
         const start = page * pageSize;
         const end = start + pageSize - 1;
         const { data, error } = await supabaseFamilias
           .from("familias")
           .select("*")
-          .order("id",{ascending:true})
-          .range(start,end);
+          .order("id", { ascending: true })
+          .range(start, end);
 
-        if(error) throw error;
-        tabla.innerHTML="";
-        if(!data || data.length===0){
-          tabla.innerHTML="<tr><td colspan='7'>Sin registros</td></tr>";
+        if (error) throw error;
+        tabla.innerHTML = "";
+        if (!data || data.length === 0) {
+          tabla.innerHTML = "<tr><td colspan='7'>Sin registros</td></tr>";
           return;
         }
 
-        data.forEach(fam=>{
+        data.forEach((fam) => {
           const tr = document.createElement("tr");
           tr.dataset.id = fam.id;
-
           tr.innerHTML = `
-           <td>${fam.id}</td>
-           <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos||"")}</td>
-           <td contenteditable="true" data-field="direccion">${esc(fam.direccion||"")}</td>
-           <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto||"")}</td>
-           <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada?"checked":""}></td>
-           <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
-           <td>
-             <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
-             <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
-           </td>
+            <td>${fam.id}</td>
+            <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos || "")}</td>
+            <td contenteditable="true" data-field="direccion">${esc(fam.direccion || "")}</td>
+            <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto || "")}</td>
+            <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada ? "checked" : ""}></td>
+            <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
+            <td>
+              <button class="btn btn-ghost" data-hist="${fam.id}">Historial</button>
+              <button class="btn-del" data-del="${fam.id}">🗑 Eliminar</button>
+            </td>
           `;
           tabla.appendChild(tr);
         });
-      }catch(err){
+      } catch (err) {
         console.error(err);
-        tabla.innerHTML="<tr><td colspan='7'>Error al cargar datos</td></tr>";
+        tabla.innerHTML = "<tr><td colspan='7'>Error al cargar datos</td></tr>";
       }
     }
 
-    // Guardar cambios de visitada
-    document.getElementById("familiasTable")
-      ?.addEventListener("change", async e => {
-        if (e.target && e.target.type === "checkbox") {
-          const id = e.target.dataset.id;
-          const visitada = e.target.checked;
-          if (!supabaseFamilias) return showMsg("❌ Supabase no inicializado", "error");
+    // visitada
+    document.getElementById("familiasTable")?.addEventListener("change", async (e) => {
+      if (e.target && e.target.type === "checkbox") {
+        const id = e.target.dataset.id;
+        const visitada = e.target.checked;
+        if (!supabaseFamilias) return showMsg("❌ Supabase no inicializado", "error");
 
-          try {
-            await supabaseFamilias.from("familias").update({ visitada }).eq("id", id);
-            showMsg("✅ Estado actualizado", "success");
-          } catch (err) {
-            console.error("❌ Error actualizando visitada:", err);
-            showMsg("❌ Error al actualizar", "error");
-            e.target.checked = !visitada;
-          }
+        try {
+          await supabaseFamilias.from("familias").update({ visitada }).eq("id", id);
+          showMsg("✅ Estado actualizado", "success");
+        } catch (err) {
+          console.error("❌ Error actualizando visitada:", err);
+          showMsg("❌ Error al actualizar", "error");
+          e.target.checked = !visitada;
         }
-      });
+      }
+    });
 
-    // Paginación
-    document.getElementById("prevPage").addEventListener("click",()=>{ if(page>0){ page--; cargarFamilias(); }});
-    document.getElementById("nextPage").addEventListener("click",()=>{ page++; cargarFamilias(); });
+    // paginación
+    document.getElementById("prevPage").addEventListener("click", () => { if (page > 0) { page--; cargarFamilias(); } });
+    document.getElementById("nextPage").addEventListener("click", () => { page++; cargarFamilias(); });
 
     cargarFamilias();
 
-    // Guardado inline
-    document.getElementById("familiasTable").addEventListener("blur", async e => {
-      if (e.target.matches("[contenteditable]")) {
-        const id = e.target.closest("tr").dataset.id;
-        const field = e.target.dataset.field;
-        const value = e.target.textContent.trim();
-
-        try {
-          const { error } = await supabaseFamilias
-            .from("familias")
-            .update({ [field]: value })
-            .eq("id", id);
-          if (error) throw error;
-          showMsg("✅ Campo actualizado", "success");
-        } catch (err) {
-          console.error("❌ Error al actualizar:", err);
-          showMsg("❌ Error al actualizar", "error");
+    // edición inline
+    document.getElementById("familiasTable").addEventListener(
+      "blur",
+      async (e) => {
+        if (e.target.matches("[contenteditable]")) {
+          const id = e.target.closest("tr").dataset.id;
+          const field = e.target.dataset.field;
+          const value = e.target.textContent.trim();
+          try {
+            const { error } = await supabaseFamilias
+              .from("familias")
+              .update({ [field]: value })
+              .eq("id", id);
+            if (error) throw error;
+            showMsg("✅ Campo actualizado", "success");
+          } catch (err) {
+            console.error("❌ Error al actualizar:", err);
+            showMsg("❌ Error al actualizar", "error");
+          }
         }
-      }
-    }, true);
+      },
+      true
+    );
 
-    // Eliminar fila (delegado)
+    // eliminar
     document.getElementById("familiasTable").addEventListener("click", async (e) => {
       const id = e.target?.dataset?.del;
       if (!id) return;
-
       e.preventDefault();
       if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
 
@@ -745,11 +641,10 @@
       }
     });
 
-    // Historial (delegado)
+    // abrir historial
     document.getElementById("familiasTable").addEventListener("click", (e) => {
       const id = e.target?.dataset?.hist;
       if (!id) return;
-
       e.preventDefault();
       if (window.openHistoryModal) {
         window.openHistoryModal(id);
@@ -757,303 +652,308 @@
     });
   </script>
 
-  <!-- 🔍 Galería: lightbox -->
+  <!-- Historial local -->
   <script>
-  (function(){
-    const modal = document.getElementById('galleryModal');
-    const fullImg = document.getElementById('galleryFull');
-    const btnClose = document.getElementById('galleryClose');
-    if (!modal || !fullImg) return;
+    (function () {
+      const STORAGE_KEY = "familias_history_v1";
+      const $ = (q, root = document) => root.querySelector(q);
+      const nowISO = () => new Date().toISOString();
 
-    function open(src, alt){
-      fullImg.src = src;
-      fullImg.alt = alt || 'Foto Cáritas CNC';
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden','false');
-    }
-    function close(){
-      modal.classList.remove('open');
-      modal.setAttribute('aria-hidden','true');
-      fullImg.src = '';
-    }
-
-    document.addEventListener('click', (e)=>{
-      const img = e.target.closest('[data-gallery-full]');
-      if (!img) return;
-      const src = img.getAttribute('data-gallery-full') || img.src;
-      const alt = img.alt || '';
-      open(src, alt);
-    });
-    btnClose?.addEventListener('click', close);
-    modal.addEventListener('click', (e)=>{ if (e.target === modal) close(); });
-  })();
-  </script>
-
-  <!-- Panel familias: mover tabla al panel y filtros -->
-  <script>
-  (function(){
-    const TABLE_SEL = '#familiasTable';
-    const $ = (q,root=document)=>root.querySelector(q);
-
-    let moved = false;
-    function mountFamiliesBlockOnce(){
-      if (moved) return true;
-
-      const table = document.querySelector(TABLE_SEL);
-      const mount = $('#familiasMountInline');
-      if (!table || !mount) return false;
-
-      const wrapper = table.closest('.table-wrapper') || table;
-      const pager   = document.getElementById('prevPage')?.parentElement || null;
-
-      const phWrapper = document.createComment('familias-wrapper-placeholder');
-      wrapper.parentNode.insertBefore(phWrapper, wrapper);
-
-      let phPager = null;
-      if (pager && pager.parentNode) {
-        phPager = document.createComment('familias-pager-placeholder');
-        pager.parentNode.insertBefore(phPager, pager);
+      function loadDB() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        } catch {
+          return {};
+        }
+      }
+      function saveDB(db) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      }
+      function getHistory(familyId) {
+        const db = loadDB();
+        return db[familyId] || [];
+      }
+      function addHistory(familyId, entry) {
+        const db = loadDB();
+        db[familyId] = db[familyId] || [];
+        db[familyId].unshift(entry);
+        saveDB(db);
       }
 
-      const block = document.createElement('div');
-      block.id = 'familiasBlockInline';
-      block.appendChild(wrapper);
-      if (pager) block.appendChild(pager);
-
-      mount.appendChild(block);
-      moved = true;
-      return true;
-    }
-
-    function togglePanel(force){
-      const panel = $('#familiasPanel');
-      if (!panel) return;
-      if (panel.hasAttribute('hidden')) {
-        mountFamiliesBlockOnce();
-      }
-      const willOpen = (typeof force === 'boolean') ? force : panel.hasAttribute('hidden');
-      if (willOpen) {
-        panel.removeAttribute('hidden');
-        panel.scrollIntoView({ behavior:'smooth', block:'start' });
-      } else {
-        panel.setAttribute('hidden','');
-      }
-    }
-
-    function filterFamilies(q){
-      const table = document.querySelector(TABLE_SEL);
-      if (!table) return;
-      const needle = (q||'').trim().toLowerCase();
-
-      table.querySelectorAll('tbody tr').forEach(tr=>{
-        const text = tr.textContent.toLowerCase();
-        tr.style.display = (!needle || text.includes(needle)) ? '' : 'none';
-      });
-    }
-
-    function exportCSV(){
-      const table = document.querySelector(TABLE_SEL);
-      if (!table) return;
-      const root = table.closest('table') || table;
-      const rows = [];
-      const trs = root.querySelectorAll('tr');
-      trs.forEach(tr=>{
-        if (tr.style && tr.style.display==='none') return;
-        const cells = [...tr.querySelectorAll('th,td')].map(td=>{
-          let t=(td.innerText||'').replace(/\s+/g,' ').trim();
-          if (/[",;\n]/.test(t)) t=`"${t.replace(/"/g,'""')}"`;
-          return t;
+      function diffObjects(prev, cur) {
+        const keys = Array.from(
+          new Set([...Object.keys(prev || {}), ...Object.keys(cur || {})])
+        );
+        const changes = [];
+        keys.forEach((k) => {
+          const a = (prev || {})[k] ?? "";
+          const b = (cur || {})[k] ?? "";
+          if (String(a) !== String(b)) changes.push({ field: k, from: a, to: b });
         });
-        if (cells.length) rows.push(cells.join(','));
-      });
-      const csv = rows.join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'familias.csv';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
+        return changes;
+      }
 
-    document.addEventListener('click', (e)=>{
-      if (e.target.closest('#btn-familias')) togglePanel();
-      if (e.target.closest('#familiasExport')) exportCSV();
-    });
-    document.addEventListener('input', (e)=>{
-      if (e.target && e.target.id==='familiasSearch') filterFamilies(e.target.value);
-    });
+      async function logFamilyUpdate(formData, opts = {}) {
+        const user = (window.CARITAS?.auth?.currentUser) || null;
+        const familyId = formData.id;
+        if (!familyId) return;
+        const hist = getHistory(familyId);
+        const prevSnapshot = hist.find((h) => h.snapshot)?.snapshot || {};
+        const changes = diffObjects(prevSnapshot, formData);
 
-    if (location.hash.replace('#','').toLowerCase().includes('familias')) {
-      togglePanel(true);
-    }
-  })();
+        addHistory(familyId, {
+          ts: nowISO(),
+          user: user?.email || user?.displayName || "anon",
+          action: opts.action || "update",
+          snapshot: formData,
+          changes,
+        });
+      }
+
+      function renderHistoryTable(familyId, q = "") {
+        const tbody = $("#histTable tbody");
+        tbody.innerHTML = "";
+        const rows = getHistory(familyId);
+        const needle = q.trim().toLowerCase();
+
+        rows.forEach((r) => {
+          const summary = r.changes && r.changes.length
+            ? r.changes
+                .map((c) => `${c.field}: “${c.from}” → “${c.to}”`)
+                .join(" | ")
+            : "(sin cambios detectados)";
+          const line = `${r.ts} ${r.user || ""} ${summary}`.toLowerCase();
+          if (needle && !line.includes(needle)) return;
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${new Date(r.ts).toLocaleString()}</td>
+            <td>${r.user || "—"}</td>
+            <td>${summary}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function exportHistoryCSV(familyId) {
+        const rows = getHistory(familyId);
+        const out = [["fecha", "usuario", "accion", "campo", "de", "a"]];
+        rows.forEach((r) => {
+          if (r.changes?.length) {
+            r.changes.forEach((c) =>
+              out.push([
+                r.ts,
+                r.user || "",
+                r.action || "",
+                c.field,
+                String(c.from || ""),
+                String(c.to || ""),
+              ])
+            );
+          } else {
+            out.push([r.ts, r.user || "", r.action || "", "", "", ""]);
+          }
+        });
+        const csv = out
+          .map((cols) =>
+            cols
+              .map((v) => {
+                let t = String(v).replace(/\s+/g, " ").trim();
+                if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g, '""')}"`;
+                return t;
+              })
+              .join(",")
+          )
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `historial_${familyId}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function openHistoryModal(familyId) {
+        const modal = document.getElementById("histModal");
+        document.getElementById("histTitle").textContent =
+          `Historial – ID: ${familyId}`;
+        renderHistoryTable(familyId);
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+
+        document.getElementById("histSearch").oninput = (e) =>
+          renderHistoryTable(familyId, e.target.value);
+        document.getElementById("histExport").onclick = () =>
+          exportHistoryCSV(familyId);
+        document.getElementById("histClose").onclick = () =>
+          closeHistoryModal();
+
+        modal.addEventListener(
+          "click",
+          (e) => { if (e.target === modal) closeHistoryModal(); },
+          { once: true }
+        );
+        document.addEventListener("keydown", function esc(e) {
+          if (e.key === "Escape") {
+            closeHistoryModal();
+            document.removeEventListener("keydown", esc);
+          }
+        });
+      }
+      window.openHistoryModal = openHistoryModal;
+
+      function closeHistoryModal() {
+        const modal = document.getElementById("histModal");
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      const form = document.querySelector("#famForm");
+      if (form) {
+        form.addEventListener("submit", async (e) => {
+          try {
+            const data = Object.fromEntries(new FormData(form).entries());
+            await logFamilyUpdate(data, { action: "submit" });
+          } catch (err) {
+            console.warn("No se pudo registrar historial:", err);
+          }
+        });
+      }
+    })();
   </script>
 
-  <!-- ==== Modal: Galería ==== -->
-  <div id="galleryModal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3>Galería Cáritas CNC</h3>
-        <button id="galleryClose" class="btn ghost">Cerrar</button>
-      </div>
-      <div class="modal-body center">
-        <img id="galleryFull" src="" alt="Foto Cáritas CNC">
-      </div>
-    </div>
-  </div>
-
-  <!-- ==== Modal: Historial por familia ==== -->
-  <div id="histModal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3 id="histTitle">Historial</h3>
-        <input id="histSearch" class="search" type="search" placeholder="Filtrar..." />
-        <button id="histExport" class="btn">⬇️ Exportar CSV</button>
-        <button id="histClose" class="btn ghost">Cerrar</button>
-      </div>
-      <div class="modal-body">
-        <table id="histTable">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Usuario</th>
-              <th>Resumen de cambios</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Historial local por familia -->
+  <!-- Galería: lightbox -->
   <script>
-  (function(){
-    const STORAGE_KEY = 'familias_history_v1';
-    const $ = (q,root=document)=>root.querySelector(q);
-    const nowISO = ()=> new Date().toISOString();
+    (function () {
+      const modal = document.getElementById("galleryModal");
+      const fullImg = document.getElementById("galleryFull");
+      const btnClose = document.getElementById("galleryClose");
+      if (!modal || !fullImg) return;
 
-    function loadDB(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch{ return {}; } }
-    function saveDB(db){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
-    function getHistory(familyId){ const db = loadDB(); return db[familyId] || []; }
-    function addHistory(familyId, entry){
-      const db = loadDB(); db[familyId] = db[familyId] || [];
-      db[familyId].unshift(entry); saveDB(db);
-    }
+      function open(src, alt) {
+        fullImg.src = src;
+        fullImg.alt = alt || "Foto Cáritas CNC";
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+      }
+      function close() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        fullImg.src = "";
+      }
 
-    function diffObjects(prev, cur){
-      const keys = Array.from(new Set([...Object.keys(prev||{}), ...Object.keys(cur||{})]));
-      const changes = [];
-      keys.forEach(k=>{
-        const a = (prev||{})[k] ?? '';
-        const b = (cur||{})[k] ?? '';
-        if (String(a) !== String(b)) changes.push({field:k, from:a, to:b});
+      document.addEventListener("click", (e) => {
+        const img = e.target.closest("[data-gallery-full]");
+        if (!img) return;
+        const src = img.getAttribute("data-gallery-full") || img.src;
+        const alt = img.alt || "";
+        open(src, alt);
       });
-      return changes;
-    }
-
-    async function logFamilyUpdate(formData, opts={}){
-      const user = (window.CARITAS?.auth?.currentUser) || null;
-      const familyId = formData.id;
-      if(!familyId) return;
-      const hist = getHistory(familyId);
-      const prevSnapshot = hist.find(h=>h.snapshot)?.snapshot || {};
-      const changes = diffObjects(prevSnapshot, formData);
-
-      addHistory(familyId, {
-        ts: nowISO(),
-        user: user?.email || user?.displayName || 'anon',
-        action: opts.action || 'update',
-        snapshot: formData,
-        changes
+      btnClose?.addEventListener("click", close);
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) close();
       });
-    }
+    })();
+  </script>
 
-    function renderHistoryTable(familyId, q=''){
-      const tbody = $('#histTable tbody'); tbody.innerHTML = '';
-      const rows = getHistory(familyId);
-      const needle = q.trim().toLowerCase();
+  <!-- Panel de familias: mover tabla y filtros -->
+  <script>
+    (function () {
+      const TABLE_SEL = "#familiasTable";
+      const $ = (q, root = document) => root.querySelector(q);
+      let moved = false;
 
-      rows.forEach(r=>{
-        const summary = (r.changes && r.changes.length)
-          ? r.changes.map(c=> `${c.field}: “${c.from}” → “${c.to}”`).join(' | ')
-          : '(sin cambios detectados)';
-        const line = `${r.ts} ${r.user||''} ${summary}`.toLowerCase();
-        if (needle && !line.includes(needle)) return;
+      function mountFamiliesBlockOnce() {
+        if (moved) return true;
+        const table = document.querySelector(TABLE_SEL);
+        const mount = $("#familiasMountInline");
+        if (!table || !mount) return false;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${new Date(r.ts).toLocaleString()}</td>
-          <td>${r.user || '—'}</td>
-          <td>${summary}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+        const wrapper = table.closest(".table-wrapper") || table;
+        const pager = document.querySelector(".pager");
 
-    function exportHistoryCSV(familyId){
-      const rows = getHistory(familyId);
-      const out = [['fecha','usuario','accion','campo','de','a']];
-      rows.forEach(r=>{
-        if (r.changes?.length){
-          r.changes.forEach(c=> out.push([r.ts, r.user||'', r.action||'', c.field, String(c.from||''), String(c.to||'')]));
+        const block = document.createElement("div");
+        block.id = "familiasBlockInline";
+        block.appendChild(wrapper);
+        if (pager) block.appendChild(pager);
+
+        mount.appendChild(block);
+        moved = true;
+        return true;
+      }
+
+      function togglePanel(force) {
+        const panel = $("#familiasPanel");
+        if (!panel) return;
+        if (panel.hasAttribute("hidden")) {
+          mountFamiliesBlockOnce();
+        }
+        const willOpen =
+          typeof force === "boolean" ? force : panel.hasAttribute("hidden");
+        if (willOpen) {
+          panel.removeAttribute("hidden");
+          panel.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
-          out.push([r.ts, r.user||'', r.action||'', '', '', '']);
+          panel.setAttribute("hidden", "");
+        }
+      }
+
+      function filterFamilies(q) {
+        const table = document.querySelector(TABLE_SEL);
+        if (!table) return;
+        const needle = (q || "").trim().toLowerCase();
+
+        table.querySelectorAll("tbody tr").forEach((tr) => {
+          const text = tr.textContent.toLowerCase();
+          tr.style.display = !needle || text.includes(needle) ? "" : "none";
+        });
+      }
+
+      function exportCSV() {
+        const table = document.querySelector(TABLE_SEL);
+        if (!table) return;
+        const root = table.closest("table") || table;
+        const rows = [];
+        const trs = root.querySelectorAll("tr");
+        trs.forEach((tr) => {
+          if (tr.style && tr.style.display === "none") return;
+          const cells = [...tr.querySelectorAll("th,td")].map((td) => {
+            let t = (td.innerText || "").replace(/\s+/g, " ").trim();
+            if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g, '""')}"`;
+            return t;
+          });
+          if (cells.length) rows.push(cells.join(","));
+        });
+        const csv = rows.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "familias.csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      document.addEventListener("click", (e) => {
+        if (e.target.closest("#btn-familias")) togglePanel();
+        if (e.target.closest("#familiasExport")) exportCSV();
+      });
+      document.addEventListener("input", (e) => {
+        if (e.target && e.target.id === "familiasSearch") {
+          filterFamilies(e.target.value);
         }
       });
-      const csv = out.map(cols => cols.map(v=>{
-        let t = String(v).replace(/\s+/g,' ').trim();
-        if (/[",;\n]/.test(t)) t = `"${t.replace(/"/g,'""')}"`;
-        return t;
-      }).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `historial_${familyId}.csv`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
 
-    function openHistoryModal(familyId){
-      const modal = document.getElementById('histModal');
-      document.getElementById('histTitle').textContent = `Historial – ID: ${familyId}`;
-      renderHistoryTable(familyId);
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden','false');
-
-      document.getElementById('histSearch').oninput = (e)=> renderHistoryTable(familyId, e.target.value);
-      document.getElementById('histExport').onclick = ()=> exportHistoryCSV(familyId);
-      document.getElementById('histClose').onclick  = ()=> closeHistoryModal();
-
-      modal.addEventListener('click', (e)=>{ if (e.target === modal) closeHistoryModal(); }, {once:true});
-      document.addEventListener('keydown', function esc(e){
-        if(e.key==='Escape'){ closeHistoryModal(); document.removeEventListener('keydown', esc); }
-      });
-    }
-    window.openHistoryModal = openHistoryModal;
-
-    function closeHistoryModal(){
-      const modal = document.getElementById('histModal');
-      modal.classList.remove('open'); modal.setAttribute('aria-hidden','true');
-    }
-
-    const form = document.querySelector('#famForm');
-    if (form){
-      form.addEventListener('submit', async (e)=>{
-        try{
-          const data = Object.fromEntries(new FormData(form).entries());
-          await logFamilyUpdate(data, {action:'submit'});
-        }catch(err){ console.warn('No se pudo registrar historial:', err); }
-      });
-    }
-  })();
+      if (location.hash.replace("#", "").toLowerCase().includes("familias")) {
+        togglePanel(true);
+      }
+    })();
   </script>
 
   <!-- Mensaje del sacerdote (Supabase) -->
   <script type="module">
     const supabaseSacerdote = window.CARITAS?.supabase;
     const textoSac = document.getElementById("sacerdoteMensajeTexto");
-    const formSac  = document.getElementById("sacerdoteForm");
+    const formSac = document.getElementById("sacerdoteForm");
 
     async function cargarMensajeSacerdote() {
       if (!supabaseSacerdote || !textoSac) return;
@@ -1088,13 +988,12 @@
 
       const fd = new FormData(formSac);
       const contenido = String(fd.get("contenido") || "").trim();
-      const autor     = String(fd.get("autor") || "").trim() || null;
+      const autor = String(fd.get("autor") || "").trim() || null;
 
       if (!contenido) {
         alert("Escribe un mensaje antes de publicar.");
         return;
       }
-
       if (!navigator.onLine) {
         alert("Ahora mismo no hay conexión. Vuelve a intentar cuando tengas internet.");
         return;
@@ -1124,29 +1023,35 @@
   <!-- Chart.js global -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- Tesorería: Dashboard financiero -->
+  <!-- Tesorería (con filtro por mes y resumen por categoría) -->
   <script type="module">
     const ChartJS = window.Chart;
     const supabaseTeso = window.CARITAS?.supabase;
     if (!supabaseTeso) console.error("Supabase no inicializado para tesorería");
     if (!ChartJS) console.error("Chart.js no se ha cargado correctamente");
 
-    const tBody    = document.querySelector("#tesoTable tbody");
+    const tBody = document.querySelector("#tesoTable tbody");
     const tesoForm = document.querySelector("#tesoForm");
     const filtroTipo = document.querySelector("#tesoFiltroTipo");
-    const btnExport  = document.querySelector("#tesoExport");
+    const filtroMes = document.querySelector("#tesoFiltroMes");
+    const btnExport = document.querySelector("#tesoExport");
 
     const elIngresos = document.getElementById("tesoIngresos");
-    const elGastos   = document.getElementById("tesoGastos");
-    const elSaldo    = document.getElementById("tesoSaldo");
-    const elMovs     = document.getElementById("tesoMovs");
+    const elGastos = document.getElementById("tesoGastos");
+    const elSaldo = document.getElementById("tesoSaldo");
+    const elMovs = document.getElementById("tesoMovs");
+    const catResumenEl = document.getElementById("tesoCatResumen");
 
     let movimientos = [];
     let chart;
 
-    const fmon = n => "S/ " + (Number(n)||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmon = (n) =>
+      "S/ " + (Number(n) || 0).toLocaleString("es-PE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
-    async function cargarMovimientos(){
+    async function cargarMovimientos() {
       if (!supabaseTeso) return;
 
       const { data, error } = await supabaseTeso
@@ -1163,62 +1068,78 @@
       renderDashboard();
       renderTabla();
       renderChart();
+      renderCategorias();
     }
 
-    function getFiltrados(){
+    function getFiltrados() {
       const tipo = filtroTipo.value;
-      return tipo ? movimientos.filter(m => m.tipo === tipo) : movimientos;
+      const mes = filtroMes?.value; // YYYY-MM
+
+      return movimientos.filter((m) => {
+        if (tipo && m.tipo !== tipo) return false;
+        if (mes && m.created_at) {
+          const d = new Date(m.created_at);
+          if (isNaN(d)) return false;
+          const ym =
+            d.getFullYear() +
+            "-" +
+            String(d.getMonth() + 1).padStart(2, "0");
+          if (ym !== mes) return false;
+        }
+        return true;
+      });
     }
 
-    function renderDashboard(){
+    function renderDashboard() {
       const rows = movimientos;
       const ingresos = rows
-        .filter(r => r.tipo === "ingreso")
-        .reduce((s,r)=> s + Number(r.monto||0), 0);
+        .filter((r) => r.tipo === "ingreso")
+        .reduce((s, r) => s + Number(r.monto || 0), 0);
       const gastos = rows
-        .filter(r => r.tipo === "gasto")
-        .reduce((s,r)=> s + Number(r.monto||0), 0);
+        .filter((r) => r.tipo === "gasto")
+        .reduce((s, r) => s + Number(r.monto || 0), 0);
       const saldo = ingresos - gastos;
 
       elIngresos.textContent = fmon(ingresos);
-      elGastos.textContent   = fmon(gastos);
-      elSaldo.textContent    = fmon(saldo);
-      elMovs.textContent     = rows.length;
+      elGastos.textContent = fmon(gastos);
+      elSaldo.textContent = fmon(saldo);
+      elMovs.textContent = rows.length;
     }
 
-    function esc(str=""){
-      return String(str).replace(/[&<>"']/g,
-        m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-      );
+    function esc(str = "") {
+      return String(str).replace(/[&<>"']/g, (m) => (
+        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]
+      ));
     }
 
-    function renderTabla(){
+    function renderTabla() {
       const rows = getFiltrados();
       tBody.innerHTML = "";
-      if (!rows.length){
-        tBody.innerHTML = "<tr><td colspan='11'>Sin movimientos registrados</td></tr>";
+      if (!rows.length) {
+        tBody.innerHTML =
+          "<tr><td colspan='11'>Sin movimientos registrados</td></tr>";
         return;
       }
 
-      for (const r of rows){
+      for (const r of rows) {
         const tr = document.createElement("tr");
         tr.dataset.id = r.id;
 
         tr.innerHTML = `
           <td>
             <select data-field="tipo">
-              <option value="ingreso" ${r.tipo==="ingreso"?"selected":""}>Ingreso</option>
-              <option value="gasto" ${r.tipo==="gasto"?"selected":""}>Gasto</option>
+              <option value="ingreso" ${r.tipo === "ingreso" ? "selected" : ""}>Ingreso</option>
+              <option value="gasto" ${r.tipo === "gasto" ? "selected" : ""}>Gasto</option>
             </select>
           </td>
-          <td contenteditable="true" data-field="categoria">${esc(r.categoria||"")}</td>
-          <td contenteditable="true" data-field="concepto">${esc(r.concepto||"")}</td>
-          <td contenteditable="true" data-field="abonado">${esc(r.abonado||"")}</td>
-          <td contenteditable="true" data-field="monto">${esc(r.monto||"")}</td>
-          <td contenteditable="true" data-field="medio_pago">${esc(r.medio_pago||"")}</td>
-          <td contenteditable="true" data-field="fecha_texto">${esc(r.fecha_texto||"")}</td>
-          <td contenteditable="true" data-field="hora_texto">${esc(r.hora_texto||"")}</td>
-          <td contenteditable="true" data-field="observaciones">${esc(r.observaciones||"")}</td>
+          <td contenteditable="true" data-field="categoria">${esc(r.categoria || "")}</td>
+          <td contenteditable="true" data-field="concepto">${esc(r.concepto || "")}</td>
+          <td contenteditable="true" data-field="abonado">${esc(r.abonado || "")}</td>
+          <td contenteditable="true" data-field="monto">${esc(r.monto || "")}</td>
+          <td contenteditable="true" data-field="medio_pago">${esc(r.medio_pago || "")}</td>
+          <td contenteditable="true" data-field="fecha_texto">${esc(r.fecha_texto || "")}</td>
+          <td contenteditable="true" data-field="hora_texto">${esc(r.hora_texto || "")}</td>
+          <td contenteditable="true" data-field="observaciones">${esc(r.observaciones || "")}</td>
           <td style="text-align:center;">
             <input type="checkbox" data-field="validado" ${r.validado ? "checked" : ""}>
           </td>
@@ -1230,11 +1151,11 @@
       }
     }
 
-    async function actualizarCampo(id, field, value){
+    async function actualizarCampo(id, field, value) {
       if (!supabaseTeso) return;
       try {
         if (field === "validado") value = !!value;
-        if (field === "monto") value = Number(String(value).replace(",","."));
+        if (field === "monto") value = Number(String(value).replace(",", "."));
 
         const { error } = await supabaseTeso
           .from("tesoreria_movimientos")
@@ -1243,18 +1164,19 @@
 
         if (error) throw error;
 
-        const row = movimientos.find(m => m.id === id);
+        const row = movimientos.find((m) => m.id === id);
         if (row) row[field] = value;
 
         renderDashboard();
         renderChart();
-      } catch (err){
+        renderCategorias();
+      } catch (err) {
         console.error("Error actualizando movimiento:", err);
         alert("No se pudo guardar el cambio en tesorería.");
       }
     }
 
-    tBody.addEventListener("change", (e)=>{
+    tBody.addEventListener("change", (e) => {
       const tr = e.target.closest("tr");
       if (!tr) return;
       const id = Number(tr.dataset.id);
@@ -1268,17 +1190,21 @@
       }
     });
 
-    tBody.addEventListener("blur", (e)=>{
-      const cell = e.target;
-      if (!cell.matches("[contenteditable][data-field]")) return;
-      const tr = cell.closest("tr");
-      const id = Number(tr.dataset.id);
-      const field = cell.dataset.field;
-      const value = cell.textContent.trim();
-      actualizarCampo(id, field, value);
-    }, true);
+    tBody.addEventListener(
+      "blur",
+      (e) => {
+        const cell = e.target;
+        if (!cell.matches("[contenteditable][data-field]")) return;
+        const tr = cell.closest("tr");
+        const id = Number(tr.dataset.id);
+        const field = cell.dataset.field;
+        const value = cell.textContent.trim();
+        actualizarCampo(id, field, value);
+      },
+      true
+    );
 
-    tBody.addEventListener("click", async (e)=>{
+    tBody.addEventListener("click", async (e) => {
       const id = e.target?.dataset?.del;
       if (!id) return;
       if (!confirm("¿Eliminar este movimiento de tesorería?")) return;
@@ -1288,24 +1214,32 @@
         .delete()
         .eq("id", id);
 
-      if (error){
+      if (error) {
         console.error("Error eliminando:", error);
         alert("No se pudo eliminar el movimiento.");
         return;
       }
 
-      movimientos = movimientos.filter(m => m.id !== Number(id));
+      movimientos = movimientos.filter((m) => m.id !== Number(id));
       renderDashboard();
       renderTabla();
       renderChart();
+      renderCategorias();
     });
 
-    filtroTipo.addEventListener("change", ()=>{
+    filtroTipo.addEventListener("change", () => {
       renderTabla();
       renderChart();
+      renderCategorias();
     });
 
-    tesoForm.addEventListener("submit", async (e)=>{
+    filtroMes?.addEventListener("change", () => {
+      renderTabla();
+      renderChart();
+      renderCategorias();
+    });
+
+    tesoForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!supabaseTeso) return;
 
@@ -1319,10 +1253,10 @@
         moneda: "PEN",
         medio_pago: data.medio_pago || null,
         observaciones: data.observaciones || null,
-        validado: false
+        validado: false,
       };
 
-      try{
+      try {
         const { data: inserted, error } = await supabaseTeso
           .from("tesoreria_movimientos")
           .insert([nuevo])
@@ -1335,32 +1269,51 @@
         renderDashboard();
         renderTabla();
         renderChart();
-      } catch(err){
+        renderCategorias();
+      } catch (err) {
         console.error("Error insertando movimiento:", err);
         alert("No se pudo guardar el movimiento.");
       }
     });
 
-    btnExport.addEventListener("click", ()=>{
+    btnExport.addEventListener("click", () => {
       const rows = getFiltrados();
       if (!rows.length) {
         alert("No hay movimientos para exportar.");
         return;
       }
 
-      const headers = ["tipo","categoria","concepto","abonado","monto","moneda","medio_pago","fecha_texto","hora_texto","observaciones","validado"];
+      const headers = [
+        "tipo",
+        "categoria",
+        "concepto",
+        "abonado",
+        "monto",
+        "moneda",
+        "medio_pago",
+        "fecha_texto",
+        "hora_texto",
+        "observaciones",
+        "validado",
+      ];
       const lines = [
         headers.join(","),
-        ...rows.map(r => headers.map(h => {
-          let v = r[h];
-          if (v === null || v === undefined) v = "";
-          v = String(v).replace(/\s+/g," ").trim();
-          if (/[",;\n]/.test(v)) v = `"${v.replace(/"/g,'""')}"`;
-          return v;
-        }).join(","))
+        ...rows.map((r) =>
+          headers
+            .map((h) => {
+              let v = r[h];
+              if (v === null || v === undefined) v = "";
+              v = String(v).replace(/\s+/g, " ").trim();
+              if (/[\",;\n]/.test(v)) v = `"${v.replace(/"/g, '""')}"`;
+              return v;
+            })
+            .join(",")
+        ),
       ];
 
-      const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8;"});
+      const blob = new Blob([lines.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "tesoreria_movimientos.csv";
@@ -1368,15 +1321,15 @@
       URL.revokeObjectURL(a.href);
     });
 
-    function renderChart(){
+    function renderChart() {
       if (!ChartJS) return;
-      const rows = movimientos;
+      const rows = getFiltrados();
       const ingresos = rows
-        .filter(r => r.tipo === "ingreso")
-        .reduce((s,r)=> s + Number(r.monto||0), 0);
+        .filter((r) => r.tipo === "ingreso")
+        .reduce((s, r) => s + Number(r.monto || 0), 0);
       const gastos = rows
-        .filter(r => r.tipo === "gasto")
-        .reduce((s,r)=> s + Number(r.monto||0), 0);
+        .filter((r) => r.tipo === "gasto")
+        .reduce((s, r) => s + Number(r.monto || 0), 0);
       const saldo = ingresos - gastos;
 
       const ctx = document.getElementById("tesoChart");
@@ -1384,22 +1337,25 @@
 
       const data = {
         labels: ["Ingresos", "Gastos", "Saldo"],
-        datasets: [{
-          label: "Soles",
-          data: [ingresos, gastos, saldo]
-        }]
+        datasets: [
+          {
+            label: "Soles",
+            data: [ingresos, gastos, saldo],
+          },
+        ],
       };
-
       const options = {
-        responsive:true,
-        scales:{ y:{ beginAtZero:true } }
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true },
+        },
       };
 
-      if (!chart){
+      if (!chart) {
         chart = new ChartJS(ctx, {
           type: "bar",
           data,
-          options
+          options,
         });
       } else {
         chart.data = data;
@@ -1407,20 +1363,67 @@
       }
     }
 
+    function renderCategorias() {
+      if (!catResumenEl) return;
+      const rows = getFiltrados();
+      if (!rows.length) {
+        catResumenEl.innerHTML = "<p>No hay datos para este filtro.</p>";
+        return;
+      }
+
+      const map = {};
+      rows.forEach((r) => {
+        const cat = (r.categoria || "Sin categoría").trim() || "Sin categoría";
+        const sign = r.tipo === "gasto" ? -1 : 1;
+        const monto = Number(r.monto || 0) * sign;
+
+        if (!map[cat]) map[cat] = { total: 0, count: 0 };
+        map[cat].total += monto;
+        map[cat].count += 1;
+      });
+
+      const rowsHtml = Object.entries(map)
+        .sort((a, b) => Math.abs(b[1].total) - Math.abs(a[1].total))
+        .map(
+          ([cat, info]) => `
+        <tr>
+          <td>${cat}</td>
+          <td>${info.count}</td>
+          <td>${fmon(info.total)}</td>
+        </tr>
+      `
+        )
+        .join("");
+
+      catResumenEl.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Movs.</th>
+            <th>Total (ingresos - gastos)</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+    }
+
     cargarMovimientos();
   </script>
 
-  <!-- Service Worker para modo offline -->
+  <!-- Service worker para modo offline -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("./service-worker.js")
-          .then((reg) => console.log("✅ Service Worker registrado:", reg.scope))
+          .then((reg) =>
+            console.log("✅ Service Worker registrado:", reg.scope)
+          )
           .catch((err) => console.warn("⚠️ Error registrando SW:", err));
       });
     }
   </script>
-
 </body>
 </html>
