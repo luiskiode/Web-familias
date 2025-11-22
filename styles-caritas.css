@@ -1,10 +1,10 @@
 /* =========================
-   Cáritas CNC – Estilos final
+   Cáritas CNC – Estilos FINAL
    ========================= */
 
 :root {
   --primary:#b91c1c;
-  --bg:transparent;              /* fondo general transparente */
+  --bg:transparent;              /* fondo global transparente */
   --text:#fff;
   --muted:#c9c9c9;
   --border:#551010;
@@ -40,7 +40,7 @@ body{
   width:100%;
   height:100%;
   object-fit:cover;
-  opacity:.36;
+  opacity:.5;          /* el video se nota más */
   z-index:-1;
   pointer-events:none;
 }
@@ -52,11 +52,11 @@ body{
   padding:0 1rem;
 }
 
-/* Tarjetas glass */
+/* Tarjetas glass ultra suaves */
 .card{
-  background:rgba(0,0,0,.38);
-  backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.10);      /* casi transparente */
+  backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.08);
   border-radius:var(--radius-card);
   padding:1.1rem 1.2rem;
   margin:1rem auto;
@@ -71,8 +71,8 @@ body{
   position:sticky;
   top:0;
   z-index:10;
-  background:rgba(0,0,0,.45);
-  backdrop-filter:blur(16px);
+  background:rgba(0,0,0,.22);
+  backdrop-filter:blur(6px);
   box-shadow:0 10px 30px rgba(0,0,0,.7);
 }
 .app-header-inner{
@@ -184,7 +184,7 @@ textarea{
   padding:.45rem .6rem;
   border-radius:8px;
   border:1px solid rgba(255,255,255,.2);
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.7);   /* inputs más sólidos para lectura */
   color:var(--text);
   font-family:inherit;
   font-size:.9rem;
@@ -217,8 +217,8 @@ select:required{
   overflow:auto;
   border-radius:10px;
   border:1px solid rgba(255,255,255,.16);
-  background:rgba(0,0,0,.28);
-  backdrop-filter:blur(10px);
+  background:rgba(0,0,0,.12);
+  backdrop-filter:blur(3px);
 }
 table{
   width:100%;
@@ -269,9 +269,9 @@ tbody tr:hover{
   max-width:1100px;
   margin:0 auto 1rem;
   padding:0 1rem 1rem;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.12);
+  backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.08);
   border-radius:var(--radius-card);
   box-shadow:var(--shadow-card);
 }
@@ -312,7 +312,7 @@ tbody tr:hover{
   border-radius:12px;
   cursor:pointer;
   border:1px solid rgba(255,255,255,.12);
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.15);
 }
 .gallery-item img{
   display:block;
@@ -343,9 +343,9 @@ tbody tr:hover{
 .sacerdote-mensaje{
   padding:.5rem .75rem;
   border-radius:12px;
-  background:rgba(0,0,0,.25);
-  backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.10);
+  backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.08);
   white-space:pre-wrap;
   margin-bottom:.7rem;
 }
@@ -366,7 +366,7 @@ tbody tr:hover{
 .stat-card{
   padding:.55rem .7rem;
   border-radius:12px;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.6);    /* un poco más sólido para números */
   border:1px solid rgba(248,113,113,.2);
   box-shadow:0 8px 22px rgba(0,0,0,.7);
 }
@@ -410,9 +410,9 @@ tbody tr:hover{
 }
 .teso-form,
 .teso-chart{
-  background:rgba(0,0,0,.33);
-  backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.10);
+  backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.08);
   border-radius:12px;
   padding:.75rem .85rem;
 }
