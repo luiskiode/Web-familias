@@ -54,7 +54,7 @@
     </div>
   </header>
 
-  <!-- Misión / Visión -->
+  <!-- Misión / Visión (contenido general) -->
   <section class="container card">
     <h2>🌟 Nuestra misión</h2>
     <p>
@@ -68,45 +68,7 @@
     </p>
   </section>
 
-  <!-- Accesos principales -->
-  <section class="container card center">
-    <div class="btn-row">
-      <a
-        id="btn-drive"
-        class="btn"
-        href="https://drive.google.com/drive/folders/15O0gRC4yDubSsrd2Qvo_ni7Hm7Bk1KBc?usp=drive_link"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        📂 <span>Acceder a Drive</span>
-      </a>
-
-      <button id="btn-familias" class="btn btn-ghost" type="button">
-        👨‍👩‍👧 <span>Familias</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- Panel plegable de familias -->
-  <section id="familiasPanel" class="familias-panel" hidden>
-    <header class="familias-head">
-      <h3>👨‍👩‍👧 Familias Registradas</h3>
-      <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
-      <button id="familiasExport" class="btn btn-ghost">⬇️ Exportar CSV</button>
-    </header>
-    <div id="familiasMountInline" class="familias-body"></div>
-  </section>
-
-  <!-- Credenciales -->
-  <section class="container card center">
-    <h2>🎫 Credenciales Cáritas CNC</h2>
-    <p>Gestiona tu carnet, comparte el enlace público y, si eres admin, administra todas las credenciales.</p>
-    <a class="btn" href="credenciales.html">
-      🪪 <span>Abrir credenciales</span>
-    </a>
-  </section>
-
-  <!-- Sobre Cáritas + galería -->
+  <!-- Sobre Cáritas + galería (contenido general) -->
   <section class="container card">
     <h2>🤝 Sobre Cáritas CNC</h2>
     <p>
@@ -140,7 +102,7 @@
     </div>
   </section>
 
-  <!-- Palabras del sacerdote -->
+  <!-- Palabras del sacerdote (contenido general) -->
   <section class="container card" id="palabras-sacerdote">
     <h2>✝️ Palabras del sacerdote</h2>
     <p id="sacerdoteMensajeTexto" class="sacerdote-mensaje">
@@ -161,113 +123,59 @@
     </form>
   </section>
 
-  <!-- Tesorería -->
-  <section class="container card" id="tesoreria">
-    <h2>💰 Dashboard financiero Cáritas CNC</h2>
-    <p>Resumen de ingresos y gastos registrados en tesorería.</p>
-
-    <div class="dash-grid">
-      <div class="stat-card">
-        <span>Total ingresos</span>
-        <strong id="tesoIngresos">S/ 0.00</strong>
-      </div>
-      <div class="stat-card">
-        <span>Total gastos</span>
-        <strong id="tesoGastos">S/ 0.00</strong>
-      </div>
-      <div class="stat-card">
-        <span>Saldo</span>
-        <strong id="tesoSaldo">S/ 0.00</strong>
-      </div>
-      <div class="stat-card">
-        <span>Movimientos</span>
-        <strong id="tesoMovs">0</strong>
-      </div>
-    </div>
-
-    <div class="teso-filtros">
-      <label>Tipo:
-        <select id="tesoFiltroTipo">
-          <option value="">Todos</option>
-          <option value="ingreso">Ingresos</option>
-          <option value="gasto">Gastos</option>
-        </select>
-      </label>
-
-      <label>Mes:
-        <input type="month" id="tesoFiltroMes" />
-      </label>
-
-      <button class="btn btn-ghost" id="tesoExport">⬇️ Exportar CSV</button>
-    </div>
-
-    <div class="teso-layout">
-      <form id="tesoForm" class="teso-form">
-        <h3>➕ Registrar movimiento</h3>
-        <div class="form-grid">
-          <label>Tipo<br />
-            <select name="tipo" required>
-              <option value="ingreso">Ingreso</option>
-              <option value="gasto">Gasto</option>
-            </select>
-          </label>
-          <label>Categoría<br />
-            <input type="text" name="categoria" placeholder="Chocolatada, logística…" />
-          </label>
-          <label>Monto (S/)<br />
-            <input type="number" name="monto" step="0.01" required />
-          </label>
-        </div>
-        <div class="form-grid">
-          <label>Abonado / responsable<br />
-            <input type="text" name="abonado" placeholder="Nombre" />
-          </label>
-          <label>Medio de pago<br />
-            <input type="text" name="medio_pago" placeholder="Yape, efectivo…" />
-          </label>
-        </div>
-        <label>Concepto<br />
-          <input type="text" name="concepto" placeholder="Ej: Aporte campaña, compra de víveres…" />
-        </label>
-        <label>Observaciones<br />
-          <textarea name="observaciones" rows="2"></textarea>
-        </label>
-        <button type="submit" class="btn" style="margin-top:.5rem;">
-          💾 <span>Guardar movimiento</span>
-        </button>
-      </form>
-
-      <div class="teso-chart">
-        <h3>📊 Ingresos vs gastos</h3>
-        <canvas id="tesoChart"></canvas>
-        <div id="tesoCatResumen" class="teso-cat-resumen"></div>
-      </div>
-    </div>
-
-    <div class="table-wrapper teso-table-wrapper">
-      <table id="tesoTable">
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Categoría</th>
-            <th>Concepto</th>
-            <th>Abonado</th>
-            <th>Monto (S/)</th>
-            <th>Medio</th>
-            <th>Fecha (texto)</th>
-            <th>Hora</th>
-            <th>Obs.</th>
-            <th>Validado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <!-- Barra de pestañas -->
+  <section class="container card tabs-card" data-tab-bar>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="familias">
+        👨‍👩‍👧 <span>Familias</span>
+      </button>
+      <button class="tab-btn" data-tab="tesoreria">
+        💰 <span>Tesorería</span>
+      </button>
+      <button class="tab-btn" data-tab="credenciales">
+        🎫 <span>Credenciales</span>
+      </button>
+      <button class="tab-btn" data-tab="ajustes">
+        ⚙ <span>Ajustes</span>
+      </button>
     </div>
   </section>
 
+  <!-- =========================
+       TAB: FAMILIAS
+       ========================= -->
+
+  <!-- Accesos principales (familias / drive) -->
+  <section class="container card center" data-tab-content="familias">
+    <div class="btn-row">
+      <a
+        id="btn-drive"
+        class="btn"
+        href="https://drive.google.com/drive/folders/15O0gRC4yDubSsrd2Qvo_ni7Hm7Bk1KBc?usp=drive_link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        📂 <span>Acceder a Drive</span>
+      </a>
+
+      <button id="btn-familias" class="btn btn-ghost" type="button">
+        👨‍👩‍👧 <span>Abrir familias</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Panel plegable de familias (filtro + export) -->
+  <section id="familiasPanel" class="familias-panel" data-tab-content="familias">
+    <header class="familias-head">
+      <h3>👨‍👩‍👧 Familias Registradas</h3>
+      <input id="familiasSearch" class="familias-search" type="search" placeholder="Filtrar..." />
+      <button id="familiasExport" class="btn btn-ghost">⬇️ Exportar CSV</button>
+    </header>
+    <div id="familiasMountInline" class="familias-body"></div>
+  </section>
+
   <!-- Formulario integral de familia -->
-  <section class="container card">
+  <section class="container card" data-tab-content="familias">
     <h2>📋 Registro integral de familia</h2>
     <p>Complete todos los datos requeridos para registrar su solicitud de ayuda.</p>
 
@@ -404,8 +312,8 @@
     </form>
   </section>
 
-  <!-- Tabla de familias (copia original, que luego movemos al panel) -->
-  <main class="container card" id="familiasTablaSection">
+  <!-- Tabla de familias -->
+  <main class="container card" id="familiasTablaSection" data-tab-content="familias">
     <h2>👨‍👩‍👧 Familias registradas</h2>
     <div id="msg"></div>
 
@@ -431,6 +339,153 @@
       <button id="nextPage" class="btn btn-ghost">Siguiente ⏭</button>
     </div>
   </main>
+
+  <!-- =========================
+       TAB: TESORERÍA
+       ========================= -->
+
+  <section class="container card" id="tesoreria" data-tab-content="tesoreria">
+    <h2>💰 Dashboard financiero Cáritas CNC</h2>
+    <p>Resumen de ingresos y gastos registrados en tesorería.</p>
+
+    <div class="dash-grid">
+      <div class="stat-card">
+        <span>Total ingresos</span>
+        <strong id="tesoIngresos">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Total gastos</span>
+        <strong id="tesoGastos">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Saldo</span>
+        <strong id="tesoSaldo">S/ 0.00</strong>
+      </div>
+      <div class="stat-card">
+        <span>Movimientos</span>
+        <strong id="tesoMovs">0</strong>
+      </div>
+    </div>
+
+    <div class="teso-filtros">
+      <label>Tipo:
+        <select id="tesoFiltroTipo">
+          <option value="">Todos</option>
+          <option value="ingreso">Ingresos</option>
+          <option value="gasto">Gastos</option>
+        </select>
+      </label>
+
+      <label>Mes:
+        <input type="month" id="tesoFiltroMes" />
+      </label>
+
+      <button class="btn btn-ghost" id="tesoExport">⬇️ Exportar CSV</button>
+    </div>
+
+    <div class="teso-layout">
+      <form id="tesoForm" class="teso-form">
+        <h3>➕ Registrar movimiento</h3>
+        <div class="form-grid">
+          <label>Tipo<br />
+            <select name="tipo" required>
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+          </label>
+          <label>Categoría<br />
+            <input type="text" name="categoria" placeholder="Chocolatada, logística…" />
+          </label>
+          <label>Monto (S/)<br />
+            <input type="number" name="monto" step="0.01" required />
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>Abonado / responsable<br />
+            <input type="text" name="abonado" placeholder="Nombre" />
+          </label>
+          <label>Medio de pago<br />
+            <input type="text" name="medio_pago" placeholder="Yape, efectivo…" />
+          </label>
+        </div>
+        <label>Concepto<br />
+          <input type="text" name="concepto" placeholder="Ej: Aporte campaña, compra de víveres…" />
+        </label>
+        <label>Observaciones<br />
+          <textarea name="observaciones" rows="2"></textarea>
+        </label>
+        <button type="submit" class="btn" style="margin-top:.5rem;">
+          💾 <span>Guardar movimiento</span>
+        </button>
+      </form>
+
+      <div class="teso-chart">
+        <h3>📊 Ingresos vs gastos</h3>
+        <canvas id="tesoChart"></canvas>
+        <div id="tesoCatResumen" class="teso-cat-resumen"></div>
+      </div>
+    </div>
+
+    <div class="table-wrapper teso-table-wrapper">
+      <table id="tesoTable">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Categoría</th>
+            <th>Concepto</th>
+            <th>Abonado</th>
+            <th>Monto (S/)</th>
+            <th>Medio</th>
+            <th>Fecha (texto)</th>
+            <th>Hora</th>
+            <th>Obs.</th>
+            <th>Validado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================
+       TAB: CREDENCIALES
+       ========================= -->
+
+  <section class="container card center" data-tab-content="credenciales">
+    <h2>🎫 Credenciales Cáritas CNC</h2>
+    <p>Gestiona tu carnet, comparte el enlace público y, si eres admin, administra todas las credenciales.</p>
+    <a class="btn" href="credenciales.html">
+      🪪 <span>Abrir credenciales</span>
+    </a>
+  </section>
+
+  <!-- =========================
+       TAB: AJUSTES
+       ========================= -->
+
+  <section class="container card" id="ajustes" data-tab-content="ajustes">
+    <h2>⚙ Ajustes de la app</h2>
+    <p class="muted">
+      Estos ajustes son locales para este dispositivo. Más adelante puedes agregar aquí controles
+      para notificaciones, vista compacta, idioma, etc.
+    </p>
+
+    <div class="form-grid">
+      <label>
+        <input type="checkbox" />
+        Activar modo compacto en tablas
+      </label>
+      <label>
+        <input type="checkbox" />
+        Recordar pestaña abierta al volver a la app
+      </label>
+      <label>
+        <input type="checkbox" />
+        Mostrar siempre panel de familias expandido
+      </label>
+    </div>
+  </section>
 
   <!-- Modal galería -->
   <div id="galleryModal" class="modal" aria-hidden="true">
@@ -716,6 +771,13 @@
         const rows = getHistory(familyId);
         const needle = q.trim().toLowerCase();
 
+        if (!rows.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="3">Aún no hay cambios registrados para esta familia.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
         rows.forEach((r) => {
           const summary = r.changes && r.changes.length
             ? r.changes
@@ -738,6 +800,7 @@
       function exportHistoryCSV(familyId) {
         const rows = getHistory(familyId);
         const out = [["fecha", "usuario", "accion", "campo", "de", "a"]];
+
         rows.forEach((r) => {
           if (r.changes?.length) {
             r.changes.forEach((c) =>
@@ -754,6 +817,7 @@
             out.push([r.ts, r.user || "", r.action || "", "", "", ""]);
           }
         });
+
         const csv = out
           .map((cols) =>
             cols
@@ -886,6 +950,8 @@
         const panel = $("#familiasPanel");
         if (!panel) return;
         if (panel.hasAttribute("hidden")) {
+          mountFamiliesBlockOnce();
+        } else {
           mountFamiliesBlockOnce();
         }
         const willOpen =
@@ -1262,7 +1328,7 @@
           .insert([nuevo])
           .select();
 
-        if (error) throw error;
+      if (error) throw error;
 
         movimientos.push(inserted[0]);
         tesoForm.reset();
@@ -1410,6 +1476,57 @@
     }
 
     cargarMovimientos();
+  </script>
+
+  <!-- Lógica de pestañas -->
+  <script>
+    (function () {
+      const tabs = document.querySelectorAll("[data-tab]");
+      const sections = document.querySelectorAll("[data-tab-content]");
+      if (!tabs.length || !sections.length) return;
+
+      function activateTab(name) {
+        tabs.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.tab === name);
+        });
+        sections.forEach((sec) => {
+          if (sec.dataset.tabContent === name) {
+            sec.style.display = "";
+          } else {
+            sec.style.display = "none";
+          }
+        });
+      }
+
+      // Exponer por si se quiere usar en otros scripts
+      window.CARITAS = window.CARITAS || {};
+      window.CARITAS.activateTab = activateTab;
+
+      tabs.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const name = btn.dataset.tab;
+          activateTab(name);
+          history.replaceState(null, "", "#" + name);
+        });
+      });
+
+      // Botón de accesos rápidos "Familias"
+      const btnFamilias = document.getElementById("btn-familias");
+      if (btnFamilias) {
+        btnFamilias.addEventListener("click", () => {
+          activateTab("familias");
+          document.querySelector("[data-tab-bar]")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
+
+      const initialHash = location.hash.replace("#", "").toLowerCase();
+      const valid = ["familias", "tesoreria", "credenciales", "ajustes"];
+      const startTab = valid.includes(initialHash) ? initialHash : "familias";
+      activateTab(startTab);
+    })();
   </script>
 
   <!-- Service worker para modo offline -->

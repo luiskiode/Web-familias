@@ -505,6 +505,37 @@ tbody tr:hover{
   overflow:auto;
 }
 
+/* Pestañas */
+.tabs-card{
+  margin-top:1rem;
+}
+.tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem;
+}
+.tab-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.3rem;
+  padding:.4rem .9rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  cursor:pointer;
+  font-size:.85rem;
+  font-weight:600;
+}
+.tab-btn span{
+  display:inline-block;
+}
+.tab-btn.active{
+  background:var(--primary);
+  border-color:var(--primary);
+  box-shadow:0 4px 16px rgba(0,0,0,.8);
+}
+
 /* Responsivo */
 @media (max-width:640px){
   .card{
