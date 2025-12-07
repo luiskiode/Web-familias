@@ -1710,14 +1710,25 @@
       if (!ctx) return;
 
       const data = {
-        labels: ["Ingresos", "Gastos", "Saldo"],
-        datasets: [
-          {
-            label: "Soles",
-            data: [ingresos, gastos, saldo],
-          },
-        ],
-      };
+  labels: ["Ingresos", "Gastos", "Saldo"],
+  datasets: [
+    {
+      label: "Soles",
+      data: [ingresos, gastos, saldo],
+      backgroundColor: [
+        "#22c55e", // ingresos verde
+        "#ef4444", // gastos rojo
+        "#3b82f6"  // saldo azul
+      ],
+      borderColor: [
+        "#22c55e",
+        "#ef4444",
+        "#3b82f6"
+      ],
+      borderWidth: 1.5
+    },
+  ],
+};
       const options = {
         responsive: true,
         scales: {
