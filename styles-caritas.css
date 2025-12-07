@@ -596,3 +596,20 @@ tbody tr:hover{
     padding:.6rem .85rem;
   }
 }
+#tesoIngresos {
+  color: #22c55e; /* Verde */
+  font-weight: 700;
+}
+
+#tesoGastos {
+  color: #ef4444; /* Rojo */
+  font-weight: 700;
+}
+
+#tesoSaldo {
+  color: #3b82f6; /* Azul */
+  font-weight: 700;
+}
+#tesoChart {
+  filter: contrast(1.05);
+}
