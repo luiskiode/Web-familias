@@ -9,11 +9,10 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <link rel="icon" href="img/favicon.ico" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <base href="/Web-familias/">
 
   <link rel="stylesheet" href="styles-caritas.css" />
 
-  <!-- ✅ CSP básica (incluye Supabase y Chart.js) -->
+  <!-- CSP básica -->
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
                  script-src 'self' 'unsafe-inline' https://esm.sh https://cdn.jsdelivr.net;
@@ -22,14 +21,11 @@
                  connect-src *;
                  font-src * data:;">
 
-  <!-- 🛠 Self-heal & overlay (si los tienes en tu repo) -->
-  <script type="module" src="api.js/self-heal-caritas.js"></script>
-  <script defer src="api.js/error-overlay.js"></script>
-
-  <!-- 🔌 Supabase global (Caritas CNC) -->
+  <!-- Supabase global -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+    // 🔑 Usa aquí TU URL y TU ANON KEY reales de Supabase
     const SUPABASE_URL = "https://qivjlsvcjyqymommfdke.supabase.co";
     const SUPABASE_ANON_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdmpsc3ZjanlxeW1vbW1mZGtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNjA2MjUsImV4cCI6MjA2OTkzNjYyNX0.YN0W5miJeWwu96jhqKiGB-cA8t9TeIboQWURCjTFVbw";
@@ -54,7 +50,7 @@
     </div>
   </header>
 
-  <!-- Misión / Visión (contenido general) -->
+  <!-- Misión / Visión -->
   <section class="container card">
     <h2>🌟 Nuestra misión</h2>
     <p>
@@ -68,7 +64,7 @@
     </p>
   </section>
 
-  <!-- Sobre Cáritas + galería (contenido general) -->
+  <!-- Sobre Cáritas + galería -->
   <section class="container card">
     <h2>🤝 Sobre Cáritas CNC</h2>
     <p>
@@ -102,7 +98,7 @@
     </div>
   </section>
 
-  <!-- Palabras del sacerdote (contenido general) -->
+  <!-- Palabras del sacerdote -->
   <section class="container card" id="palabras-sacerdote">
     <h2>✝️ Palabras del sacerdote</h2>
     <p id="sacerdoteMensajeTexto" class="sacerdote-mensaje">
@@ -145,7 +141,7 @@
        TAB: FAMILIAS
        ========================= -->
 
-  <!-- Accesos principales (familias / drive) -->
+  <!-- Accesos principales -->
   <section class="container card center" data-tab-content="familias">
     <div class="btn-row">
       <a
@@ -314,7 +310,19 @@
 
   <!-- Tabla de familias -->
   <main class="container card" id="familiasTablaSection" data-tab-content="familias">
-    <h2>👨‍👩‍👧 Familias registradas</h2>
+    <div class="section-title-row">
+      <h2>👨‍👩‍👧 Familias registradas</h2>
+      <button
+        id="lockFamilias"
+        class="icon-lock-btn"
+        type="button"
+        aria-pressed="true"
+        title="Edición bloqueada"
+      >
+        🔒
+      </button>
+    </div>
+
     <div id="msg"></div>
 
     <div class="table-wrapper">
@@ -345,7 +353,19 @@
        ========================= -->
 
   <section class="container card" id="tesoreria" data-tab-content="tesoreria">
-    <h2>💰 Dashboard financiero Cáritas CNC</h2>
+    <div class="section-title-row">
+      <h2>💰 Dashboard financiero Cáritas CNC</h2>
+      <button
+        id="lockTeso"
+        class="icon-lock-btn"
+        type="button"
+        aria-pressed="true"
+        title="Edición de tesorería bloqueada"
+      >
+        🔒
+      </button>
+    </div>
+
     <p>Resumen de ingresos y gastos registrados en tesorería.</p>
 
     <div class="dash-grid">
@@ -381,6 +401,17 @@
       </label>
 
       <button class="btn btn-ghost" id="tesoExport">⬇️ Exportar CSV</button>
+    </div>
+
+    <!-- Importar CSV desde Excel -->
+    <div class="teso-import-row">
+      <label class="teso-import-label">
+        Importar desde Excel (CSV):
+        <input type="file" id="tesoImportFile" accept=".csv" />
+      </label>
+      <button type="button" class="btn-ghost" id="tesoImportBtn">
+        📥 Cargar CSV
+      </button>
     </div>
 
     <div class="teso-layout">
@@ -524,13 +555,59 @@
     </div>
   </div>
 
-  <!-- ===== Script familias (Supabase + tabla) ===== -->
+  <!-- ===== Script familias (Supabase + tabla + candado) ===== -->
   <script type="module">
     const supabaseFamilias = window.CARITAS?.supabase;
     const tabla = document.querySelector("#familiasTable tbody");
     const msg = document.getElementById("msg");
     let page = 0;
     const pageSize = 10;
+
+    const lockFamiliasBtn = document.getElementById("lockFamilias");
+    let familiasLocked = true;
+    const FAMILIAS_PASSWORD = "1234"; // 🔐 Clave sencilla para desbloquear edición de familias
+
+    function applyFamiliasLockState() {
+      const editableCells = document.querySelectorAll(
+        "#familiasTable [data-field][contenteditable]"
+      );
+      editableCells.forEach((cell) => {
+        cell.setAttribute("contenteditable", familiasLocked ? "false" : "true");
+      });
+
+      const checkboxes = document.querySelectorAll(
+        "#familiasTable input[type='checkbox'][data-id]"
+      );
+      checkboxes.forEach((c) => (c.disabled = familiasLocked));
+
+      const delBtns = document.querySelectorAll("#familiasTable .btn-del");
+      delBtns.forEach((b) => (b.disabled = familiasLocked));
+
+      if (lockFamiliasBtn) {
+        lockFamiliasBtn.textContent = familiasLocked ? "🔒" : "🔓";
+        lockFamiliasBtn.title = familiasLocked
+          ? "Edición bloqueada"
+          : "Edición desbloqueada";
+        lockFamiliasBtn.setAttribute(
+          "aria-pressed",
+          familiasLocked ? "true" : "false"
+        );
+      }
+    }
+
+    lockFamiliasBtn?.addEventListener("click", () => {
+      if (familiasLocked) {
+        const pass = prompt("Ingresa la clave para desbloquear la lista de familias:");
+        if (pass !== FAMILIAS_PASSWORD) {
+          alert("Clave incorrecta.");
+          return;
+        }
+        familiasLocked = false;
+      } else {
+        familiasLocked = true;
+      }
+      applyFamiliasLockState();
+    });
 
     // Guardado local si no hay db.js
     let savePendiente = async (datos) => {
@@ -605,6 +682,7 @@
         tabla.innerHTML = "";
         if (!data || data.length === 0) {
           tabla.innerHTML = "<tr><td colspan='7'>Sin registros</td></tr>";
+          applyFamiliasLockState();
           return;
         }
 
@@ -613,9 +691,9 @@
           tr.dataset.id = fam.id;
           tr.innerHTML = `
             <td>${fam.id}</td>
-            <td contenteditable="true" data-field="nombres_apellidos">${esc(fam.nombres_apellidos || "")}</td>
-            <td contenteditable="true" data-field="direccion">${esc(fam.direccion || "")}</td>
-            <td contenteditable="true" data-field="telefono_contacto">${esc(fam.telefono_contacto || "")}</td>
+            <td data-field="nombres_apellidos" contenteditable="true">${esc(fam.nombres_apellidos || "")}</td>
+            <td data-field="direccion" contenteditable="true">${esc(fam.direccion || "")}</td>
+            <td data-field="telefono_contacto" contenteditable="true">${esc(fam.telefono_contacto || "")}</td>
             <td><input type="checkbox" data-id="${fam.id}" ${fam.visitada ? "checked" : ""}></td>
             <td>${fam.direccion ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fam.direccion)}" target="_blank">🗺</a>` : "—"}</td>
             <td>
@@ -625,6 +703,8 @@
           `;
           tabla.appendChild(tr);
         });
+
+        applyFamiliasLockState();
       } catch (err) {
         console.error(err);
         tabla.innerHTML = "<tr><td colspan='7'>Error al cargar datos</td></tr>";
@@ -634,6 +714,11 @@
     // visitada
     document.getElementById("familiasTable")?.addEventListener("change", async (e) => {
       if (e.target && e.target.type === "checkbox") {
+        if (familiasLocked) {
+          e.target.checked = !e.target.checked;
+          alert("Lista de familias bloqueada. Abre el candado para editar.");
+          return;
+        }
         const id = e.target.dataset.id;
         const visitada = e.target.checked;
         if (!supabaseFamilias) return showMsg("❌ Supabase no inicializado", "error");
@@ -659,7 +744,12 @@
     document.getElementById("familiasTable").addEventListener(
       "blur",
       async (e) => {
-        if (e.target.matches("[contenteditable]")) {
+        if (e.target.matches("[contenteditable][data-field]")) {
+          if (familiasLocked) {
+            alert("Lista de familias bloqueada. Abre el candado para editar.");
+            cargarFamilias();
+            return;
+          }
           const id = e.target.closest("tr").dataset.id;
           const field = e.target.dataset.field;
           const value = e.target.textContent.trim();
@@ -683,6 +773,10 @@
     document.getElementById("familiasTable").addEventListener("click", async (e) => {
       const id = e.target?.dataset?.del;
       if (!id) return;
+      if (familiasLocked) {
+        alert("Lista de familias bloqueada. Abre el candado para eliminar.");
+        return;
+      }
       e.preventDefault();
       if (!confirm("¿Seguro que deseas eliminar esta familia?")) return;
 
@@ -707,7 +801,7 @@
     });
   </script>
 
-  <!-- Historial local -->
+  <!-- Historial local de familias -->
   <script>
     (function () {
       const STORAGE_KEY = "familias_history_v1";
@@ -1089,7 +1183,7 @@
   <!-- Chart.js global -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-  <!-- Tesorería (con filtro por mes y resumen por categoría) -->
+  <!-- Tesorería (con CSV import + candado) -->
   <script type="module">
     const ChartJS = window.Chart;
     const supabaseTeso = window.CARITAS?.supabase;
@@ -1101,12 +1195,18 @@
     const filtroTipo = document.querySelector("#tesoFiltroTipo");
     const filtroMes = document.querySelector("#tesoFiltroMes");
     const btnExport = document.querySelector("#tesoExport");
+    const inputImport = document.getElementById("tesoImportFile");
+    const btnImport = document.getElementById("tesoImportBtn");
 
     const elIngresos = document.getElementById("tesoIngresos");
     const elGastos = document.getElementById("tesoGastos");
     const elSaldo = document.getElementById("tesoSaldo");
     const elMovs = document.getElementById("tesoMovs");
     const catResumenEl = document.getElementById("tesoCatResumen");
+
+    const lockTesoBtn = document.getElementById("lockTeso");
+    let tesoLocked = true;
+    const TESORERIA_PASSWORD = "5678"; // 🔐 Clave sencilla para desbloquear edición de tesorería
 
     let movimientos = [];
     let chart;
@@ -1116,6 +1216,51 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
+
+    function applyTesoLockState() {
+      const editableCells = document.querySelectorAll(
+        "#tesoTable [contenteditable][data-field]"
+      );
+      const selects = document.querySelectorAll(
+        "#tesoTable select[data-field]"
+      );
+      const checks = document.querySelectorAll(
+        "#tesoTable input[type='checkbox'][data-field]"
+      );
+      const delBtns = document.querySelectorAll("#tesoTable .btn-del");
+
+      editableCells.forEach((cell) => {
+        cell.setAttribute("contenteditable", tesoLocked ? "false" : "true");
+      });
+      selects.forEach((s) => (s.disabled = tesoLocked));
+      checks.forEach((c) => (c.disabled = tesoLocked));
+      delBtns.forEach((b) => (b.disabled = tesoLocked));
+
+      if (lockTesoBtn) {
+        lockTesoBtn.textContent = tesoLocked ? "🔒" : "🔓";
+        lockTesoBtn.title = tesoLocked
+          ? "Edición de tesorería bloqueada"
+          : "Edición de tesorería desbloqueada";
+        lockTesoBtn.setAttribute(
+          "aria-pressed",
+          tesoLocked ? "true" : "false"
+        );
+      }
+    }
+
+    lockTesoBtn?.addEventListener("click", () => {
+      if (tesoLocked) {
+        const pass = prompt("Ingresa la clave para desbloquear la tesorería:");
+        if (pass !== TESORERIA_PASSWORD) {
+          alert("Clave incorrecta.");
+          return;
+        }
+        tesoLocked = false;
+      } else {
+        tesoLocked = true;
+      }
+      applyTesoLockState();
+    });
 
     async function cargarMovimientos() {
       if (!supabaseTeso) return;
@@ -1184,6 +1329,7 @@
       if (!rows.length) {
         tBody.innerHTML =
           "<tr><td colspan='11'>Sin movimientos registrados</td></tr>";
+        applyTesoLockState();
         return;
       }
 
@@ -1215,6 +1361,7 @@
         `;
         tBody.appendChild(tr);
       }
+      applyTesoLockState();
     }
 
     async function actualizarCampo(id, field, value) {
@@ -1243,6 +1390,11 @@
     }
 
     tBody.addEventListener("change", (e) => {
+      if (tesoLocked) {
+        alert("Tesorería bloqueada. Abre el candado para editar.");
+        renderTabla();
+        return;
+      }
       const tr = e.target.closest("tr");
       if (!tr) return;
       const id = Number(tr.dataset.id);
@@ -1261,6 +1413,11 @@
       (e) => {
         const cell = e.target;
         if (!cell.matches("[contenteditable][data-field]")) return;
+        if (tesoLocked) {
+          alert("Tesorería bloqueada. Abre el candado para editar.");
+          renderTabla();
+          return;
+        }
         const tr = cell.closest("tr");
         const id = Number(tr.dataset.id);
         const field = cell.dataset.field;
@@ -1273,6 +1430,10 @@
     tBody.addEventListener("click", async (e) => {
       const id = e.target?.dataset?.del;
       if (!id) return;
+      if (tesoLocked) {
+        alert("Tesorería bloqueada. Abre el candado para eliminar.");
+        return;
+      }
       if (!confirm("¿Eliminar este movimiento de tesorería?")) return;
 
       const { error } = await supabaseTeso
@@ -1328,7 +1489,7 @@
           .insert([nuevo])
           .select();
 
-      if (error) throw error;
+        if (error) throw error;
 
         movimientos.push(inserted[0]);
         tesoForm.reset();
@@ -1386,6 +1547,153 @@
       a.click();
       URL.revokeObjectURL(a.href);
     });
+
+    // =========================
+    //  IMPORTACIÓN CSV DESDE EXCEL
+    // =========================
+
+    function parseCSV(text) {
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.length);
+
+      if (!lines.length) return [];
+
+      const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+      const out = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const rowText = lines[i];
+        if (!rowText) continue;
+        const cols = rowText.split(",");
+
+        const mov = {
+          tipo: "ingreso",
+          categoria: null,
+          concepto: null,
+          abonado: null,
+          monto: 0,
+          moneda: "PEN",
+          medio_pago: null,
+          fecha_texto: null,
+          hora_texto: null,
+          observaciones: null,
+          validado: false,
+        };
+
+        header.forEach((name, idx) => {
+          const raw = (cols[idx] || "").trim();
+          if (!name) return;
+
+          switch (name) {
+            case "tipo":
+              if (raw === "gasto" || raw === "ingreso") mov.tipo = raw;
+              break;
+            case "categoria":
+              mov.categoria = raw || null;
+              break;
+            case "concepto":
+              mov.concepto = raw || null;
+              break;
+            case "abonado":
+              mov.abonado = raw || null;
+              break;
+            case "monto":
+              mov.monto = Number(raw.replace(",", ".")) || 0;
+              break;
+            case "moneda":
+              mov.moneda = raw || "PEN";
+              break;
+            case "medio_pago":
+            case "medio":
+              mov.medio_pago = raw || null;
+              break;
+            case "fecha_texto":
+              mov.fecha_texto = raw || null;
+              break;
+            case "hora_texto":
+              mov.hora_texto = raw || null;
+              break;
+            case "observaciones":
+              mov.observaciones = raw || null;
+              break;
+            case "validado":
+              mov.validado =
+                /^s/i.test(raw) || /^1$/.test(raw) || /^true$/i.test(raw);
+              break;
+            default:
+              break;
+          }
+        });
+
+        if (!mov.monto && !mov.concepto && !mov.categoria) continue;
+
+        out.push(mov);
+      }
+
+      return out;
+    }
+
+    async function importarCSVDesdeArchivo(file) {
+      if (!supabaseTeso) {
+        alert("Supabase no está disponible.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        try {
+          const text = e.target.result;
+          const rows = parseCSV(text);
+
+          if (!rows.length) {
+            alert("No se encontraron filas válidas en el CSV.");
+            return;
+          }
+
+          if (
+            !confirm(
+              `Se encontraron ${rows.length} movimientos en el CSV.\nSe agregarán a la tesorería. ¿Continuar?`
+            )
+          ) {
+            return;
+          }
+
+          const { data, error } = await supabaseTeso
+            .from("tesoreria_movimientos")
+            .insert(rows)
+            .select();
+
+          if (error) throw error;
+
+          movimientos = movimientos.concat(data || []);
+          renderDashboard();
+          renderTabla();
+          renderChart();
+          renderCategorias();
+
+          alert("✅ Movimientos importados correctamente.");
+        } catch (err) {
+          console.error("Error importando CSV:", err);
+          alert("No se pudo importar el archivo CSV. Revisa el formato.");
+        }
+      };
+
+      reader.readAsText(file, "UTF-8");
+    }
+
+    if (btnImport && inputImport) {
+      btnImport.addEventListener("click", () => {
+        const file = inputImport.files?.[0];
+        if (!file) {
+          alert("Primero selecciona un archivo CSV exportado desde Excel.");
+          return;
+        }
+        importarCSVDesdeArchivo(file);
+      });
+    }
 
     function renderChart() {
       if (!ChartJS) return;
@@ -1498,7 +1806,6 @@
         });
       }
 
-      // Exponer por si se quiere usar en otros scripts
       window.CARITAS = window.CARITAS || {};
       window.CARITAS.activateTab = activateTab;
 
@@ -1510,7 +1817,6 @@
         });
       });
 
-      // Botón de accesos rápidos "Familias"
       const btnFamilias = document.getElementById("btn-familias");
       if (btnFamilias) {
         btnFamilias.addEventListener("click", () => {

@@ -4,7 +4,7 @@
 
 :root {
   --primary:#b91c1c;
-  --bg:transparent;              /* fondo global transparente */
+  --bg:transparent;
   --text:#fff;
   --muted:#c9c9c9;
   --border:#551010;
@@ -40,7 +40,7 @@ body{
   width:100%;
   height:100%;
   object-fit:cover;
-  opacity:.5;          /* el video se nota más */
+  opacity:.5;
   z-index:-1;
   pointer-events:none;
 }
@@ -52,9 +52,9 @@ body{
   padding:0 1rem;
 }
 
-/* Tarjetas glass ultra suaves */
+/* Tarjetas glass */
 .card{
-  background:rgba(0,0,0,.10);      /* casi transparente */
+  background:rgba(0,0,0,.10);
   backdrop-filter:blur(4px);
   border:1px solid rgba(255,255,255,.08);
   border-radius:var(--radius-card);
@@ -91,7 +91,7 @@ body{
   color:var(--muted);
 }
 
-/* Tipografía general */
+/* Tipografía */
 h1,h2,h3,h4{
   margin-top:.1rem;
   margin-bottom:.5rem;
@@ -184,7 +184,7 @@ textarea{
   padding:.45rem .6rem;
   border-radius:8px;
   border:1px solid rgba(255,255,255,.2);
-  background:rgba(0,0,0,.7);   /* inputs más sólidos para lectura */
+  background:rgba(0,0,0,.7);
   color:var(--text);
   font-family:inherit;
   font-size:.9rem;
@@ -366,7 +366,7 @@ tbody tr:hover{
 .stat-card{
   padding:.55rem .7rem;
   border-radius:12px;
-  background:rgba(0,0,0,.6);    /* un poco más sólido para números */
+  background:rgba(0,0,0,.6);
   border:1px solid rgba(248,113,113,.2);
   box-shadow:0 8px 22px rgba(0,0,0,.7);
 }
@@ -394,6 +394,27 @@ tbody tr:hover{
 .teso-filtros input[type="month"]{
   width:auto;
   min-width:120px;
+}
+
+/* Import CSV */
+.teso-import-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.6rem;
+  margin:.25rem 0 1rem;
+}
+.teso-import-label{
+  font-size:.85rem;
+}
+.teso-import-label input[type="file"]{
+  display:block;
+  margin-top:.25rem;
+  font-size:.8rem;
+  padding:.25rem .4rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.75);
 }
 
 .teso-layout{
@@ -534,6 +555,36 @@ tbody tr:hover{
   background:var(--primary);
   border-color:var(--primary);
   box-shadow:0 4px 16px rgba(0,0,0,.8);
+}
+
+/* Título con candado */
+.section-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.5rem;
+}
+.icon-lock-btn{
+  border:none;
+  background:rgba(0,0,0,.7);
+  color:#fff;
+  border-radius:999px;
+  padding:.25rem .6rem;
+  font-size:1rem;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,.7);
+  transition:background .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.icon-lock-btn:hover{
+  background:rgba(0,0,0,.95);
+  transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(0,0,0,.8);
+}
+.icon-lock-btn[aria-pressed="false"]{
+  background:#16a34a;
 }
 
 /* Responsivo */
