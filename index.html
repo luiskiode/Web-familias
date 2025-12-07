@@ -1763,8 +1763,8 @@
         <tr>
           <td>${cat}</td>
           <td>${info.count}</td>
-          <td>${fmon(info.total)}</td>
-        </tr>
+          <td class="${info.total >= 0 ? "positivo" : "negativo"}">${fmon(info.total)}</td>
+          </tr>
       `
         )
         .join("");

@@ -613,3 +613,25 @@ tbody tr:hover{
 #tesoChart {
   filter: contrast(1.05);
 }
+
+.tesoCatResumen td:last-child {
+  font-weight: 600;
+}
+
+.tesoCatResumen td:last-child.positivo {
+  color: #22c55e; /* Verde */
+}
+
+.tesoCatResumen td:last-child.negativo {
+  color: #ef4444; /* Rojo */
+}
+
+.positivo {
+  color: #22c55e; /* verde */
+  font-weight: 600;
+}
+
+.negativo {
+  color: #ef4444; /* rojo */
+  font-weight: 600;
+}
